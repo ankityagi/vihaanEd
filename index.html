@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vihaan's Quest</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: one centred column on "school paper" blue; chunky tiles, a level ladder, one big question card with a kid keypad. */
+:root {
+  --bg: #eaf4ff;
+  --rule: rgba(43, 125, 224, 0.10);
+  --card: #ffffff;
+  --ink: #1f2a44;
+  --muted: #56647e;
+  --line: #c6d8ee;
+  --sky: #2b7de0;
+  --sun: #ffc93a;
+  --sun-ink: #5c4100;
+  --grass: #23935a;
+  --berry: #dc3d55;
+  --grape: #7a52d4;
+  --good-bg: #e2f6ea;
+  --bad-bg: #fde7ea;
+  --soft: #f3f8ff;
+  --display: 'Fredoka', 'Trebuchet MS', system-ui, sans-serif;
+  --body: 'Andika', 'Comic Sans MS', system-ui, -apple-system, sans-serif;
+  --r: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1a2c; --rule: rgba(160, 200, 255, 0.06); --card: #1a2740; --ink: #eef3fb; --muted: #a8b6cd;
+    --line: #2d4063; --sky: #6ea9ff; --sun: #ffd25e; --sun-ink: #3a2a00; --grass: #4fd18a; --berry: #ff7a8c;
+    --grape: #b39bff; --good-bg: #133524; --bad-bg: #3d1b22; --soft: #142139; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1a2c; --rule: rgba(160, 200, 255, 0.06); --card: #1a2740; --ink: #eef3fb; --muted: #a8b6cd;
+  --line: #2d4063; --sky: #6ea9ff; --sun: #ffd25e; --sun-ink: #3a2a00; --grass: #4fd18a; --berry: #ff7a8c;
+  --grape: #b39bff; --good-bg: #133524; --bad-bg: #3d1b22; --soft: #142139; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0; font: 19px/1.45 var(--body); color: var(--ink);
+  background-color: var(--bg);
+  background-image: linear-gradient(var(--rule) 2px, transparent 2px);
+  background-size: 100% 40px;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 4px solid var(--sky); outline-offset: 3px; border-radius: 8px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.wrap { max-width: 860px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-block: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 0; cursor: pointer; font: 700 1.45rem var(--display); }
+.mark { width: 40px; height: 40px; border-radius: 12px; background: var(--sun); color: var(--sun-ink); display: grid; place-items: center; transform: rotate(-6deg); border: 3px solid var(--ink); }
+.right { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.chipbtn { border: 3px solid var(--ink); background: var(--card); border-radius: 999px; padding: 4px 12px; font: 600 .95rem var(--display); cursor: pointer; white-space: nowrap; }
+.xp { font: 600 .95rem var(--display); border: 3px solid var(--ink); border-radius: 999px; padding: 4px 12px; background: var(--card); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.who { font-size: .85rem; color: var(--muted); white-space: nowrap; }
+
+main.wrap { display: flex; flex-direction: column; gap: 22px; padding-block: 6px 56px; }
+h1, h2 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(1.9rem, 6vw, 2.8rem); font-weight: 700; }
+h2 { font-size: 1.3rem; font-weight: 600; }
+.eyebrow { margin: 0 0 4px; font: 600 .8rem var(--display); text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+.lede { margin: 8px 0 0; color: var(--muted); max-width: 58ch; font-size: 1rem; }
+.link { background: none; border: 0; padding: 6px 0; cursor: pointer; color: var(--sky); font-weight: 700; }
+
+.btn { border: 3px solid var(--ink); background: var(--card); border-radius: 16px; padding: 12px 20px; font: 600 1.1rem var(--display); cursor: pointer; box-shadow: 0 4px 0 var(--ink); transition: transform .08s, box-shadow .08s; }
+.btn:active { transform: translateY(4px); box-shadow: 0 0 0 var(--ink); }
+.btn.primary { background: var(--sun); color: var(--sun-ink); }
+.btn:disabled { opacity: .5; cursor: default; }
+
+/* home */
+.area { display: flex; flex-direction: column; gap: 12px; }
+.area-h { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pill { font: 600 .75rem var(--display); text-transform: uppercase; letter-spacing: .08em; background: var(--berry); color: #fff; padding: 3px 10px; border-radius: 999px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 16px; }
+.tile { position: relative; text-align: left; display: flex; flex-direction: column; gap: 6px; background: var(--card); border: 3px solid var(--ink); border-radius: var(--r); padding: 18px; box-shadow: 0 6px 0 var(--ink); cursor: pointer; min-width: 0; transition: transform .12s, box-shadow .12s; }
+.tile:hover { transform: translateY(-2px); box-shadow: 0 8px 0 var(--ink); }
+.tile:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--ink); }
+.tile p { margin: 0; color: var(--muted); font-size: .95rem; }
+.badge { width: 58px; height: 58px; border-radius: 16px; display: grid; place-items: center; font: 700 1.7rem var(--display); color: #fff; border: 3px solid var(--ink); }
+.c-sky { background: var(--sky); } .c-grass { background: var(--grass); } .c-grape { background: var(--grape); } .c-berry { background: var(--berry); } .c-sun { background: var(--sun); color: var(--sun-ink); }
+.tag { position: absolute; top: 16px; right: 16px; font: 600 .78rem var(--display); text-transform: uppercase; letter-spacing: .06em; padding: 3px 10px; border-radius: 8px; border: 2px solid var(--ink); background: var(--sun); color: var(--sun-ink); }
+.foot { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; font-size: .9rem; color: var(--muted); }
+.meter { height: 12px; border-radius: 99px; background: var(--soft); border: 2px solid var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--grass); }
+.stars { color: #f2a900; letter-spacing: 1px; white-space: nowrap; }
+.stars .off { color: var(--line); }
+
+/* players */
+.players .tile { align-items: center; text-align: center; padding-block: 28px; }
+.avatar { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: var(--sun); color: var(--sun-ink); font: 700 2.6rem var(--display); border: 3px solid var(--ink); }
+
+/* level map */
+.path { margin-top: 16px; display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; }
+.path span { height: 18px; border-radius: 99px; background: var(--card); border: 2px solid var(--ink); }
+.path span.on { background: var(--grass); }
+.levels { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 12px; }
+.lvl { display: flex; align-items: center; gap: 14px; text-align: left; cursor: pointer; background: var(--card); border: 3px solid var(--ink); border-radius: var(--r); padding: 12px 14px; box-shadow: 0 5px 0 var(--ink); min-width: 0; }
+.lvl.locked { cursor: default; border-color: var(--line); box-shadow: none; opacity: .6; }
+.lvl.next { outline: 4px dashed var(--sun); outline-offset: 3px; }
+.lvl-n { flex: none; width: 50px; height: 50px; border-radius: 50%; display: grid; place-items: center; font: 700 1.4rem var(--display); background: var(--soft); border: 3px solid currentColor; }
+.lvl.done .lvl-n { background: var(--grass); color: #fff; border-color: var(--grass); }
+.lvl-b { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lvl-b b { font: 600 1.15rem var(--display); }
+.lvl-b small { color: var(--muted); font-size: .88rem; }
+.parent-note { margin: 0; font-size: .9rem; color: var(--muted); }
+
+/* play */
+.playtop { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between; }
+.where { font: 600 1.05rem var(--display); flex: 1; min-width: 0; text-align: center; }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink); background: var(--card); }
+.dots i.cur { background: var(--sun); }
+.dots i.ok { background: var(--grass); border-color: var(--grass); }
+.dots i.no { background: var(--berry); border-color: var(--berry); }
+.qcard { background: var(--card); border: 3px solid var(--ink); border-radius: 24px; box-shadow: 0 7px 0 var(--ink); padding: clamp(16px, 4vw, 30px); display: flex; flex-direction: column; gap: 18px; }
+.qhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.qnum { margin: 0; font: 600 .82rem var(--display); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.say { border: 3px solid var(--ink); background: var(--soft); border-radius: 999px; padding: 6px 14px; cursor: pointer; font: 600 1rem var(--display); white-space: nowrap; }
+.prompt { font-size: clamp(1.25rem, 4vw, 1.6rem); line-height: 1.4; }
+.prompt b { color: var(--sky); }
+.eq { font: 700 clamp(2.2rem, 9vw, 3.4rem) var(--display); letter-spacing: .02em; display: block; text-align: center; font-variant-numeric: tabular-nums; }
+.eq .q { color: var(--berry); }
+.fig { margin: 0; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 14px; }
+.fig svg { max-width: 100%; height: auto; }
+.pics { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 330px; font-size: 2.1rem; line-height: 1; }
+.pics span.gone { position: relative; opacity: .45; }
+.pics span.gone::after { content: ""; position: absolute; left: -2px; right: -2px; top: 50%; height: 4px; background: var(--berry); transform: rotate(-35deg); border-radius: 2px; }
+.plus { font: 700 2.4rem var(--display); color: var(--muted); }
+.grid5 { display: grid; grid-template-columns: repeat(5, auto); gap: 6px 8px; font-size: 2rem; line-height: 1; }
+.tenframe { display: grid; grid-template-columns: repeat(5, 46px); gap: 0; border: 3px solid var(--ink); border-radius: 6px; overflow: hidden; }
+.tenframe i { width: 46px; height: 46px; border: 1.5px solid var(--line); display: grid; place-items: center; }
+.tenframe i.on::before { content: ""; width: 30px; height: 30px; border-radius: 50%; background: var(--berry); }
+.bigletter { font: 700 clamp(4.5rem, 20vw, 7rem)/1 var(--body); color: var(--sky); }
+.lines { position: relative; width: 210px; height: 150px; border-top: 3px solid var(--ink); border-bottom: 3px solid var(--ink); }
+.lines::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 3px dashed var(--muted); }
+.lines span { position: absolute; left: 0; right: 0; bottom: -2px; text-align: center; font: 400 150px/1 var(--body); color: var(--sky); }
+.lines span.cap { font-size: 154px; }
+.gtable { border-collapse: collapse; font-size: 1.1rem; }
+.gtable td { padding: 6px 10px; border-bottom: 2px solid var(--line); }
+.gtable td:first-child { font-family: var(--display); font-weight: 600; text-align: right; white-space: nowrap; }
+.gtable td:last-child { font-size: 1.7rem; letter-spacing: 4px; }
+
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px; }
+.choice { border: 3px solid var(--ink); border-radius: 16px; background: var(--soft); padding: 14px; cursor: pointer; font: 600 1.35rem var(--display); box-shadow: 0 4px 0 var(--ink); min-height: 72px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.choice.letter { font: 400 3rem/1 var(--body); min-height: 96px; }
+.choice.word { font: 400 1.6rem var(--body); }
+.choice svg { max-width: 100%; height: auto; }
+.choice:hover:not(:disabled) { background: var(--card); }
+.choice:disabled { cursor: default; }
+.choice.right { background: var(--good-bg); border-color: var(--grass); box-shadow: 0 4px 0 var(--grass); }
+.choice.wrong { background: var(--bad-bg); border-color: var(--berry); box-shadow: 0 4px 0 var(--berry); }
+.flipx { display: inline-block; transform: scaleX(-1); }
+.flipy { display: inline-block; transform: scaleY(-1); }
+
+.entry { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.screen { min-width: 170px; min-height: 76px; border: 3px solid var(--ink); border-radius: 16px; background: var(--soft); display: grid; place-items: center; font: 700 2.6rem var(--display); font-variant-numeric: tabular-nums; padding: 0 16px; }
+.screen.empty { color: var(--line); }
+.screen.right { border-color: var(--grass); background: var(--good-bg); }
+.screen.wrong { border-color: var(--berry); background: var(--bad-bg); }
+.pad { display: grid; grid-template-columns: repeat(5, minmax(0, 64px)); gap: 8px; width: 100%; max-width: 352px; }
+.pad button { height: 60px; border: 3px solid var(--ink); border-radius: 14px; background: var(--card); font: 700 1.6rem var(--display); box-shadow: 0 3px 0 var(--ink); cursor: pointer; }
+.pad button:active { transform: translateY(3px); box-shadow: none; }
+.pad button:disabled { opacity: .5; }
+.pad .wide { grid-column: span 2; }
+.pad .go { grid-column: span 3; background: var(--sun); color: var(--sun-ink); font-size: 1.3rem; }
+
+.tracebox { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.tracebox canvas { width: min(100%, 340px); aspect-ratio: 1; border: 3px solid var(--ink); border-radius: 18px; background: var(--card); touch-action: none; cursor: crosshair; max-width: 100%; }
+.tracebtns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.tracemsg { margin: 0; font: 600 1.1rem var(--display); color: var(--berry); min-height: 1.4em; text-align: center; }
+
+.hintrow { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.hinttext { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--soft); border: 2px dashed var(--line); max-width: 60ch; font-size: 1.05rem; }
+.feedback { border-radius: 16px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.feedback.good { background: var(--good-bg); border: 3px solid var(--grass); }
+.feedback.bad { background: var(--bad-bg); border: 3px solid var(--berry); }
+.feedback p { margin: 0; }
+.verdict { font: 700 1.4rem var(--display); }
+.plusxp { font: 600 .9rem var(--display); color: var(--grass); }
+.why { font-size: 1.1rem; }
+
+.result { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; padding-block: 28px; }
+.result .lede { margin-inline: auto; }
+.bigstars { font-size: 3.8rem; line-height: 1.1; margin: 6px 0; }
+.result.win .bigstars { animation: pop .5s ease-out; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 16px; }
+@keyframes pop { from { transform: scale(.4); } 70% { transform: scale(1.15); } to { transform: scale(1); } }
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; }
+
+/* dialogs */
+.modal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(10, 18, 30, .55); padding-block: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.sheet { width: min(100%, 400px); background: var(--card); border: 3px solid var(--ink); border-radius: 22px; box-shadow: 0 7px 0 var(--ink); padding: 22px; display: flex; flex-direction: column; gap: 12px; max-height: 100%; overflow: auto; }
+.sheet .lede { margin: 0; }
+.pin { font: 700 1.5rem var(--display); letter-spacing: .3em; text-align: center; color: var(--ink); background: var(--soft); border: 3px solid var(--ink); border-radius: 14px; padding: 10px; width: 100%; }
+.err { margin: 0; color: var(--berry); font-weight: 700; font-size: .95rem; }
+.picks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.picks button { font-size: 2.4rem; height: 76px; border: 3px solid var(--ink); border-radius: 16px; background: var(--soft); cursor: pointer; box-shadow: 0 3px 0 var(--ink); }
+.picks button:active { transform: translateY(3px); box-shadow: none; }
+.slots { display: flex; justify-content: center; gap: 10px; }
+.slots i { width: 60px; height: 60px; border: 3px dashed var(--line); border-radius: 14px; display: grid; place-items: center; font-size: 2rem; font-style: normal; }
+.slots i.full { border-style: solid; border-color: var(--ink); }
+.sheet .actions { justify-content: flex-end; margin-top: 4px; }
+
+/* parent */
+.tabs { display: flex; gap: 8px; border-bottom: 3px solid var(--line); }
+.tab { background: none; border: 0; border-bottom: 4px solid transparent; margin-bottom: -3px; padding: 8px 14px; font: 600 1rem var(--display); cursor: pointer; color: var(--muted); }
+.tab.on { color: var(--ink); border-bottom-color: var(--sun); }
+.panel { background: var(--card); border: 3px solid var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+.kpis div { background: var(--card); border: 3px solid var(--line); border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; }
+.kpis b { font: 700 1.8rem var(--display); font-variant-numeric: tabular-nums; }
+.kpis span { color: var(--muted); font-size: .85rem; }
+.tablewrap { overflow-x: auto; }
+.rep { border-collapse: collapse; width: 100%; font-size: .92rem; background: var(--card); }
+.rep th, .rep td { border-bottom: 2px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+.rep th { font: 600 .75rem var(--display); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--soft); }
+.rep .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: .88rem; }
+.toggle { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.toggle input { width: 26px; height: 26px; }
+.build { text-align: center; font: 500 .8rem var(--display); color: var(--muted); padding-block: 0 24px; }
+.build .link { font-size: .8rem; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+@media (max-width: 520px) {
+  .where { order: 3; flex-basis: 100%; text-align: left; }
+  .brand-t { display: none; }
+  .who { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top wrap">
+  <button class="brand" id="home" aria-label="Back to all quests"><span class="mark">V</span><span class="brand-t">Vihaan's Quest</span></button>
+  <span class="right"><span class="who" id="who"></span><button class="chipbtn" id="voice" aria-pressed="true">🔊 On</button><span class="xp" id="xp" hidden>0 XP</span></span>
+</header>
+<main class="wrap" id="app"></main>
+<footer class="build"><button class="link" id="parent-link">Parent</button> · Vihaan's Quest · Grade 1</footer>
+
+<script>
+/* ======================= Content: pure functions, no DOM at load ======================= */
+window.VQ = (function () {
+  const KID = 'Vihaan', BRO = 'Viraj';
+  const R = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const uniq = a => [...new Set(a)];
+  // multiple choice: correct first, then wrongs; shuffled, duplicates dropped
+  function mc(correct, wrongs, n = 4) {
+    const w = uniq(wrongs.filter(x => x !== correct)).slice(0, n - 1);
+    const all = shuffle([correct, ...w]);
+    return { choices: all, answer: all.indexOf(correct) };
+  }
+  function near(n, lo = 0, hi = 120) {
+    const out = new Set();
+    let guard = 0;
+    while (out.size < 3 && guard++ < 50) { const d = pick([-2, -1, 1, 2, 10, -10, 3]); const v = n + d; if (v !== n && v >= lo && v <= hi) out.add(v); }
+    return [...out];
+  }
+
+  const FRUIT = [['🍎', 'apples'], ['🚗', 'cars'], ['⭐', 'stars'], ['🐟', 'fish'], ['🍪', 'cookies'], ['🎈', 'balloons'], ['🦆', 'ducks'], ['🍓', 'strawberries'], ['⚽', 'balls'], ['🐞', 'ladybugs']];
+  const pics = (e, n, goneFrom = 99) => `<div class="pics" aria-label="${n} pictures">${Array.from({ length: n }, (_, i) => `<span${i >= goneFrom ? ' class="gone"' : ''}>${e}</span>`).join('')}</div>`;
+  const grid5 = (e, n) => `<div class="grid5" aria-label="${n} pictures">${Array.from({ length: n }, () => `<span>${e}</span>`).join('')}</div>`;
+  const eq = s => `<span class="eq">${s.replace('?', '<span class="q">?</span>')}</span>`;
+  const tenframe = n => `<div class="tenframe" aria-label="Ten frame with ${n} dots">${Array.from({ length: 10 }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('')}</div>`;
+
+  /* ---------- drawings ---------- */
+  const COLS = ['var(--sky)', 'var(--grass)', 'var(--grape)', 'var(--berry)', 'var(--sun)'];
+  const SHAPES = {
+    circle: { sides: 0, corners: 0 },
+    triangle: { sides: 3, corners: 3, pts: [[50, 8], [94, 88], [6, 88]] },
+    square: { sides: 4, corners: 4, pts: [[12, 12], [88, 12], [88, 88], [12, 88]] },
+    rectangle: { sides: 4, corners: 4, pts: [[2, 24], [98, 24], [98, 76], [2, 76]] },
+    rhombus: { sides: 4, corners: 4, pts: [[50, 4], [86, 50], [50, 96], [14, 50]] },
+    trapezoid: { sides: 4, corners: 4, pts: [[28, 22], [72, 22], [96, 80], [4, 80]] },
+    pentagon: { sides: 5, corners: 5, pts: [[50, 6], [94, 38], [77, 92], [23, 92], [6, 38]] },
+    hexagon: { sides: 6, corners: 6, pts: [[28, 10], [72, 10], [96, 50], [72, 90], [28, 90], [4, 50]] }
+  };
+  function shape(name, size = 140, col) {
+    const s = SHAPES[name], c = col || pick(COLS);
+    const body = name === 'circle'
+      ? `<circle cx="50" cy="50" r="44" fill="${c}" stroke="var(--ink)" stroke-width="3"/>`
+      : `<polygon points="${s.pts.map(p => p.join(',')).join(' ')}" fill="${c}" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>`;
+    return `<svg viewBox="-2 -2 104 104" width="${size}" height="${size}" role="img" aria-label="${name}">${body}</svg>`;
+  }
+  // parts: 'half' | 'quarter' | 'whole' | 'unequal'
+  function parts(kind, base) {
+    const c = 'var(--sun)', e = 'var(--card)', st = 'stroke="var(--ink)" stroke-width="3"';
+    let b = '';
+    if (base === 'circle') {
+      if (kind === 'whole') b = `<circle cx="50" cy="50" r="44" fill="${c}" ${st}/>`;
+      else if (kind === 'half') b = `<circle cx="50" cy="50" r="44" fill="${e}" ${st}/><path d="M50 6 A44 44 0 0 1 50 94 Z" fill="${c}" ${st}/>`;
+      else if (kind === 'quarter') b = `<circle cx="50" cy="50" r="44" fill="${e}" ${st}/><path d="M50 50 L50 6 A44 44 0 0 1 94 50 Z" fill="${c}" ${st}/><line x1="6" y1="50" x2="94" y2="50" ${st}/><line x1="50" y1="6" x2="50" y2="94" ${st}/>`;
+      else b = `<circle cx="50" cy="50" r="44" fill="${e}" ${st}/><path d="M78 16 A44 44 0 0 1 78 84 Z" fill="${c}" ${st}/>`;
+    } else {
+      if (kind === 'whole') b = `<rect x="6" y="20" width="88" height="60" fill="${c}" ${st}/>`;
+      else if (kind === 'half') b = `<rect x="6" y="20" width="88" height="60" fill="${e}" ${st}/><rect x="6" y="20" width="44" height="60" fill="${c}" ${st}/>`;
+      else if (kind === 'quarter') b = `<rect x="6" y="20" width="88" height="60" fill="${e}" ${st}/><rect x="6" y="20" width="22" height="60" fill="${c}" ${st}/><line x1="50" y1="20" x2="50" y2="80" ${st}/><line x1="72" y1="20" x2="72" y2="80" ${st}/>`;
+      else b = `<rect x="6" y="20" width="88" height="60" fill="${e}" ${st}/><rect x="6" y="20" width="26" height="60" fill="${c}" ${st}/>`;
+    }
+    return `<svg viewBox="0 0 100 100" width="150" height="150" role="img" aria-label="Shape cut into parts">${b}</svg>`;
+  }
+  function clock(h, m, size = 190) {
+    const cx = 100, cy = 100, Rr = 88, at = (r, deg) => [cx + r * Math.cos((deg - 90) * Math.PI / 180), cy + r * Math.sin((deg - 90) * Math.PI / 180)];
+    let b = `<circle cx="100" cy="100" r="${Rr}" fill="var(--card)" stroke="var(--ink)" stroke-width="5"/>`;
+    for (let k = 1; k <= 12; k++) { const [x, y] = at(70, k * 30); b += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-family="Fredoka, sans-serif" font-weight="600" font-size="20" fill="var(--ink)">${k}</text>`; }
+    const ha = (h % 12) * 30 + m * 0.5, ma = m * 6;
+    const [hx, hy] = at(44, ha), [mx, my] = at(68, ma);
+    b += `<line x1="100" y1="100" x2="${hx.toFixed(1)}" y2="${hy.toFixed(1)}" stroke="var(--sky)" stroke-width="9" stroke-linecap="round"/>`;
+    b += `<line x1="100" y1="100" x2="${mx.toFixed(1)}" y2="${my.toFixed(1)}" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="100" r="6" fill="var(--ink)"/>`;
+    return `<svg viewBox="0 0 200 200" width="${size}" height="${size}" role="img" aria-label="Clock">${b}</svg>`;
+  }
+  // base-ten blocks: t rods and o cubes
+  function blocks(t, o, scale = 1) {
+    const u = 13, gap = 8;
+    let b = '', x = 4;
+    for (let i = 0; i < t; i++) {
+      for (let k = 0; k < 10; k++) b += `<rect x="${x}" y="${4 + k * u}" width="${u}" height="${u}" fill="var(--sky)" stroke="var(--ink)" stroke-width="1.5"/>`;
+      x += u + gap;
+    }
+    if (o) x += 6;
+    for (let k = 0; k < o; k++) { const col = Math.floor(k / 5), row = k % 5; b += `<rect x="${x + col * (u + 4)}" y="${4 + (9 - row) * u}" width="${u}" height="${u}" fill="var(--sun)" stroke="var(--ink)" stroke-width="1.5"/>`; }
+    const w = x + (o ? Math.ceil(o / 5) * (u + 4) : 0) + 4, h = 10 * u + 8;
+    return `<svg viewBox="0 0 ${w} ${h}" width="${Math.round(w * 1.4 * scale)}" height="${Math.round(h * 1.4 * scale)}" role="img" aria-label="${t} tens and ${o} ones">${b}</svg>`;
+  }
+  // bars measured against a cube row. items: [{len, col, label}]
+  function lengths(items, cubes) {
+    const u = 26, L = 70, w = L + 14 * u + 10, rowH = 46;
+    let b = '', y = 8;
+    items.forEach(it => {
+      b += `<text x="${L - 10}" y="${y + 15}" text-anchor="end" dominant-baseline="central" font-family="Fredoka, sans-serif" font-weight="600" font-size="16" fill="var(--ink)">${it.label}</text>`;
+      b += `<rect x="${L}" y="${y + 3}" width="${it.len * u}" height="24" rx="12" fill="${it.col}" stroke="var(--ink)" stroke-width="2.5"/>`;
+      y += rowH;
+    });
+    if (cubes) for (let k = 0; k < cubes; k++) b += `<rect x="${L + k * u}" y="${y}" width="${u}" height="${u}" fill="var(--sun)" stroke="var(--ink)" stroke-width="2"/>`;
+    const h = y + (cubes ? u + 8 : 0);
+    return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="Lengths">${b}</svg>`;
+  }
+
+  const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+
+  /* ======================= TOPIC 1: Adding & Taking Away ======================= */
+  const addsub = [
+    { title: 'Count and Add', skill: 'Add two groups of pictures, up to 10', variants: [
+      () => { const [e, n] = pick(FRUIT), a = R(1, 6), b = R(1, 10 - a); return { kind: 'num', prompt: `How many ${n} in all?`, say: `${a} ${n} and ${b} more ${n}. How many in all?`, fig: pics(e, a) + '<span class="plus">+</span>' + pics(e, b), answer: a + b, hint: 'Touch each picture as you count.', explain: `${a} + ${b} = ${a + b}` }; },
+      () => { const [e, n] = pick(FRUIT), a = R(2, 6), b = R(1, 10 - a); return { kind: 'num', prompt: `${KID} has <b>${a}</b> ${n}. He gets <b>${b}</b> more. How many now?`, say: `${KID} has ${a} ${n}. He gets ${b} more. How many now?`, fig: pics(e, a) + '<span class="plus">+</span>' + pics(e, b), answer: a + b, hint: `Start at ${a} and count on ${b} more.`, explain: `${a} + ${b} = ${a + b}` }; },
+      () => { const [e] = pick(FRUIT), a = R(1, 5), b = R(1, 5); const m = mc(`${a} + ${b}`, [`${a} + ${b + 1}`, `${a + 1} + ${b + 1}`, `${Math.max(1, a - 1)} + ${b}`]); return { kind: 'choice', prompt: 'Which number sentence matches the pictures?', say: 'Which number sentence matches the pictures?', fig: pics(e, a) + '<span class="plus">+</span>' + pics(e, b), ...m, hint: 'Count each group by itself.', explain: `${a} in the first group and ${b} in the second: ${a} + ${b}.` }; }
+    ] },
+    { title: 'Add to 10', skill: 'Adding numbers up to 10', variants: [
+      () => { const a = R(1, 8), b = R(1, 10 - a); return { kind: 'num', prompt: eq(`${a} + ${b} = ?`), say: `${a} plus ${b}`, answer: a + b, hint: `Hold ${Math.max(a, b)} in your head and count on.`, explain: `${a} + ${b} = ${a + b}` }; },
+      () => { const a = R(1, 5); return { kind: 'num', prompt: eq(`${a} + ${a} = ?`), say: `${a} plus ${a}. That is a double!`, answer: 2 * a, hint: 'A double is the same number two times.', explain: `${a} + ${a} = ${2 * a}` }; },
+      () => { const a = R(2, 7), b = R(1, 9 - a); return { kind: 'num', prompt: `${eq(`${a} + ${b} = ${b} + ?`)}`, say: `${a} plus ${b} is the same as ${b} plus what?`, answer: a, hint: 'You can add in any order and get the same answer.', explain: `${a} + ${b} = ${b} + ${a}. Both are ${a + b}.` }; }
+    ] },
+    { title: 'Take Away', skill: 'Subtracting within 10', variants: [
+      () => { const [e, n] = pick(FRUIT), a = R(4, 10), b = R(1, a - 1); return { kind: 'num', prompt: `There were <b>${a}</b> ${n}. <b>${b}</b> are crossed out. How many are left?`, say: `There were ${a} ${n}. ${b} are crossed out. How many are left?`, fig: pics(e, a, a - b), answer: a - b, hint: 'Count only the ones without a line.', explain: `${a} − ${b} = ${a - b}` }; },
+      () => { const a = R(3, 10), b = R(1, a); return { kind: 'num', prompt: eq(`${a} − ${b} = ?`), say: `${a} take away ${b}`, answer: a - b, hint: `Start at ${a} and count back ${b}.`, explain: `${a} − ${b} = ${a - b}` }; },
+      () => { const a = R(3, 10), z = Math.random() < .5; return { kind: 'num', prompt: eq(z ? `${a} − 0 = ?` : `${a} − ${a} = ?`), say: z ? `${a} take away zero` : `${a} take away ${a}`, answer: z ? a : 0, hint: z ? 'Taking away zero takes nothing away.' : 'Take them all away. What is left?', explain: z ? `${a} − 0 = ${a}` : `${a} − ${a} = 0` }; }
+    ] },
+    { title: 'Make 10', skill: 'Number pairs that make 10', variants: [
+      () => { const a = R(1, 9); return { kind: 'num', prompt: 'How many more dots to fill the ten frame?', say: 'How many more dots do you need to make 10?', fig: tenframe(a), answer: 10 - a, hint: 'Count the empty boxes.', explain: `${a} + ${10 - a} = 10` }; },
+      () => { const a = R(1, 9); return { kind: 'num', prompt: eq(`${a} + ? = 10`), say: `${a} plus what makes 10?`, answer: 10 - a, hint: 'Count up from ' + a + ' to 10 on your fingers.', explain: `${a} + ${10 - a} = 10` }; },
+      () => { const a = R(1, 9); const m = mc(`${a} and ${10 - a}`, [`${a} and ${9 - a}`, `${a} and ${11 - a}`, `${Math.min(9, a + 2)} and ${10 - a}`]); return { kind: 'choice', prompt: 'Which two numbers make <b>10</b>?', say: 'Which two numbers make 10?', ...m, hint: 'Add each pair. Which one makes exactly 10?', explain: `${a} + ${10 - a} = 10` }; }
+    ] },
+    { title: 'Add to 20', skill: 'Adding within 20, using 10 to help', variants: [
+      () => { const a = R(6, 9), b = R(11 - a, 9); return { kind: 'num', prompt: eq(`${a} + ${b} = ?`), say: `${a} plus ${b}`, answer: a + b, hint: `Make 10 first: ${a} + ${10 - a} = 10. Then add ${b - (10 - a)} more.`, explain: `${a} + ${10 - a} = 10, and 10 + ${b - (10 - a)} = ${a + b}.` }; },
+      () => { const a = R(5, 10), nd = Math.random() < .5; const b = nd ? a + 1 : a; return { kind: 'num', prompt: eq(`${a} + ${b} = ?`), say: `${a} plus ${b}`, answer: a + b, hint: nd ? `Think of the double ${a} + ${a} = ${2 * a}, then add 1.` : 'It is a double. Same number two times.', explain: `${a} + ${b} = ${a + b}` }; },
+      () => { const n = R(1, 10), f = Math.random() < .5; return { kind: 'num', prompt: eq(f ? `10 + ${n} = ?` : `${n} + 10 = ?`), say: f ? `10 plus ${n}` : `${n} plus 10`, answer: 10 + n, hint: 'Ten and some more ones makes a teen number.', explain: `10 + ${n} = ${10 + n}` }; }
+    ] },
+    { title: 'Take Away to 20', skill: 'Subtracting within 20', variants: [
+      () => { const c = R(11, 18), b = R(c - 9, 9); return { kind: 'num', prompt: eq(`${c} − ${b} = ?`), say: `${c} take away ${b}`, answer: c - b, hint: `Think: ${b} + what makes ${c}?`, explain: `${b} + ${c - b} = ${c}, so ${c} − ${b} = ${c - b}.` }; },
+      () => { const n = R(1, 9); return { kind: 'num', prompt: eq(`${10 + n} − 10 = ?`), say: `${10 + n} take away 10`, answer: n, hint: 'Take away the ten. The ones are left.', explain: `${10 + n} − 10 = ${n}` }; },
+      () => { const a = R(5, 9), b = R(4, 9); return { kind: 'num', prompt: `If <b>${a} + ${b} = ${a + b}</b>, then` + eq(`${a + b} − ${b} = ?`), say: `If ${a} plus ${b} is ${a + b}, then what is ${a + b} take away ${b}?`, answer: a, hint: 'Look at the first number sentence. Same numbers!', explain: `${a + b} − ${b} = ${a}` }; }
+    ] },
+    { title: 'Missing Number', skill: 'Find the missing number', variants: [
+      () => { const a = R(2, 12), b = R(1, 20 - a); return { kind: 'num', prompt: eq(`${a} + ? = ${a + b}`), say: `${a} plus what makes ${a + b}?`, answer: b, hint: `Count up from ${a} to ${a + b}.`, explain: `${a} + ${b} = ${a + b}` }; },
+      () => { const b = R(2, 9), c = R(1, 11); return { kind: 'num', prompt: eq(`? − ${b} = ${c}`), say: `What number take away ${b} leaves ${c}?`, answer: b + c, hint: `Add them back: ${c} + ${b}.`, explain: `${b + c} − ${b} = ${c}` }; },
+      () => { const c = R(8, 20), d = R(1, c - 2); return { kind: 'num', prompt: eq(`${c} − ? = ${d}`), say: `${c} take away what leaves ${d}?`, answer: c - d, hint: `Count up from ${d} to ${c}.`, explain: `${c} − ${c - d} = ${d}` }; },
+      () => { const a = R(2, 10), b = R(2, 10); return { kind: 'num', prompt: eq(`? + ${b} = ${a + b}`), say: `What plus ${b} makes ${a + b}?`, answer: a, hint: `Take ${b} away from ${a + b}.`, explain: `${a} + ${b} = ${a + b}` }; }
+    ] },
+    { title: 'Story Problems', skill: 'Add and take away in stories', variants: [
+      () => { const a = R(5, 12), b = R(3, 8); return { kind: 'num', prompt: `${KID} has <b>${a}</b> toy cars. ${BRO} gives him <b>${b}</b> more. How many cars does ${KID} have now?`, say: `${KID} has ${a} toy cars. ${BRO} gives him ${b} more. How many cars does ${KID} have now?`, answer: a + b, hint: 'He gets more, so add.', explain: `${a} + ${b} = ${a + b} cars` }; },
+      () => { const a = R(9, 18), b = R(2, 8); return { kind: 'num', prompt: `There are <b>${a}</b> ducks in the pond. <b>${b}</b> fly away. How many ducks are still in the pond?`, say: `There are ${a} ducks in the pond. ${b} fly away. How many ducks are still in the pond?`, answer: a - b, hint: 'Some went away, so take away.', explain: `${a} − ${b} = ${a - b} ducks` }; },
+      () => { const a = R(3, 10), b = a + R(2, 8); return { kind: 'num', prompt: `${KID} has <b>${a}</b> stickers. ${BRO} has <b>${b}</b> stickers. How many <b>more</b> stickers does ${BRO} have?`, say: `${KID} has ${a} stickers. ${BRO} has ${b} stickers. How many more stickers does ${BRO} have?`, answer: b - a, hint: `Count up from ${a} to ${b}.`, explain: `${b} − ${a} = ${b - a} more` }; },
+      () => { const s = R(6, 15), b = R(2, 5); return { kind: 'num', prompt: `${KID} had some cookies. He ate <b>${b}</b>. Now he has <b>${s - b}</b>. How many cookies did he have at the start?`, say: `${KID} had some cookies. He ate ${b}. Now he has ${s - b}. How many cookies did he have at the start?`, answer: s, hint: 'Put back the ones he ate.', explain: `${s - b} + ${b} = ${s} cookies` }; }
+    ] },
+    { title: 'Three Numbers', skill: 'Add three numbers and check if sentences are true', variants: [
+      () => { const a = R(1, 9), b = 10 - a, c = R(1, 9); const o = shuffle([a, b, c]); return { kind: 'num', prompt: eq(`${o[0]} + ${o[1]} + ${o[2]} = ?`), say: `${o[0]} plus ${o[1]} plus ${o[2]}`, answer: a + b + c, hint: `Look for two numbers that make 10: ${a} and ${b}.`, explain: `${a} + ${b} = 10, and 10 + ${c} = ${10 + c}.` }; },
+      () => { const a = R(2, 8), b = R(2, 8), t = Math.random() < .5; const c = R(1, a + b - 1), d = a + b - c + (t ? 0 : pick([-1, 1])); return { kind: 'choice', prompt: `Is this true or false?` + eq(`${a} + ${b} = ${c} + ${d}`), say: `Is this true or false? ${a} plus ${b} equals ${c} plus ${d}.`, choices: ['True', 'False'], answer: t ? 0 : 1, hint: 'Work out both sides. Are they the same?', explain: `${a} + ${b} = ${a + b} and ${c} + ${d} = ${c + d}. ${t ? 'Same, so it is true.' : 'Not the same, so it is false.'}` }; },
+      () => { const a = R(3, 9), b = R(3, 9), s = a + b, c = R(1, s - 1); const m = mc(`${c} + ${s - c}`, [`${c} + ${s - c + 1}`, `${c + 2} + ${s - c}`, `${Math.max(1, c - 1)} + ${s - c - 1 > 0 ? s - c - 1 : 1}`]); return { kind: 'choice', prompt: `Which one is the same as <b>${a} + ${b}</b>?`, say: `Which one is the same as ${a} plus ${b}?`, ...m, hint: `${a} + ${b} = ${s}. Which choice also makes ${s}?`, explain: `${a} + ${b} = ${s} and ${c} + ${s - c} = ${s}.` }; }
+    ] },
+    { title: 'Boss Level', skill: 'A mix of everything, plus bigger adding', variants: [] }
+  ];
+  addsub[9].variants = [...addsub[4].variants, ...addsub[6].variants, ...addsub[7].variants, ...addsub[8].variants,
+    () => { const t = R(1, 8), o = R(0, 5), b = R(1, 9 - o); const n = t * 10 + o; return { kind: 'num', prompt: eq(`${n} + ${b} = ?`), say: `${n} plus ${b}`, answer: n + b, hint: `Keep the ${t} tens. Add the ones: ${o} + ${b}.`, explain: `${n} + ${b} = ${n + b}` }; }];
+
+  /* ======================= TOPIC 2: Numbers & Tens ======================= */
+  const tens = [
+    { title: 'Count It', skill: 'Count up to 20 things', variants: [
+      () => { const [e, n] = pick(FRUIT), k = R(8, 20); return { kind: 'num', prompt: `How many ${n}?`, say: `How many ${n}? Count carefully.`, fig: grid5(e, k), answer: k, hint: 'Each row has 5. Count by 5s, then the rest.', explain: `There are ${k}.` }; },
+      () => { const k = R(11, 20); const m = mc(k, [k + 10 > 30 ? k - 1 : k + 10, Number(String(k).split('').reverse().join('')) || k + 2, k + 1]); return { kind: 'choice', prompt: `Which number is <b>${WORDS[k]}</b>?`, say: `Which number is ${WORDS[k]}?`, ...m, hint: 'Teen numbers start with a 1.', explain: `${WORDS[k]} is ${k}.` }; }
+    ] },
+    { title: 'Before & After', skill: 'Numbers up to 120', variants: [
+      () => { const n = R(9, 119); return { kind: 'num', prompt: `What number comes right <b>after</b> ${n}?`, say: `What number comes right after ${n}?`, answer: n + 1, hint: 'Count one more.', explain: `${n}, ${n + 1}` }; },
+      () => { const n = R(11, 120); return { kind: 'num', prompt: `What number comes right <b>before</b> ${n}?`, say: `What number comes right before ${n}?`, answer: n - 1, hint: 'Count one less.', explain: `${n - 1}, ${n}` }; },
+      () => { const n = R(8, 117); return { kind: 'num', prompt: eq(`${n}, ?, ${n + 2}`), say: `What number goes between ${n} and ${n + 2}?`, answer: n + 1, hint: 'Count on from the first number.', explain: `${n}, ${n + 1}, ${n + 2}` }; },
+      () => { const n = R(95, 116); return { kind: 'num', prompt: eq(`${n}, ${n + 1}, ${n + 2}, ?`), say: `${n}, ${n + 1}, ${n + 2}. What comes next?`, answer: n + 3, hint: 'Keep counting by 1.', explain: `${n + 2}, ${n + 3}` }; }
+    ] },
+    { title: 'Skip Counting', skill: 'Count by 2s, 5s and 10s', variants: [
+      () => { const s = R(0, 9) * 10 || 10; return { kind: 'num', prompt: eq(`${s}, ${s + 10}, ${s + 20}, ?`), say: `Count by tens. ${s}, ${s + 10}, ${s + 20}, what comes next?`, answer: s + 30, hint: 'Add 1 ten each time.', explain: `${s + 20} + 10 = ${s + 30}` }; },
+      () => { const s = R(1, 14) * 5; return { kind: 'num', prompt: eq(`${s}, ${s + 5}, ${s + 10}, ?`), say: `Count by fives. ${s}, ${s + 5}, ${s + 10}, what comes next?`, answer: s + 15, hint: 'Fives end in 0 or 5.', explain: `${s + 10} + 5 = ${s + 15}` }; },
+      () => { const s = R(1, 20) * 2; return { kind: 'num', prompt: eq(`${s}, ${s + 2}, ${s + 4}, ?`), say: `Count by twos. ${s}, ${s + 2}, ${s + 4}, what comes next?`, answer: s + 6, hint: 'Skip one number each time.', explain: `${s + 4} + 2 = ${s + 6}` }; },
+      () => { const s = R(1, 9), t = R(0, 6) * 10 + s; return { kind: 'num', prompt: eq(`${t}, ${t + 10}, ${t + 20}, ?`), say: `${t}, ${t + 10}, ${t + 20}, what comes next?`, answer: t + 30, hint: 'The tens go up by 1. The ones stay the same.', explain: `${t + 20} + 10 = ${t + 30}` }; }
+    ] },
+    { title: 'Tens & Ones', skill: 'Read base-ten blocks', variants: [
+      () => { const t = R(1, 9), o = R(0, 9); return { kind: 'num', prompt: 'Each blue stick is <b>10</b>. Each yellow cube is <b>1</b>. What number is this?', say: 'Each blue stick is 10. Each yellow cube is 1. What number is this?', fig: blocks(t, o), answer: t * 10 + o, hint: 'Count the sticks by tens, then count on the cubes.', explain: `${t} tens and ${o} ones is ${t * 10 + o}.` }; },
+      () => { const t = R(2, 7), o = R(1, 8); const opts = shuffle([[t, o], [o, t], [t + 1, o], [t, o === 9 ? 8 : o + 1]].filter((v, i, a) => a.findIndex(w => w[0] === v[0] && w[1] === v[1]) === i)).slice(0, 3); if (!opts.some(v => v[0] === t && v[1] === o)) opts[0] = [t, o]; const sh = shuffle(opts); return { kind: 'choice', prompt: `Which picture shows <b>${t * 10 + o}</b>?`, say: `Which picture shows ${t * 10 + o}?`, choices: sh.map(v => blocks(v[0], v[1], .55)), answer: sh.findIndex(v => v[0] === t && v[1] === o), hint: `${t * 10 + o} has ${t} tens and ${o} ones.`, explain: `${t} sticks and ${o} cubes.` }; }
+    ] },
+    { title: 'Place Value', skill: 'How many tens and ones?', variants: [
+      () => { const n = R(12, 99); return { kind: 'num', prompt: `How many <b>tens</b> are in <b>${n}</b>?`, say: `How many tens are in ${n}?`, answer: Math.floor(n / 10), hint: 'The tens digit is the first one.', explain: `${n} is ${Math.floor(n / 10)} tens and ${n % 10} ones.` }; },
+      () => { const n = R(12, 99); return { kind: 'num', prompt: `How many <b>ones</b> are in <b>${n}</b>?`, say: `How many ones are in ${n}?`, answer: n % 10, hint: 'The ones digit is the last one.', explain: `${n} is ${Math.floor(n / 10)} tens and ${n % 10} ones.` }; },
+      () => { const t = R(1, 9), o = R(0, 9); return { kind: 'num', prompt: `<b>${t}</b> tens and <b>${o}</b> ones make what number?`, say: `${t} tens and ${o} ones make what number?`, answer: t * 10 + o, hint: `${t} tens is ${t * 10}.`, explain: `${t * 10} + ${o} = ${t * 10 + o}` }; },
+      () => { const t = R(2, 9), o = R(1, 9); return { kind: 'num', prompt: `<b>${o}</b> ones and <b>${t}</b> tens make what number?`, say: `Careful! ${o} ones and ${t} tens make what number?`, answer: t * 10 + o, hint: 'The tens come first in the number, even if they are said last.', explain: `${t} tens and ${o} ones is ${t * 10 + o}.` }; }
+    ] },
+    { title: 'Bigger or Smaller', skill: 'Compare with <, > and =', variants: [
+      () => { let a = R(10, 99), b = Math.random() < .15 ? a : R(10, 99); if (Math.random() < .4 && a !== b) b = Number(String(a).split('').reverse().join('')) || b; const ans = a < b ? 0 : a > b ? 1 : 2; return { kind: 'choice', prompt: eq(`${a}  ?  ${b}`), say: `Which sign goes between ${a} and ${b}?`, choices: ['&lt;', '&gt;', '='], answer: ans, hint: 'The open mouth eats the bigger number. Look at the tens first.', explain: `${a} ${['&lt;', '&gt;', '='][ans]} ${b}` }; },
+      () => { const ns = uniq([R(10, 99), R(10, 99), R(10, 99), R(10, 99)]).slice(0, 3); const mx = Math.max(...ns); return { kind: 'choice', prompt: 'Which number is the <b>biggest</b>?', say: 'Which number is the biggest?', choices: ns.map(String), answer: ns.indexOf(mx), hint: 'Look at the tens first.', explain: `${mx} is the biggest.` }; },
+      () => { const ns = uniq([R(10, 99), R(10, 99), R(10, 99), R(10, 99)]).slice(0, 3); const mn = Math.min(...ns); return { kind: 'choice', prompt: 'Which number is the <b>smallest</b>?', say: 'Which number is the smallest?', choices: ns.map(String), answer: ns.indexOf(mn), hint: 'Look at the tens first.', explain: `${mn} is the smallest.` }; }
+    ] },
+    { title: '10 More, 10 Less', skill: 'Find 10 more or 10 less', variants: [
+      () => { const n = R(10, 89); return { kind: 'num', prompt: `What is <b>10 more</b> than ${n}?`, say: `What is 10 more than ${n}?`, answer: n + 10, hint: 'Only the tens digit changes. It goes up by 1.', explain: `${n} + 10 = ${n + 10}` }; },
+      () => { const n = R(20, 99); return { kind: 'num', prompt: `What is <b>10 less</b> than ${n}?`, say: `What is 10 less than ${n}?`, answer: n - 10, hint: 'Only the tens digit changes. It goes down by 1.', explain: `${n} − 10 = ${n - 10}` }; },
+      () => { const n = R(11, 98), up = Math.random() < .5; return { kind: 'num', prompt: `What is <b>1 ${up ? 'more' : 'less'}</b> than ${n}?`, say: `What is 1 ${up ? 'more' : 'less'} than ${n}?`, answer: up ? n + 1 : n - 1, hint: 'Careful: 1, not 10.', explain: `${n} ${up ? '+' : '−'} 1 = ${up ? n + 1 : n - 1}` }; }
+    ] },
+    { title: 'Add Tens', skill: 'Add and take away tens', variants: [
+      () => { const a = R(1, 8), b = R(1, 9 - a); return { kind: 'num', prompt: eq(`${a * 10} + ${b * 10} = ?`), say: `${a * 10} plus ${b * 10}`, answer: (a + b) * 10, hint: `${a} tens and ${b} tens.`, explain: `${a} tens + ${b} tens = ${a + b} tens = ${(a + b) * 10}` }; },
+      () => { const a = R(3, 9), b = R(1, a - 1); return { kind: 'num', prompt: eq(`${a * 10} − ${b * 10} = ?`), say: `${a * 10} take away ${b * 10}`, answer: (a - b) * 10, hint: `${a} tens take away ${b} tens.`, explain: `${a * 10} − ${b * 10} = ${(a - b) * 10}` }; },
+      () => { const n = R(11, 59), b = R(1, Math.floor((99 - n) / 10)); return { kind: 'num', prompt: eq(`${n} + ${b * 10} = ?`), say: `${n} plus ${b * 10}`, answer: n + b * 10, hint: `Add ${b} to the tens digit. The ones stay ${n % 10}.`, explain: `${n} + ${b * 10} = ${n + b * 10}` }; }
+    ] },
+    { title: 'Big Adding', skill: 'Add a 2-digit and a 1-digit number', variants: [
+      () => { const t = R(1, 8), o = R(1, 6), b = R(1, 9 - o); const n = t * 10 + o; return { kind: 'num', prompt: eq(`${n} + ${b} = ?`), say: `${n} plus ${b}`, answer: n + b, hint: `Add the ones: ${o} + ${b}.`, explain: `${n} + ${b} = ${n + b}` }; },
+      () => { const t = R(1, 8), o = R(5, 9), b = R(10 - o, 9); const n = t * 10 + o; return { kind: 'num', prompt: eq(`${n} + ${b} = ?`), say: `${n} plus ${b}`, answer: n + b, hint: `Get to the next ten first: ${n} + ${10 - o} = ${n + 10 - o}. Then add ${b - (10 - o)} more.`, explain: `${n} + ${b} = ${n + b}` }; },
+      () => { const t = R(1, 6), o = R(1, 5), b = R(1, 4); return { kind: 'num', prompt: `Add <b>${b}</b> more cubes. What number is it now?`, say: `Here is ${t * 10 + o}. Add ${b} more cubes. What number is it now?`, fig: blocks(t, o), answer: t * 10 + o + b, hint: `It shows ${t * 10 + o}. Count on ${b}.`, explain: `${t * 10 + o} + ${b} = ${t * 10 + o + b}` }; }
+    ] },
+    { title: 'Boss Level', skill: 'A mix of everything', variants: [] }
+  ];
+  tens[9].variants = [...tens[4].variants, ...tens[5].variants, ...tens[6].variants, ...tens[7].variants, ...tens[8].variants];
+
+  /* ======================= TOPIC 3: Shapes, Time & Measuring ======================= */
+  const SH = Object.keys(SHAPES);
+  const hr = h => `${h} o'clock`;
+  const half = h => `${h}:30`;
+  const nextH = h => (h % 12) + 1;
+  const GRAPH = [['🍎', 'Apples'], ['🍌', 'Bananas'], ['🍇', 'Grapes'], ['🍊', 'Oranges']];
+  function graph() {
+    const rows = shuffle(GRAPH).slice(0, 3).map(([e, n]) => ({ e, n, c: 0 }));
+    const counts = shuffle([R(1, 3), R(4, 6), R(7, 9)]);
+    rows.forEach((r, i) => (r.c = counts[i]));
+    const fig = `<table class="gtable" aria-label="Fruit picture graph"><tbody>${rows.map(r => `<tr><td>${r.n}</td><td>${r.e.repeat(r.c)}</td></tr>`).join('')}</tbody></table>`;
+    return { rows, fig };
+  }
+  const shapes = [
+    { title: 'Name the Shape', skill: 'Circles, squares, triangles and more', variants: [
+      () => { const s = pick(SH); const m = mc(s, shuffle(SH.filter(x => x !== s)).slice(0, 3)); return { kind: 'choice', prompt: 'What shape is this?', say: 'What shape is this?', fig: shape(s), ...m, hint: 'Count the sides and corners.', explain: `It is a ${s}.` }; },
+      () => { const s = pick(SH); const others = shuffle(SH.filter(x => x !== s)).slice(0, 3); const all = shuffle([s, ...others]); return { kind: 'choice', prompt: `Which one is a <b>${s}</b>?`, say: `Which one is a ${s}?`, choices: all.map(x => shape(x, 90)), answer: all.indexOf(s), hint: s === 'rhombus' ? 'A rhombus looks like a diamond.' : s === 'trapezoid' ? 'A trapezoid has a short top and a long bottom.' : 'Think about its sides and corners.', explain: `That is the ${s}.` }; }
+    ] },
+    { title: 'Sides & Corners', skill: 'Count sides and corners', variants: [
+      () => { const s = pick(SH.filter(x => x !== 'circle')); return { kind: 'num', prompt: 'How many <b>sides</b> does this shape have?', say: 'How many sides does this shape have?', fig: shape(s), answer: SHAPES[s].sides, hint: 'Sides are the straight lines. Touch each one.', explain: `A ${s} has ${SHAPES[s].sides} sides.` }; },
+      () => { const s = pick(SH.filter(x => x !== 'circle')); return { kind: 'num', prompt: 'How many <b>corners</b> does this shape have?', say: 'How many corners does this shape have?', fig: shape(s), answer: SHAPES[s].corners, hint: 'Corners are where two sides meet.', explain: `A ${s} has ${SHAPES[s].corners} corners.` }; },
+      () => { const s = pick(['triangle', 'pentagon', 'hexagon', 'circle']); const clue = s === 'circle' ? 'I am round. I have no sides and no corners.' : `I have ${SHAPES[s].sides} sides and ${SHAPES[s].corners} corners.`; const m = mc(s, shuffle(['triangle', 'pentagon', 'hexagon', 'circle', 'square'].filter(x => x !== s)).slice(0, 3)); return { kind: 'choice', prompt: `${clue} What am I?`, say: `${clue} What am I?`, ...m, hint: 'Picture each shape and count.', explain: `It is a ${s}.` }; }
+    ] },
+    { title: 'Halves & Quarters', skill: 'Equal parts of a shape', variants: [
+      () => { const k = pick(['half', 'quarter', 'whole']), base = pick(['circle', 'rect']); const label = { half: 'one half', quarter: 'one quarter', whole: 'the whole thing' }; return { kind: 'choice', prompt: 'How much of the shape is yellow?', say: 'How much of the shape is yellow?', fig: parts(k, base), choices: ['one half', 'one quarter', 'the whole thing'], answer: ['half', 'quarter', 'whole'].indexOf(k), hint: 'Count the equal parts. Then count the yellow parts.', explain: `It is ${label[k]}.` }; },
+      () => { const eqp = Math.random() < .5, base = pick(['circle', 'rect']); return { kind: 'choice', prompt: 'Is this shape cut into <b>equal</b> parts?', say: 'Is this shape cut into equal parts?', fig: parts(eqp ? pick(['half', 'quarter']) : 'unequal', base), choices: ['Yes, equal', 'No, not equal'], answer: eqp ? 0 : 1, hint: 'Equal parts are all the same size.', explain: eqp ? 'Every part is the same size.' : 'The parts are different sizes.' }; },
+      () => { const q = Math.random() < .5; return { kind: 'num', prompt: `How many <b>${q ? 'quarters' : 'halves'}</b> make one whole pizza?`, say: `How many ${q ? 'quarters' : 'halves'} make one whole pizza?`, fig: parts(q ? 'quarter' : 'half', 'circle'), answer: q ? 4 : 2, hint: 'Count the parts it is cut into.', explain: `${q ? 4 : 2} ${q ? 'quarters' : 'halves'} make a whole.` }; }
+    ] },
+    { title: 'Longer or Shorter', skill: 'Compare lengths', variants: [
+      () => { const a = R(3, 12); let b = R(3, 12); if (b === a) b = a > 6 ? a - 3 : a + 3; const longer = Math.random() < .5; const ans = longer ? (a > b ? 0 : 1) : (a < b ? 0 : 1); return { kind: 'choice', prompt: `Which crayon is <b>${longer ? 'longer' : 'shorter'}</b>?`, say: `Which crayon is ${longer ? 'longer' : 'shorter'}?`, fig: lengths([{ len: a, col: 'var(--berry)', label: 'Red' }, { len: b, col: 'var(--sky)', label: 'Blue' }]), choices: ['Red', 'Blue'], answer: ans, hint: 'They start at the same line. Look at where they end.', explain: `The ${['Red', 'Blue'][ans].toLowerCase()} one is ${longer ? 'longer' : 'shorter'}.` }; },
+      () => { const ls = shuffle([R(2, 4), R(6, 8), R(10, 13)]); const names = ['Red', 'Blue', 'Green']; const cols = ['var(--berry)', 'var(--sky)', 'var(--grass)']; const sh = Math.random() < .5; const ans = ls.indexOf(sh ? Math.min(...ls) : Math.max(...ls)); return { kind: 'choice', prompt: `Which ribbon is the <b>${sh ? 'shortest' : 'longest'}</b>?`, say: `Which ribbon is the ${sh ? 'shortest' : 'longest'}?`, fig: lengths(ls.map((l, i) => ({ len: l, col: cols[i], label: names[i] }))), choices: names, answer: ans, hint: 'Compare where each one ends.', explain: `${names[ans]} is the ${sh ? 'shortest' : 'longest'}.` }; }
+    ] },
+    { title: 'Measure It', skill: 'Measure with cubes', variants: [
+      () => { const n = R(3, 13); const thing = pick(['pencil', 'ribbon', 'worm', 'stick']); return { kind: 'num', prompt: `How many cubes long is the ${thing}?`, say: `How many cubes long is the ${thing}?`, fig: lengths([{ len: n, col: 'var(--grape)', label: '' }], 14), answer: n, hint: 'Count the cubes under it, from the start to the end.', explain: `It is ${n} cubes long.` }; },
+      () => { const a = R(7, 13), b = R(2, a - 2); return { kind: 'num', prompt: `How many cubes <b>longer</b> is the blue ribbon than the red one?`, say: 'How many cubes longer is the blue ribbon than the red one?', fig: lengths([{ len: a, col: 'var(--sky)', label: 'Blue' }, { len: b, col: 'var(--berry)', label: 'Red' }], 14), answer: a - b, hint: `Blue is ${a} cubes. Red is ${b} cubes.`, explain: `${a} − ${b} = ${a - b} cubes longer` }; }
+    ] },
+    { title: "O'Clock", skill: 'Tell time to the hour', variants: [
+      () => { const h = R(1, 12); const m = mc(hr(h), [hr(nextH(h)), hr(nextH(nextH(h + 4))), hr(((h + 5) % 12) + 1)]); return { kind: 'choice', prompt: 'What time is it?', say: 'What time is it? Look at the short hand.', fig: clock(h, 0), ...m, hint: 'The short blue hand points to the hour. The long hand is on 12.', explain: `It is ${hr(h)}.` }; },
+      () => { const h = R(1, 12); const hs = uniq([h, nextH(h), ((h + 5) % 12) + 1, ((h + 8) % 12) + 1]).slice(0, 3); const all = shuffle(hs); return { kind: 'choice', prompt: `Which clock shows <b>${hr(h)}</b>?`, say: `Which clock shows ${hr(h)}?`, choices: all.map(x => clock(x, 0, 110)), answer: all.indexOf(h), hint: 'Find the short hand pointing at ' + h + '.', explain: `The short hand points to ${h}.` }; }
+    ] },
+    { title: 'Half Past', skill: 'Tell time to the half hour', variants: [
+      () => { const h = R(1, 12), hp = Math.random() < .7; const t = hp ? half(h) : `${h}:00`; const m = mc(t, [half(nextH(h)), `${h}:00`, half(h), `${nextH(h)}:00`].filter(x => x !== t)); return { kind: 'choice', prompt: 'What time is it?', say: 'What time is it?', fig: clock(h, hp ? 30 : 0), ...m, hint: hp ? 'The long hand on 6 means half past. The short hand is just past the hour.' : 'The long hand on 12 means o\'clock.', explain: `It is ${t}.` }; },
+      () => { const h = R(1, 12); return { kind: 'num', prompt: `At <b>${half(h)}</b>, the long hand points to which number?`, say: `At ${h} thirty, the long hand points to which number?`, fig: clock(h, 30, 150), answer: 6, hint: 'Half past means halfway around the clock.', explain: 'At half past, the long hand points to 6.' }; }
+    ] },
+    { title: 'Picture Graphs', skill: 'Read a picture graph', variants: [
+      () => { const g = graph(), r = pick(g.rows); return { kind: 'num', prompt: `How many <b>${r.n.toLowerCase()}</b> are there?`, say: `Look at the graph. How many ${r.n.toLowerCase()} are there?`, fig: g.fig, answer: r.c, hint: 'Count the pictures in that row.', explain: `There are ${r.c} ${r.n.toLowerCase()}.` }; },
+      () => { const g = graph(), s = g.rows.slice().sort((a, b) => b.c - a.c); return { kind: 'num', prompt: `How many <b>more</b> ${s[0].n.toLowerCase()} than ${s[2].n.toLowerCase()}?`, say: `How many more ${s[0].n.toLowerCase()} than ${s[2].n.toLowerCase()}?`, fig: g.fig, answer: s[0].c - s[2].c, hint: `Count both rows, then find the difference.`, explain: `${s[0].c} − ${s[2].c} = ${s[0].c - s[2].c}` }; },
+      () => { const g = graph(), most = Math.random() < .5; const s = g.rows.slice().sort((a, b) => b.c - a.c); const ans = most ? s[0] : s[2]; return { kind: 'choice', prompt: `Which fruit has the <b>${most ? 'most' : 'fewest'}</b>?`, say: `Which fruit has the ${most ? 'most' : 'fewest'}?`, fig: g.fig, choices: g.rows.map(r => r.n), answer: g.rows.indexOf(ans), hint: 'Look for the longest or shortest row.', explain: `${ans.n} has the ${most ? 'most' : 'fewest'}.` }; },
+      () => { const g = graph(); const t = g.rows.reduce((a, r) => a + r.c, 0); return { kind: 'num', prompt: 'How many pieces of fruit are there <b>in all</b>?', say: 'How many pieces of fruit are there in all?', fig: g.fig, answer: t, hint: 'Add all three rows.', explain: g.rows.map(r => r.c).join(' + ') + ` = ${t}` }; }
+    ] },
+    { title: 'Time Puzzles', skill: 'Thinking about time', variants: [
+      () => { const h = R(1, 12), k = pick([1, 2, 3]); const ans = ((h + k - 1) % 12) + 1; const m = mc(hr(ans), [hr(h), hr(((ans) % 12) + 1), hr(((h + 10) % 12) + 1)]); return { kind: 'choice', prompt: `It is <b>${hr(h)}</b>. What time will it be in <b>${k} hour${k > 1 ? 's' : ''}</b>?`, say: `It is ${hr(h)}. What time will it be in ${k} hour${k > 1 ? 's' : ''}?`, fig: clock(h, 0, 150), ...m, hint: 'Move the short hand forward one number for each hour.', explain: `${hr(h)} plus ${k} hour${k > 1 ? 's' : ''} is ${hr(ans)}.` }; },
+      () => { const h = R(2, 11); const m = mc(half(h), [half(h - 1), `${h}:00`, half(h + 1)]); return { kind: 'choice', prompt: `${KID}'s bath starts at <b>${h}:00</b>. It ends a half hour later. When does it end?`, say: `${KID}'s bath starts at ${h} o'clock. It ends a half hour later. When does it end?`, ...m, hint: 'A half hour is 30 minutes.', explain: `${h}:00 plus a half hour is ${half(h)}.` }; },
+      () => { const pairs = [['breakfast', 'dinner'], ['wake up', 'go to bed'], ['lunch', 'dinner'], ['get dressed', 'go to school']]; const p = pick(pairs); const all = shuffle(p); return { kind: 'choice', prompt: 'Which comes <b>first</b> in the day?', say: 'Which comes first in the day?', choices: all, answer: all.indexOf(p[0]), hint: 'Think about your morning.', explain: `${p[0][0].toUpperCase() + p[0].slice(1)} comes before ${p[1]}.` }; }
+    ] },
+    { title: 'Boss Level', skill: 'A mix of everything', variants: [] }
+  ];
+  shapes[9].variants = [...shapes[1].variants, ...shapes[2].variants, ...shapes[4].variants, ...shapes[6].variants, ...shapes[7].variants, ...shapes[8].variants];
+
+  /* ======================= TOPIC 4: Big & Small Letters ======================= */
+  const LOW = 'abcdefghijklmnopqrstuvwxyz'.split('');
+  const UP = LOW.map(c => c.toUpperCase());
+  const LOOK_LOW = { b: 'dph', d: 'bqa', p: 'qbg', q: 'pgd', m: 'nwu', n: 'mhu', g: 'qyp', h: 'nbk', i: 'jlt', j: 'igy', l: 'itk', u: 'nvw', w: 'mvu', a: 'deo', e: 'coa', f: 'tkl', r: 'nvf', t: 'fli', y: 'gvj', k: 'hlx', o: 'ace', c: 'eoa', s: 'zce', v: 'uwy', x: 'kzy', z: 'sxn' };
+  const LOOK_UP = { B: 'DPR', D: 'BOP', M: 'NWH', N: 'MHZ', P: 'RBF', Q: 'OGP', G: 'CQO', E: 'FBL', R: 'PBK', A: 'HVR', H: 'NMA', F: 'EPT', T: 'FIL', L: 'IJT', I: 'LJT', J: 'ILU', U: 'VWJ', V: 'UWY', W: 'MVN', K: 'XRH', O: 'QCD', C: 'GOE', S: 'ZCG', X: 'KYZ', Y: 'VXT', Z: 'SNX' };
+  const DIFF = 'ABDEGHMNQRT'.split(''); // capitals that look very different from their small letter
+  const SAME = 'cosuvwxz'.split(''); // small letters that look like their capital
+  const lettersLine = (ch, cap) => `<div class="lines" aria-label="Letter on writing lines"><span class="${cap ? 'cap' : ''}">${ch}</span></div>`;
+  const NAMES = [['Vihaan', 'vihaan', 'vIhaan'], ['Viraj', 'viraj', 'viRaj'], ['Seattle', 'seattle', 'sEattle'], ['Mia', 'mia', 'mIa'], ['Sam', 'sam', 'sAm'], ['Daniel', 'daniel', 'dAniel'], ['Monday', 'monday', 'mOnday']];
+  const SENT = [['The cat is big.', 'the cat is big.', 'The Cat is big.'], ['My dog can run.', 'my dog can run.', 'My dOg can run.'], ['We like the moon.', 'we like the moon.', 'We Like the moon.'], ['I see a duck.', 'i see a duck.', 'I see a Duck.'], ['Mom made a cake.', 'mom made a cake.', 'Mom mAde a cake.']];
+  const SPOT = ['dog', 'cat', 'moon', 'duck', 'map', 'sun', 'red', 'mud', 'dad', 'mom', 'bed', 'hat'];
+  const oneUp = w => { const i = R(1, w.length - 1); return w.slice(0, i) + w[i].toUpperCase() + w.slice(i + 1); };
+  const lw = s => `<span class="lt">${s}</span>`;
+
+  const letters = [
+    { title: 'Find the Small Letter', skill: 'Match a big letter to its small letter', variants: [
+      () => { const U = pick(DIFF), l = U.toLowerCase(); const m = mc(l, shuffle((LOOK_LOW[l] || 'xyz').split('').concat(pick(LOW)))); return { kind: 'choice', cls: 'letter', prompt: `Find the small letter that goes with big <b>${U}</b>.`, say: `Find the small letter that goes with big ${U}.`, fig: `<span class="bigletter">${U}</span>`, ...m, hint: `Say the letter name: ${U}. Which small letter has the same name?`, explain: `Big ${U} and small ${l} are a pair.` }; },
+      () => { const U = pick(UP), l = U.toLowerCase(); const m = mc(l, shuffle((LOOK_LOW[l] || 'xyz').split(''))); return { kind: 'choice', cls: 'letter', prompt: `Find small <b>${U}</b>.`, say: `Find the small letter for ${U}.`, fig: `<span class="bigletter">${U}</span>`, ...m, hint: 'Small letters are often a different shape from big ones.', explain: `Big ${U}, small ${l}.` }; }
+    ] },
+    { title: 'Find the Big Letter', skill: 'Match a small letter to its big letter', variants: [
+      () => { const l = pick(DIFF).toLowerCase(), U = l.toUpperCase(); const m = mc(U, shuffle((LOOK_UP[U] || 'XYZ').split(''))); return { kind: 'choice', cls: 'letter', prompt: `Find the big letter that goes with small <b>${l}</b>.`, say: `Find the big letter that goes with small ${l}.`, fig: `<span class="bigletter">${l}</span>`, ...m, hint: `Say its name: ${l}. Which big letter has the same name?`, explain: `Small ${l} and big ${U} are a pair.` }; },
+      () => { const l = pick(LOW), U = l.toUpperCase(); const m = mc(U, shuffle((LOOK_UP[U] || 'XYZ').split(''))); return { kind: 'choice', cls: 'letter', prompt: `Find big <b>${l}</b>.`, say: `Find the big letter for ${l}.`, fig: `<span class="bigletter">${l}</span>`, ...m, hint: 'Say the letter name out loud.', explain: `Small ${l}, big ${U}.` }; }
+    ] },
+    { title: 'Big or Small?', skill: 'Tell capital letters from lower-case letters', variants: [
+      () => { const s = pick(SAME), cap = Math.random() < .5; return { kind: 'choice', prompt: 'Is this a <b>big</b> letter or a <b>small</b> letter?', say: 'Is this a big letter or a small letter? Look at the lines.', fig: lettersLine(cap ? s.toUpperCase() : s, cap), choices: ['Big letter', 'Small letter'], answer: cap ? 0 : 1, hint: 'Big letters touch the top line. Small ones like this stay under the dashed middle line.', explain: cap ? 'It reaches the top line, so it is big.' : 'It stays under the dashed line, so it is small.' }; },
+      () => { const l = pick(LOW); const caps = shuffle(UP.filter(c => c !== l.toUpperCase())).slice(0, 3); const all = shuffle([l, ...caps]); return { kind: 'choice', cls: 'letter', prompt: 'Tap the <b>small</b> letter.', say: 'Tap the small letter.', choices: all, answer: all.indexOf(l), hint: 'Three are big letters. One is small.', explain: `${l} is the small letter.` }; },
+      () => { const U = pick(UP); const lows = shuffle(LOW.filter(c => c !== U.toLowerCase())).slice(0, 3); const all = shuffle([U, ...lows]); return { kind: 'choice', cls: 'letter', prompt: 'Tap the <b>big</b> letter.', say: 'Tap the big letter.', choices: all, answer: all.indexOf(U), hint: 'Three are small letters. One is big.', explain: `${U} is the big letter.` }; }
+    ] },
+    { title: 'b, d, p, q', skill: 'Tell the tricky letters apart', variants: [
+      () => { const U = pick(['B', 'D', 'P', 'Q']), l = U.toLowerCase(); const all = shuffle(['b', 'd', 'p', 'q']); return { kind: 'choice', cls: 'letter', prompt: `Which small letter goes with big <b>${U}</b>?`, say: `Which small letter goes with big ${U}?`, fig: `<span class="bigletter">${U}</span>`, choices: all, answer: all.indexOf(l), hint: l === 'd' ? 'Small d is a c with a tall line on the right.' : l === 'b' ? 'Small b has a tall line, then a bump on the right.' : l === 'p' ? 'Small p hangs down below the line, bump on the right.' : 'Small q hangs down below the line, bump on the left.', explain: `Big ${U} goes with small ${l}.` }; },
+      () => { const l = pick(['b', 'd', 'd', 'p', 'q']); const all = shuffle(['b', 'd', 'p', 'q']); return { kind: 'choice', cls: 'letter', prompt: `Tap small <b>${l}</b>.`, say: `Tap the small letter ${l}.`, choices: all, answer: all.indexOf(l), hint: l === 'd' ? 'For d, the round part comes first, then the tall line.' : l === 'b' ? 'For b, the tall line comes first, then the round part.' : 'This one hangs below the line.', explain: `That is ${l}.` }; },
+      () => { const w = pick([['🐶', 'og', 'd'], ['🦆', 'uck', 'd'], ['🥁', 'rum', 'd'], ['🐝', 'ee', 'b'], ['⚽', 'all', 'b'], ['🐷', 'ig', 'p'], ['🍕', 'izza', 'p'], ['👸', 'ueen', 'q']]); const all = shuffle(['b', 'd', 'p', 'q']); return { kind: 'choice', cls: 'letter', prompt: `Which letter starts this word? <b>_${w[1]}</b>`, say: `Which letter starts this word?`, fig: `<span style="font-size:4rem">${w[0]}</span>`, choices: all, answer: all.indexOf(w[2]), hint: 'Say the word slowly. Listen to the first sound.', explain: `${w[2]}${w[1]} starts with ${w[2]}.` }; }
+    ] },
+    { title: 'Letter Pairs', skill: 'Find the matching big and small pair', variants: [
+      () => { const U = pick(DIFF.concat(['F', 'L'])), l = U.toLowerCase(); const bad = (LOOK_LOW[l] || 'xyz').split('').map(x => U + x); const m = mc(U + l, bad); return { kind: 'choice', cls: 'letter', prompt: 'Which one is a <b>matching pair</b>?', say: 'Which one is a matching pair, big letter and small letter?', ...m, hint: 'The big and small letter must have the same name.', explain: `${U} and ${l} match.` }; },
+      () => { const l = pick(['b', 'd', 'p', 'q', 'm', 'n']), U = l.toUpperCase(); const bad = (LOOK_UP[U] || 'XYZ').split('').slice(0, 2).map(x => x + l).concat([U + (LOOK_LOW[l] || 'x')[0]]); const m = mc(U + l, bad); return { kind: 'choice', cls: 'letter', prompt: 'Which one is a <b>matching pair</b>?', say: 'Which one is a matching pair?', ...m, hint: 'Say both letter names. Do they match?', explain: `${U} and ${l} match.` }; }
+    ] },
+    { title: 'Names Start Big', skill: 'Names start with a capital letter', variants: [
+      () => { const n = pick(NAMES); const m = mc(n[0], [n[1], n[2], n[0].toUpperCase()]); return { kind: 'choice', cls: 'word', prompt: 'Which name is written the <b>right</b> way?', say: 'Which name is written the right way?', ...m, hint: 'A name starts with one big letter. The rest are small.', explain: `${n[0]} starts with a big ${n[0][0]}, and the rest are small.` }; }
+    ] },
+    { title: 'Sentence Start', skill: 'A sentence starts with a capital letter', variants: [
+      () => { const s = pick(SENT); const m = mc(s[0], [s[1], s[2]], 3); return { kind: 'choice', cls: 'word', prompt: 'Which sentence is written the <b>right</b> way?', say: 'Which sentence is written the right way?', ...m, hint: 'A sentence starts with a big letter. Most other letters are small.', explain: `"${s[0]}" starts with a big letter.` }; }
+    ] },
+    { title: 'ABC Order', skill: 'Fill in the missing letter', variants: [
+      () => { const i = R(1, 23), l = LOW[i]; const m = mc(l, [l.toUpperCase(), LOW[i + 2], LOW[i - 1]]); return { kind: 'choice', cls: 'letter', prompt: eq(`${LOW[i - 1]} ? ${LOW[i + 1]} ${LOW[i + 2]}`), say: `Which small letter is missing? ${LOW[i - 1]}, blank, ${LOW[i + 1]}, ${LOW[i + 2]}.`, ...m, hint: 'Sing the ABC song. Keep it small like the others.', explain: `${LOW[i - 1]} ${l} ${LOW[i + 1]}` }; },
+      () => { const i = R(1, 23), U = UP[i]; const m = mc(U, [U.toLowerCase(), UP[i + 2], UP[i - 1]]); return { kind: 'choice', cls: 'letter', prompt: eq(`${UP[i - 1]} ? ${UP[i + 1]} ${UP[i + 2]}`), say: `Which big letter is missing? ${UP[i - 1]}, blank, ${UP[i + 1]}, ${UP[i + 2]}.`, ...m, hint: 'Sing the ABC song. Keep it big like the others.', explain: `${UP[i - 1]} ${U} ${UP[i + 1]}` }; }
+    ] },
+    { title: 'Spot the Mistake', skill: 'Find a big letter in the wrong place', variants: [
+      () => { const w = pick(SPOT); const m = mc(w, uniq([oneUp(w), oneUp(w), oneUp(w), w.toUpperCase().slice(0, 1) + w.slice(1).toUpperCase()])); return { kind: 'choice', cls: 'word', prompt: 'Which word is written the <b>right</b> way?', say: 'Which word is written the right way? Look for big letters in the wrong place.', ...m, hint: 'Small words in a story use all small letters.', explain: `${w} uses all small letters.` }; },
+      () => { const ws = shuffle(SPOT).slice(0, 3); const bad = oneUp(ws[0]); const all = shuffle([bad, ws[1], ws[2]]); return { kind: 'choice', cls: 'word', prompt: 'Which word has a <b>mistake</b>?', say: 'Which word has a mistake?', choices: all, answer: all.indexOf(bad), hint: 'Look for a big letter hiding in the middle.', explain: `${bad} has a big letter where a small one belongs. It should be ${ws[0]}.` }; }
+    ] },
+    { title: 'Boss Level', skill: 'A mix of everything', variants: [] }
+  ];
+  letters[9].variants = [letters[0].variants[1], letters[1].variants[1], ...letters[2].variants, ...letters[3].variants, ...letters[5].variants, ...letters[6].variants, ...letters[8].variants];
+
+  /* ======================= TOPIC 5: Write d and m ======================= */
+  const trace = (letter, guide, say) => () => ({ kind: 'trace', letter, guide, prompt: `Trace <b>${letter}</b> with your finger. Start at dot 1.`, say: say || `Trace the letter ${letter}. Start at the green dot number 1.`, hint: letter === 'd' ? 'Start at dot 1 and make a magic c going up and around. Then start at dot 2, at the top, and go straight down.' : 'Start at dot 1 and go straight down. Then from dot 2, go up and over a hill and down. Do one more hill from dot 3.', explain: letter === 'd' ? 'd is a magic c with a tall line on the right.' : 'm has a line and two hills.' });
+  const FIRST = [['🐶', 'dog', 'd'], ['🦆', 'duck', 'd'], ['🥁', 'drum', 'd'], ['🍩', 'donut', 'd'], ['🚪', 'door', 'd'], ['🐬', 'dolphin', 'd'], ['🐒', 'monkey', 'm'], ['🐭', 'mouse', 'm'], ['🌙', 'moon', 'm'], ['🧲', 'magnet', 'm'], ['🍈', 'melon', 'm'], ['🥭', 'mango', 'm'], ['🍄', 'mushroom', 'm']];
+  const write = [
+    { title: 'Trace d', skill: 'Trace d on the dotted line', variants: [trace('d', 1)] },
+    { title: 'Trace m', skill: 'Trace m on the dotted line', variants: [trace('m', 1)] },
+    { title: 'Find d', skill: 'Spot d among look-alikes', variants: [
+      () => { const all = shuffle(['d', 'b', 'p', 'q', 'a'].slice(0, 4)); return { kind: 'choice', cls: 'letter', prompt: 'Tap the letter <b>d</b>.', say: 'Tap the letter d.', choices: all, answer: all.indexOf('d'), hint: 'd is a round c first, then a tall line on the right.', explain: 'That is d. The round part is on the left.' }; },
+      () => { const w = pick(FIRST.filter(f => f[2] === 'd')); const all = shuffle(['d', 'b', 'p']); return { kind: 'choice', cls: 'letter', prompt: `Which letter starts <b>${w[1]}</b>?`, say: `Which letter starts the word ${w[1]}?`, fig: `<span style="font-size:4rem">${w[0]}</span>`, choices: all, answer: all.indexOf('d'), hint: 'd says "duh". The round part comes first.', explain: `${w[1]} starts with d.` }; },
+      () => { const ws = shuffle(['dad', 'bad', 'dab', 'bab']); return { kind: 'choice', cls: 'word', prompt: 'Which word is <b>dad</b>?', say: 'Which word says dad?', choices: ws, answer: ws.indexOf('dad'), hint: 'dad starts and ends with d.', explain: 'dad has a d at both ends.' }; }
+    ] },
+    { title: 'Find m', skill: 'Spot m among look-alikes', variants: [
+      () => { const all = shuffle(['m', 'n', 'w', 'u']); return { kind: 'choice', cls: 'letter', prompt: 'Tap the letter <b>m</b>.', say: 'Tap the letter m.', choices: all, answer: all.indexOf('m'), hint: 'm has two hills on top.', explain: 'That is m, with two hills.' }; },
+      () => ({ kind: 'num', prompt: 'How many <b>hills</b> does small m have on top?', say: 'How many hills does small m have on top?', fig: '<span class="bigletter">m</span>', answer: 2, hint: 'Run your finger over the top.', explain: 'm has 2 hills. n has only 1.' }),
+      () => { const w = pick(FIRST.filter(f => f[2] === 'm')); const all = shuffle(['m', 'n', 'w']); return { kind: 'choice', cls: 'letter', prompt: `Which letter starts <b>${w[1]}</b>?`, say: `Which letter starts the word ${w[1]}?`, fig: `<span style="font-size:4rem">${w[0]}</span>`, choices: all, answer: all.indexOf('m'), hint: 'm says "mmm", like yummy food.', explain: `${w[1]} starts with m.` }; }
+    ] },
+    { title: 'Trace d Again', skill: 'Lighter dots this time', variants: [trace('d', 2)] },
+    { title: 'Trace m Again', skill: 'Lighter dots this time', variants: [trace('m', 2)] },
+    { title: 'First Sounds', skill: 'Does it start with d or m?', variants: [
+      () => { const w = pick(FIRST); const all = shuffle(['d', 'm', 'b', 'n']); return { kind: 'choice', cls: 'letter', prompt: 'Which letter does it start with?', say: `${w[1]}. Which letter does ${w[1]} start with?`, fig: `<span style="font-size:4.5rem">${w[0]}</span>`, choices: all, answer: all.indexOf(w[2]), hint: 'Say the word slowly. Listen to the very first sound.', explain: `${w[1]} starts with ${w[2]}.` }; }
+    ] },
+    { title: 'Just the Dots', skill: 'Write d and m with only the start dots', variants: [trace('d', 3, 'Write the letter d. Only the start dots are there to help.'), trace('m', 3, 'Write the letter m. Only the start dots are there to help.')] },
+    { title: 'Right Way Round', skill: 'Which d or m is written the right way?', variants: [
+      () => { const all = shuffle([['d', ''], ['d', 'flipx'], ['d', 'flipy']]); return { kind: 'choice', cls: 'letter', prompt: 'Which <b>d</b> is the right way round?', say: 'Which d is the right way round?', choices: all.map(([c, f]) => f ? `<span class="${f}">${c}</span>` : c), answer: all.findIndex(a => !a[1]), hint: 'Round part on the left. Tall line goes up high.', explain: 'A d has the round part on the left and the tall line going up.' }; },
+      () => { const all = shuffle([['m', ''], ['m', 'flipy'], ['n', '']]); return { kind: 'choice', cls: 'letter', prompt: 'Which <b>m</b> is the right way?', say: 'Which m is written the right way?', choices: all.map(([c, f]) => f ? `<span class="${f}">${c}</span>` : c), answer: all.findIndex(a => a[0] === 'm' && !a[1]), hint: 'The hills go up on top. There are two of them.', explain: 'm has two hills on top.' }; }
+    ] },
+    { title: 'Boss Level', skill: 'Trace, find and sound out', variants: [] }
+  ];
+  write[9].variants = [trace('d', 2), trace('m', 2), ...write[2].variants, ...write[3].variants, ...write[6].variants, ...write[8].variants];
+
+  const TOPICS = [
+    { id: 'addsub', area: 'math', name: 'Adding & Taking Away', blurb: 'Add and subtract to 20, story problems, then bigger numbers.', mark: '+', color: 'c-sky', grade: 'Grade 1 → 2', levels: addsub },
+    { id: 'tens', area: 'math', name: 'Numbers & Tens', blurb: 'Count to 120, tens and ones, compare with < and >.', mark: '10', color: 'c-grass', grade: 'Grade 1 → 2', levels: tens },
+    { id: 'shapes', area: 'math', name: 'Shapes, Time & Measuring', blurb: 'Shapes, halves and quarters, clocks and picture graphs.', mark: '◆', color: 'c-grape', grade: 'Grade 1', levels: shapes },
+    { id: 'letters', area: 'abc', name: 'Big & Small Letters', blurb: 'Match capitals to small letters, b d p q, names and sentences.', mark: 'Aa', color: 'c-berry', grade: 'Grade 1', levels: letters },
+    { id: 'write', area: 'abc', name: 'Write d and m', blurb: 'Trace d and m with your finger, then spot them in words.', mark: 'dm', color: 'c-sun', grade: 'Grade 1', levels: write }
+  ];
+  const AREAS = [
+    { id: 'abc', name: 'Letters & Writing', focus: true },
+    { id: 'math', name: 'Math' }
+  ];
+
+  /* ---------- letter guides for tracing, in a 300 x 300 box ----------
+     Lines: top 40, dashed middle 140, base 240. */
+  function strokes(letter) {
+    const out = [], arc = (cx, cy, rx, ry, t0, t1, step = 4) => { const p = []; const n = Math.ceil(Math.abs(t1 - t0) / step); for (let i = 0; i <= n; i++) { const t = (t0 + (t1 - t0) * i / n) * Math.PI / 180; p.push([cx + rx * Math.cos(t), cy - ry * Math.sin(t)]); } return p; };
+    const line = (a, b) => { const n = Math.ceil(Math.hypot(b[0] - a[0], b[1] - a[1]) / 4); return Array.from({ length: n + 1 }, (_, i) => [a[0] + (b[0] - a[0]) * i / n, a[1] + (b[1] - a[1]) * i / n]); };
+    if (letter === 'd') {
+      out.push(arc(140, 190, 46, 48, 40, 380));          // magic c: up, around to the left, under, back up
+      out.push(line([186, 44], [186, 240]));               // tall line, top to bottom
+    } else {
+      out.push(line([84, 142], [84, 240]));
+      out.push(arc(114, 178, 30, 36, 180, 0).concat(line([144, 178], [144, 240])));
+      out.push(arc(174, 178, 30, 36, 180, 0).concat(line([204, 178], [204, 240])));
+    }
+    return out;
+  }
+  // Every stroke of the guide must be mostly covered, and most of the ink must sit near the guide.
+  function score(guide, ink, tol = 20) {
+    if (ink.length < 15) return { cover: 0, prec: 0, ok: false };
+    const near = (p, set, t) => set.some(q => (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 <= t * t);
+    const per = guide.map(st => st.filter(p => near(p, ink, tol)).length / st.length);
+    const cover = Math.min(...per), g = guide.flat();
+    const prec = ink.filter(p => near(p, g, tol * 1.3)).length / ink.length;
+    return { cover, prec, ok: cover >= 0.75 && prec >= 0.8 };
+  }
+
+  return { TOPICS, AREAS, KID, strokes, score, util: { R, pick, shuffle } };
+})();
+</script>
+
+<script>
+/* ======================= App ======================= */
+(function () {
+  const { TOPICS, AREAS, KID } = window.VQ;
+  const QUESTIONS = 10, PASS = 8, SILVER = 9;
+  const PLAYER = { id: 'p1', name: KID };
+  const K_STATE = 'vh.state', K_SESS = 'vh.sessions', K_PINS = 'vh.pins', K_CUR = 'vh.current', K_VOICE = 'vh.voice';
+  const lsGet = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage off: keep going */ } };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+
+  let state = lsGet(K_STATE, null); if (!state || !state.topics) state = { xp: 0, topics: {} };
+  const save = () => lsSet(K_STATE, state);
+  const prog = id => (state.topics[id] = state.topics[id] || { stars: {} });
+  const starsFor = (t, i) => prog(t.id).stars[i] || 0;
+  let parentMode = false, loggedIn = false;
+  const unlocked = (t, i) => parentMode || i === 0 || starsFor(t, i - 1) > 0;
+  const cleared = t => t.levels.filter((_, i) => starsFor(t, i) > 0).length;
+  const totalStars = t => t.levels.reduce((s, _, i) => s + starsFor(t, i), 0);
+
+  /* ---------- read aloud ---------- */
+  let voiceOn = lsGet(K_VOICE, true);
+  const voiceBtn = document.getElementById('voice');
+  function paintVoice() { voiceBtn.textContent = voiceOn ? '🔊 On' : '🔇 Off'; voiceBtn.setAttribute('aria-pressed', String(voiceOn)); voiceBtn.setAttribute('aria-label', voiceOn ? 'Reading out loud is on' : 'Reading out loud is off'); }
+  voiceBtn.addEventListener('click', () => { voiceOn = !voiceOn; lsSet(K_VOICE, voiceOn); paintVoice(); if (!voiceOn) hush(); });
+  paintVoice();
+  let voice = null;
+  function chooseVoice() { try { const vs = speechSynthesis.getVoices(); voice = vs.find(v => /en-US/i.test(v.lang) && /Samantha|Google US|Aria|Jenny/i.test(v.name)) || vs.find(v => /en-US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null; } catch (e) { voice = null; } }
+  try { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; } catch (e) { /* no speech */ }
+  function hush() { try { speechSynthesis.cancel(); } catch (e) { /* ignore */ } }
+  function speak(text, force) {
+    if ((!voiceOn && !force) || !text) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text.replace(/−/g, ' minus ').replace(/_/g, ' blank '));
+      if (voice) u.voice = voice;
+      u.rate = 0.88; u.pitch = 1.05; speechSynthesis.speak(u);
+    } catch (e) { /* speech not available */ }
+  }
+
+  /* ---------- PIN and picture code ---------- */
+  function hash(s) {
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57; s = 'vh:' + s;
+    for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  const pins = () => lsGet(K_PINS, {});
+  const setPin = (k, v) => { const p = pins(); if (v == null) delete p[k]; else p[k] = v; lsSet(K_PINS, p); };
+  function modal(html) {
+    const wrap = document.createElement('div'); wrap.className = 'modal';
+    wrap.innerHTML = `<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+    document.body.appendChild(wrap);
+    wrap.addEventListener('click', e => { if (e.target === wrap) wrap.remove(); });
+    return wrap;
+  }
+  // Parent PIN: digits. Kid-proof, not real security: only a hash is kept on this device.
+  function pinDialog(mode, onOk) {
+    const setting = mode === 'set';
+    const w = modal(`<h2>${setting ? 'Set a parent PIN' : 'Parent PIN'}</h2>
+      <p class="lede">${setting ? 'Choose 4 to 8 digits. You need it for Parent mode and the report on this device.' : 'Enter the parent PIN.'}</p>
+      <label class="sr" for="pin1">PIN</label><input id="pin1" class="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="PIN">
+      ${setting ? '<label class="sr" for="pin2">Type it again</label><input id="pin2" class="pin" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Again">' : ''}
+      <p class="err" id="pin-err" hidden></p>
+      <div class="actions"><button class="btn" type="button" id="pin-cancel">Cancel</button><button class="btn primary" type="button" id="pin-ok">${setting ? 'Save PIN' : 'Unlock'}</button></div>`);
+    const $ = s => w.querySelector(s), err = $('#pin-err');
+    const fail = m => { err.textContent = m; err.hidden = false; $('#pin1').value = ''; if ($('#pin2')) $('#pin2').value = ''; $('#pin1').focus(); };
+    const ok = () => {
+      const a = $('#pin1').value.trim();
+      if (setting) { if (!/^\d{4,8}$/.test(a)) return fail('Use 4 to 8 digits.'); if (a !== $('#pin2').value.trim()) return fail('The two PINs do not match.'); setPin('parent', hash(a)); }
+      else if (hash(a) !== pins().parent) return fail('That PIN is not right.');
+      w.remove(); onOk();
+    };
+    $('#pin-ok').addEventListener('click', ok); $('#pin-cancel').addEventListener('click', () => w.remove());
+    w.querySelectorAll('.pin').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ok(); } }));
+    $('#pin1').focus();
+  }
+  function parentGate(onOk) { pinDialog(pins().parent ? 'enter' : 'set', onOk); }
+
+  // Picture code for the kid: tap 3 pictures in order. Easier than digits for a six-year-old.
+  const PICS = ['🐶', '🐱', '🦁', '🐸', '🚀', '⚽', '🍕', '🌈', '🦖'];
+  function pictureCode(mode, onOk) {
+    const setting = mode === 'set'; let seq = [], first = null;
+    const w = modal(`<h2>${setting ? `Hi ${KID}! Make your secret code` : `Hi ${KID}!`}</h2>
+      <p class="lede" id="pc-msg">${setting ? 'Tap 3 pictures. Remember them!' : 'Tap your 3 secret pictures.'}</p>
+      <div class="slots" aria-live="polite"><i></i><i></i><i></i></div>
+      <div class="picks">${PICS.map(p => `<button type="button" data-p="${p}" aria-label="${p}">${p}</button>`).join('')}</div>
+      <div class="actions"><button class="link" type="button" id="pc-forgot"${setting ? ' hidden' : ''}>Forgot? Ask a grown-up</button><button class="btn" type="button" id="pc-clear">Start over</button></div>`);
+    const msg = w.querySelector('#pc-msg'), slots = [...w.querySelectorAll('.slots i')];
+    const paint = () => slots.forEach((s, i) => { s.textContent = seq[i] || ''; s.classList.toggle('full', !!seq[i]); });
+    speak(setting ? `Hi ${KID}! Tap 3 pictures to make your secret code.` : `Hi ${KID}! Tap your 3 secret pictures.`);
+    w.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => {
+      if (seq.length >= 3) return;
+      seq.push(b.dataset.p); paint();
+      if (seq.length < 3) return;
+      setTimeout(() => {
+        const code = seq.join('');
+        if (setting && !first) { first = code; seq = []; paint(); msg.textContent = 'Now tap the same 3 again.'; speak('Now tap the same 3 again.'); return; }
+        if (setting) {
+          if (code !== first) { first = null; seq = []; paint(); msg.textContent = 'Those did not match. Pick 3 new ones.'; speak('Those did not match. Pick 3 again.'); return; }
+          setPin('kid', hash(code)); w.remove(); onOk(); return;
+        }
+        if (hash(code) === pins().kid) { w.remove(); onOk(); }
+        else { seq = []; paint(); msg.textContent = 'Oops, not those. Try again!'; speak('Oops. Try again!'); }
+      }, 250);
+    }));
+    w.querySelector('#pc-clear').addEventListener('click', () => { seq = []; paint(); });
+    w.querySelector('#pc-forgot').addEventListener('click', () => { w.remove(); parentGate(() => { setPin('kid', null); pictureCode('set', onOk); }); });
+  }
+
+  /* ---------- screens ---------- */
+  const app = document.getElementById('app'), xpEl = document.getElementById('xp');
+  const starRow = (n, max = 3) => `<span class="stars" aria-label="${n} of ${max} stars">${'★'.repeat(n)}<span class="off">${'★'.repeat(max - n)}</span></span>`;
+  function showXP() {
+    xpEl.textContent = `${state.xp} XP`; xpEl.hidden = !loggedIn;
+    const who = document.getElementById('who');
+    who.innerHTML = loggedIn ? `<button class="link" id="logout">Log out</button>` : '';
+    if (loggedIn) document.getElementById('logout').addEventListener('click', logout);
+  }
+  function go(html, focusSel) { hush(); app.innerHTML = html; window.scrollTo(0, 0); const f = focusSel && app.querySelector(focusSel); if (f) f.focus({ preventScroll: true }); }
+
+  function login() {
+    loggedIn = false; showXP();
+    go(`<section><p class="eyebrow">Vihaan's Quest</p><h1>Who's playing?</h1><p class="lede">Tap your name and your secret pictures to start.</p></section>
+      <div class="tiles players"><button class="tile" id="pl"><span class="avatar">V</span><h2>${KID}</h2><span class="tag">${pins().kid ? 'Play' : 'Start'}</span></button></div>`, '#pl');
+    app.querySelector('#pl').addEventListener('click', () => pictureCode(pins().kid ? 'enter' : 'set', () => startAs()));
+  }
+  function startAs(topic) { loggedIn = true; lsSet(K_CUR, PLAYER.id); parentMode = false; showXP(); topic ? map(topic) : home(); }
+  function logout() { lsSet(K_CUR, null); parentMode = false; login(); }
+
+  function home() {
+    if (!loggedIn) return login();
+    const tile = t => {
+      const c = cleared(t), n = t.levels.length;
+      return `<button class="tile" data-topic="${t.id}">
+        <span class="badge ${t.color}" aria-hidden="true">${t.mark}</span>
+        <h2>${t.name}</h2><p>${t.blurb}</p>
+        <div class="foot"><div class="meter" aria-hidden="true"><i style="width:${(c / n) * 100}%"></i></div><span>${c}/${n} levels · ${starRow(Math.min(3, Math.round(totalStars(t) / n)))}</span></div>
+        <span class="tag">${c === 0 ? 'Start' : c === n ? 'Replay' : 'Go on'}</span></button>`;
+    };
+    const sections = AREAS.map(a => `<section class="area"><h2 class="area-h">${a.name}${a.focus ? ' <span class="pill">Practice most</span>' : ''}</h2><div class="tiles">${TOPICS.filter(t => t.area === a.id).map(tile).join('')}</div></section>`).join('');
+    go(`<section><p class="eyebrow">Pick a quest</p><h1>Hi ${KID}! What shall we do?</h1>
+        <p class="lede">Every quest has 10 levels. Get ${PASS} out of ${QUESTIONS} right to open the next level. Tap 🔊 to hear any question.</p></section>${sections}`);
+    app.querySelectorAll('[data-topic]').forEach(b => b.addEventListener('click', () => map(TOPICS.find(t => t.id === b.dataset.topic))));
+    speak(`Hi ${KID}! Pick a quest.`);
+  }
+
+  function map(t) {
+    const c = cleared(t);
+    const nextIdx = t.levels.findIndex((_, i) => unlocked(t, i) && starsFor(t, i) === 0);
+    const cards = t.levels.map((L, i) => {
+      const open = unlocked(t, i), s = starsFor(t, i);
+      return `<button class="lvl${open ? '' : ' locked'}${i === nextIdx ? ' next' : ''}${s ? ' done' : ''}" data-i="${i}" ${open ? '' : 'disabled'}>
+        <span class="lvl-n">${i + 1}</span>
+        <span class="lvl-b"><b>${L.title}</b><small>${open ? L.skill : 'Finish level ' + i + ' to open'}</small></span>
+        <span>${open ? starRow(s) : '🔒'}</span></button>`;
+    }).join('');
+    go(`<nav><button class="link" id="back">← All quests</button></nav>
+      <section><p class="eyebrow">${t.grade}</p><h1>${t.name}</h1><p class="lede">${c} of ${t.levels.length} levels done · ${totalStars(t)} of ${t.levels.length * 3} stars</p>
+      <div class="path" aria-hidden="true">${t.levels.map((_, i) => `<span class="${starsFor(t, i) ? 'on' : ''}"></span>`).join('')}</div></section>
+      <div class="levels">${cards}</div>
+      <p class="parent-note">${parentMode ? `<b>Parent mode is on.</b> Every level is open until you turn it off or reload. <button class="link" id="pm-off">Turn off</button>` : `<button class="link" id="pm-on">🔒 Parent mode</button> opens every level (needs the parent PIN).`}</p>`, '.lvl.next');
+    app.querySelector('#back').addEventListener('click', home);
+    const on = app.querySelector('#pm-on'), off = app.querySelector('#pm-off');
+    if (on) on.addEventListener('click', () => parentGate(() => { parentMode = true; map(t); }));
+    if (off) off.addEventListener('click', () => { parentMode = false; map(t); });
+    app.querySelectorAll('.lvl:not(.locked)').forEach(b => b.addEventListener('click', () => play(t, +b.dataset.i)));
+  }
+
+  /* ---------- playing ---------- */
+  function makeQuestions(L) {
+    const key = q => (q.prompt || '') + (q.fig || '') + (q.choices ? q.choices.slice().sort().join('|') : '') + (q.kind === 'trace' ? q.letter + Math.random() : '');
+    const out = [], seen = new Set(); let pool = [];
+    while (out.length < QUESTIONS) {
+      if (!pool.length) pool = window.VQ.util.shuffle(L.variants);
+      const v = pool.pop(); let q, tries = 0;
+      do { q = v(); tries++; } while (seen.has(key(q)) && tries < 25);
+      seen.add(key(q)); out.push(q);
+    }
+    return out;
+  }
+
+  function play(t, li) {
+    const L = t.levels[li];
+    const run = { qs: makeQuestions(L), i: 0, right: 0, hints: 0, log: [], qlog: [], started: new Date().toISOString() };
+    question();
+    function dots() { return run.qs.map((_, k) => { const r = run.log[k]; return `<i class="${r === true ? 'ok' : r === false ? 'no' : k === run.i ? 'cur' : ''}"></i>`; }).join(''); }
+
+    function question() {
+      const q = run.qs[run.i];
+      let ui = '';
+      if (q.kind === 'choice') ui = `<div class="choices">${q.choices.map((c, k) => `<button class="choice ${q.cls || ''}" data-k="${k}">${c}</button>`).join('')}</div>`;
+      else if (q.kind === 'num') ui = `<div class="entry"><div class="screen empty" id="screen" aria-live="polite">?</div>
+          <div class="pad" id="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(n => `<button type="button" data-n="${n}">${n}</button>`).join('')}<button type="button" class="wide" data-n="del" aria-label="Delete">⌫</button><button type="button" class="go" id="check">Check ✓</button></div></div>`;
+      else ui = `<div class="tracebox"><canvas id="cv" width="300" height="300" aria-label="Tracing box for the letter ${q.letter}"></canvas><p class="tracemsg" id="tmsg"></p>
+          <div class="tracebtns"><button class="btn" type="button" id="tclear">Clear</button><button class="btn primary" type="button" id="check">Check ✓</button></div></div>`;
+      go(`<div class="playtop"><button class="link" id="quit">✕ Stop</button><span class="where">Level ${li + 1} · ${L.title}</span><span class="dots" aria-label="Question ${run.i + 1} of ${QUESTIONS}">${dots()}</span></div>
+        <article class="qcard">
+          <div class="qhead"><p class="qnum">Question ${run.i + 1} of ${QUESTIONS}</p><button class="say" id="say" type="button">🔊 Read to me</button></div>
+          <div class="prompt">${q.prompt}</div>
+          ${q.fig ? `<figure class="fig">${q.fig}</figure>` : ''}
+          ${ui}
+          <div class="hintrow"><button class="link" id="hint">💡 Need a hint?</button><p class="hinttext" id="hinttext" hidden>${q.hint}</p></div>
+          <div class="feedback" id="fb" hidden></div>
+        </article>`);
+      q.t0 = performance.now();
+      speak(q.say);
+      app.querySelector('#say').addEventListener('click', () => speak(q.say, true));
+      app.querySelector('#quit').addEventListener('click', () => { if (run.qlog.length) record(t, li, run, false, 0); map(t); });
+      app.querySelector('#hint').addEventListener('click', e => { const ht = app.querySelector('#hinttext'); ht.hidden = false; q.usedHint = true; e.target.hidden = true; speak(q.hint, true); });
+      if (q.kind === 'choice') app.querySelectorAll('.choice').forEach(b => b.addEventListener('click', () => check(+b.dataset.k, b)));
+      else if (q.kind === 'num') numPad(q);
+      else tracer(q);
+    }
+
+    function numPad(q) {
+      let val = '';
+      const scr = app.querySelector('#screen');
+      const paint = () => { scr.textContent = val || '?'; scr.classList.toggle('empty', !val); };
+      const press = n => { if (scr.classList.contains('right') || scr.classList.contains('wrong')) return; if (n === 'del') val = val.slice(0, -1); else if (val.length < 3) val = (val === '0' ? '' : val) + n; paint(); };
+      app.querySelectorAll('[data-n]').forEach(b => b.addEventListener('click', () => press(b.dataset.n)));
+      const submit = () => { if (!val) { speak('Tap the numbers to type your answer.', true); return; } check(+val, null, val); };
+      app.querySelector('#check').addEventListener('click', submit);
+      const onKey = e => {
+        if (!document.body.contains(scr)) { document.removeEventListener('keydown', onKey); return; }
+        if (/^\d$/.test(e.key)) press(e.key); else if (e.key === 'Backspace') press('del'); else if (e.key === 'Enter') { e.preventDefault(); if (!scr.classList.contains('right') && !scr.classList.contains('wrong')) submit(); }
+      };
+      document.addEventListener('keydown', onKey);
+    }
+
+    function tracer(q) {
+      const cv = app.querySelector('#cv'), ctx = cv.getContext('2d'), dpr = Math.max(1, window.devicePixelRatio || 1);
+      cv.width = 300 * dpr; cv.height = 300 * dpr; ctx.scale(dpr, dpr);
+      const css = getComputedStyle(document.documentElement), col = v => css.getPropertyValue(v).trim();
+      const guide = window.VQ.strokes(q.letter); let ink = [], cur = null, tries = 0;
+      function draw() {
+        ctx.clearRect(0, 0, 300, 300);
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.strokeStyle = col('--ink'); ctx.lineWidth = 3; ctx.setLineDash([]);
+        [40, 240].forEach(y => { ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(290, y); ctx.stroke(); });
+        ctx.strokeStyle = col('--muted'); ctx.setLineDash([12, 10]); ctx.beginPath(); ctx.moveTo(10, 140); ctx.lineTo(290, 140); ctx.stroke();
+        const alpha = q.guide === 1 ? 0.9 : q.guide === 2 ? 0.4 : 0;
+        if (alpha) {
+          ctx.globalAlpha = alpha; ctx.strokeStyle = col('--grape'); ctx.lineWidth = 9; ctx.setLineDash([1, 13]);
+          guide.forEach(s => { ctx.beginPath(); s.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.stroke(); });
+          ctx.globalAlpha = 1;
+        }
+        ctx.setLineDash([]);
+        guide.forEach((s, i) => {
+          const [x, y] = s[0];
+          ctx.fillStyle = col('--grass'); ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#fff'; ctx.font = '600 15px Fredoka, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(String(i + 1), x, y + 1);
+        });
+        ctx.strokeStyle = col('--sky'); ctx.lineWidth = 12;
+        strokesDrawn.forEach(s => { ctx.beginPath(); s.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); if (s.length === 1) ctx.lineTo(s[0][0] + .1, s[0][1]); ctx.stroke(); });
+      }
+      let strokesDrawn = [];
+      const pt = e => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) * 300 / r.width, (e.clientY - r.top) * 300 / r.height]; };
+      const add = p => { const last = cur[cur.length - 1]; if (last) { const d = Math.hypot(p[0] - last[0], p[1] - last[1]), n = Math.floor(d / 3); for (let k = 1; k <= n; k++) ink.push([last[0] + (p[0] - last[0]) * k / (n + 1), last[1] + (p[1] - last[1]) * k / (n + 1)]); } cur.push(p); ink.push(p); };
+      cv.addEventListener('pointerdown', e => { if (locked) return; e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (x) { /* ignore */ } cur = []; strokesDrawn.push(cur); add(pt(e)); draw(); });
+      cv.addEventListener('pointermove', e => { if (!cur || locked) return; e.preventDefault(); add(pt(e)); draw(); });
+      const end = () => { cur = null; };
+      cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end); cv.addEventListener('pointerleave', end);
+      let locked = false;
+      const msg = app.querySelector('#tmsg');
+      app.querySelector('#tclear').addEventListener('click', () => { if (locked) return; ink = []; strokesDrawn = []; msg.textContent = ''; draw(); });
+      app.querySelector('#check').addEventListener('click', () => {
+        if (locked) return;
+        if (ink.length < 15) { msg.textContent = 'Trace the letter first.'; speak('Trace the letter first, then tap check.', true); return; }
+        const s = window.VQ.score(guide, ink);
+        tries++;
+        if (!s.ok && tries < 2) { msg.textContent = 'Almost! Try once more, nice and slow.'; speak('Almost! Try once more, nice and slow.', true); ink = []; strokesDrawn = []; setTimeout(draw, 500); return; }
+        locked = true; msg.textContent = '';
+        app.querySelector('#tclear').disabled = true;
+        check(s.ok ? 1 : 0, null, s.ok ? 'traced' : 'off the line');
+      });
+      draw();
+    }
+
+    function check(v, btn, given) {
+      const q = run.qs[run.i];
+      const ok = q.kind === 'trace' ? v === 1 : v === q.answer;
+      run.log[run.i] = ok;
+      if (ok) { run.right++; state.xp += q.usedHint ? 5 : 10; save(); showXP(); }
+      if (q.usedHint) run.hints++;
+      app.querySelectorAll('.choice, .pad button, #check').forEach(el => (el.disabled = true));
+      app.querySelector('#hint').hidden = true;
+      let correct;
+      if (q.kind === 'choice') {
+        app.querySelectorAll('.choice').forEach((b, k) => { if (k === q.answer) b.classList.add('right'); });
+        if (!ok && btn) btn.classList.add('wrong');
+        correct = q.choices[q.answer];
+      } else if (q.kind === 'num') { app.querySelector('#screen').classList.add(ok ? 'right' : 'wrong'); correct = String(q.answer); }
+      else correct = q.letter;
+      const plain = s => { const d = document.createElement('div'); d.innerHTML = String(s); return d.textContent.replace(/\s+/g, ' ').trim(); };
+      run.qlog.push({ n: run.i + 1, prompt: plain(q.prompt).slice(0, 160), answer: /<svg/.test(correct) ? 'picture ' + (q.answer + 1) : plain(correct), given: q.kind === 'choice' ? (/<svg/.test(q.choices[v]) ? 'picture ' + (v + 1) : plain(q.choices[v])) : String(given), correct: ok, hint: !!q.usedHint, seconds: Math.min(600, Math.round((performance.now() - q.t0) / 100) / 10) });
+      const cheer = q.kind === 'trace' ? pick(['Beautiful ' + q.letter + '!', 'Great tracing!', 'Super writing!']) : pick(['Yes! Great job!', 'You got it!', 'Super!', 'Awesome!']);
+      const fb = app.querySelector('#fb');
+      fb.className = 'feedback ' + (ok ? 'good' : 'bad');
+      const showAns = q.kind === 'choice' && /<svg/.test(correct) ? 'the green one' : q.kind === 'trace' ? '' : `<b>${correct}</b>`;
+      fb.innerHTML = `<p class="verdict">${ok ? `${cheer} <span class="plusxp">+${q.usedHint ? 5 : 10} XP</span>` : q.kind === 'trace' ? 'Good try! Keep practising.' : `Not quite. It is ${showAns}.`}</p>
+        <p class="why">${q.explain}</p>
+        <button class="btn primary" id="next">${run.i + 1 < QUESTIONS ? 'Next →' : 'See my stars'}</button>`;
+      fb.hidden = false;
+      speak(ok ? cheer : (q.kind === 'trace' ? 'Good try! ' : 'Not quite. ') + plain(q.explain).replace(/−/g, ' minus '));
+      app.querySelector('.dots').innerHTML = dots();
+      const nb = app.querySelector('#next');
+      nb.addEventListener('click', () => { run.i++; run.i < QUESTIONS ? question() : results(); });
+      nb.focus({ preventScroll: true });
+      fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    function results() {
+      const stars = run.right === QUESTIONS && run.hints === 0 ? 3 : run.right >= SILVER ? 2 : run.right >= PASS ? 1 : 0;
+      const passed = stars > 0, p = prog(t.id);
+      p.stars[li] = Math.max(p.stars[li] || 0, stars); save();
+      record(t, li, run, true, stars);
+      const hasNext = li + 1 < t.levels.length;
+      const title = !passed ? 'So close!' : !hasNext ? 'Quest complete!' : stars === 3 ? 'Perfect!' : 'Level done!';
+      const msg = !passed ? `You got ${run.right} out of ${QUESTIONS}. Get ${PASS} to open level ${li + 2}. The questions change every time. Try again!`
+        : stars === 3 ? 'All right, with no hints. Three stars!' : stars === 2 ? `You got ${run.right} out of ${QUESTIONS}. Get them all with no hints for 3 stars.` : `You got ${run.right} out of ${QUESTIONS}. Get ${SILVER} for 2 stars.`;
+      go(`<section class="result ${passed ? 'win' : 'lose'}"><p class="eyebrow">Level ${li + 1} · ${L.title}</p><h1>${title}</h1><div class="bigstars">${starRow(stars)}</div><p class="lede">${msg}</p>
+          <div class="actions">${passed && hasNext ? `<button class="btn primary" id="nextlvl">Level ${li + 2} →</button>` : ''}<button class="btn ${passed && hasNext ? '' : 'primary'}" id="again">${passed ? 'Play again' : 'Try again'}</button><button class="btn" id="tomap">All levels</button></div></section>`, '.actions .primary');
+      speak(`${title} ${msg}`);
+      if (passed) confetti();
+      const nl = app.querySelector('#nextlvl'); if (nl) nl.addEventListener('click', () => play(t, li + 1));
+      app.querySelector('#again').addEventListener('click', () => play(t, li));
+      app.querySelector('#tomap').addEventListener('click', () => map(t));
+    }
+  }
+
+  function record(t, li, run, completed, stars) {
+    const s = { at: new Date().toISOString(), topic: t.id, level: li + 1, title: t.levels[li].title, completed, correct: run.right, answered: run.qlog.length, stars, hints: run.hints, seconds: Math.round(run.qlog.reduce((a, q) => a + q.seconds, 0)), questions: run.qlog };
+    const all = lsGet(K_SESS, []); all.push(s); lsSet(K_SESS, all.slice(-300));
+  }
+
+  /* ---------- parent page ---------- */
+  function parentPage(tab = 'report') {
+    hush();
+    go(`<nav><button class="link" id="back">← Back to the game</button></nav>
+      <section><p class="eyebrow">Parent</p><h1>${KID}'s progress</h1><p class="lede">Saved on this device only.</p></section>
+      <div class="tabs" role="tablist"><button class="tab${tab === 'report' ? ' on' : ''}" data-tab="report">Report</button><button class="tab${tab === 'settings' ? ' on' : ''}" data-tab="settings">Settings</button></div>
+      <div id="pp"></div>`);
+    app.querySelector('#back').addEventListener('click', () => (loggedIn ? home() : login()));
+    app.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => parentPage(b.dataset.tab)));
+    const el = app.querySelector('#pp');
+    if (tab === 'report') {
+      const S = lsGet(K_SESS, []), qs = S.flatMap(s => s.questions || []);
+      const acc = qs.length ? Math.round(100 * qs.filter(q => q.correct).length / qs.length) : 0;
+      const tname = id => (TOPICS.find(t => t.id === id) || {}).name || id;
+      const date = iso => { try { return new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch (e) { return iso; } };
+      const missed = S.slice().reverse().flatMap(s => (s.questions || []).filter(q => !q.correct).map(q => ({ ...q, topic: s.topic, level: s.level }))).slice(0, 10);
+      el.innerHTML = `<div class="kpis">
+          <div><b>${TOPICS.reduce((a, t) => a + cleared(t), 0)}</b><span>levels cleared of 50</span></div>
+          <div><b>${TOPICS.reduce((a, t) => a + totalStars(t), 0)}</b><span>stars of 150</span></div>
+          <div><b>${qs.length}</b><span>questions answered</span></div>
+          <div><b>${qs.length ? acc + '%' : '–'}</b><span>right first time</span></div></div>
+        <h2 style="margin-top:12px">Quests</h2>
+        <div class="tablewrap"><table class="rep"><thead><tr><th>Quest</th><th class="num">Levels</th><th class="num">Stars</th><th class="num">Right</th></tr></thead><tbody>
+          ${TOPICS.map(t => { const tq = S.filter(s => s.topic === t.id).flatMap(s => s.questions || []); return `<tr><td>${t.name}</td><td class="num">${cleared(t)}/10</td><td class="num">${totalStars(t)}</td><td class="num">${tq.length ? Math.round(100 * tq.filter(q => q.correct).length / tq.length) + '%' : '–'}</td></tr>`; }).join('')}
+        </tbody></table></div>
+        <h2 style="margin-top:12px">Recent levels</h2>
+        ${S.length ? `<div class="tablewrap"><table class="rep"><thead><tr><th>When</th><th>Level</th><th class="num">Score</th><th class="num">Stars</th><th class="num">Hints</th><th class="num">Time</th></tr></thead><tbody>
+          ${S.slice(-15).reverse().map(s => `<tr><td>${date(s.at)}</td><td>${tname(s.topic)}<br><span class="muted small">L${s.level} ${s.title}${s.completed ? '' : ' · stopped early'}</span></td><td class="num">${s.correct}/${s.completed ? QUESTIONS : s.answered}</td><td class="num">${s.stars}</td><td class="num">${s.hints}</td><td class="num">${Math.round(s.seconds / 60)} min</td></tr>`).join('')}
+        </tbody></table></div>` : '<p class="muted">No levels played on this device yet.</p>'}
+        <h2 style="margin-top:12px">Recent misses</h2>
+        ${missed.length ? `<div class="tablewrap"><table class="rep"><thead><tr><th>Question</th><th>Answered</th><th>Right answer</th></tr></thead><tbody>
+          ${missed.map(q => `<tr><td>${q.prompt}<br><span class="muted small">${tname(q.topic)} · L${q.level}</span></td><td>${q.given}</td><td>${q.answer}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Nothing missed yet.</p>'}`;
+    } else {
+      el.innerHTML = `<section class="panel"><h2>Codes</h2>
+          <p class="muted small">${KID} logs in with 3 secret pictures. The parent PIN opens this page and Parent mode.</p>
+          <div class="actions" style="justify-content:flex-start"><button class="btn" type="button" id="p-parent">Change parent PIN</button><button class="btn" type="button" id="p-kid">Reset ${KID}'s pictures</button></div>
+          <p class="muted small" id="p-msg" aria-live="polite"></p></section>
+        <section class="panel"><h2>Reading out loud</h2>
+          <label class="toggle" for="p-voice"><input type="checkbox" id="p-voice" ${voiceOn ? 'checked' : ''}> Read each question out loud</label>
+          <p class="muted small">Uses the voice built into this device. ${KID} can also tap 🔊 on any question.</p></section>`;
+      const m = el.querySelector('#p-msg');
+      el.querySelector('#p-parent').addEventListener('click', () => pinDialog('set', () => { m.textContent = 'Parent PIN changed.'; }));
+      el.querySelector('#p-kid').addEventListener('click', () => { setPin('kid', null); m.textContent = `${KID} will make new secret pictures next time he logs in.`; });
+      el.querySelector('#p-voice').addEventListener('change', e => { voiceOn = e.target.checked; lsSet(K_VOICE, voiceOn); paintVoice(); });
+    }
+  }
+
+  function confetti() {
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const c = document.createElement('canvas'); c.className = 'confetti'; document.body.appendChild(c);
+    const ctx = c.getContext('2d'), dpr = window.devicePixelRatio || 1;
+    c.width = innerWidth * dpr; c.height = innerHeight * dpr; ctx.scale(dpr, dpr);
+    const css = getComputedStyle(document.documentElement);
+    const cols = ['--sun', '--sky', '--grass', '--berry', '--grape'].map(v => css.getPropertyValue(v).trim() || '#fb0');
+    const P = Array.from({ length: 120 }, () => ({ x: innerWidth / 2 + (Math.random() - .5) * 140, y: innerHeight * .35, vx: (Math.random() - .5) * 12, vy: -Math.random() * 12 - 4, r: Math.random() * 6.28, s: 6 + Math.random() * 7, c: pick(cols) }));
+    const t0 = performance.now();
+    (function frame(now) {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      P.forEach(p => { p.vy += .32; p.x += p.vx; p.y += p.vy; p.r += .12; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
+      if (now - t0 < 1900) requestAnimationFrame(frame); else c.remove();
+    })(t0);
+  }
+
+  document.getElementById('home').addEventListener('click', () => (loggedIn ? home() : login()));
+  document.getElementById('parent-link').addEventListener('click', () => parentGate(() => parentPage('report')));
+  lsGet(K_CUR, null) === PLAYER.id && pins().kid ? startAs() : login();
+})();
+</script>
+</body>
+</html>
