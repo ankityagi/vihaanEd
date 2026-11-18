@@ -14,8 +14,20 @@ read out loud with the device's voice, and answers use an on-screen number pad.
 - **Parent:** the link at the bottom asks for a parent PIN (chosen on first use; only a hash is
   kept). It opens the report and settings, and Parent mode on a level map opens every level until
   reload. This keeps a child out; it is not real security.
-- **Progress** is saved in the browser on the device he plays on (localStorage). There is no
-  GitHub progress sync yet, unlike Viraj's site.
+- **Progress log:** every level he finishes (or stops after answering) is saved as one small
+  JSON file in the public repo `ankityagi/mathquest-progress`, the same log Viraj's site uses, under
+  `players/p2/` (Viraj is `p1`). Files carry the code `p2`, never a name; names in story problems
+  are swapped for "Kid" and "Brother" before saving. Files are only created, never edited, and
+  anything not sent yet waits on the device and retries.
+- **Saving needs a token, entered once on Vihaan's device**: Parent → Settings → *Save progress to
+  GitHub*. Use a fine-grained token with access to `mathquest-progress` only and
+  *Contents: Read and write* (Viraj's token works if it is scoped that way). It stays in that
+  device's storage and is never in this code. The repo and branch can be changed there too.
+- **Parent report** (Parent → Report, or open `vihaan.ankityagi.online/#parent`): levels played,
+  % correct, typical time per question, what to work on next (question types under 75% or slow),
+  strong and quick types, by area, tries per level and recent sessions. It reads the online log,
+  so it works on any device, and adds anything on this device that hasn't uploaded yet. On a new
+  device his stars and XP are brought back from the log when he logs in.
 
 ## Run it
 
@@ -24,11 +36,7 @@ Everything is in `index.html`, with no build step. Open it in a browser or run
 
 ## Hosting: vihaan.ankityagi.online
 
-Published with GitHub Pages, the same way as viraj.ankityagi.online.
-`.github/workflows/deploy.yml` uploads `index.html`, `CNAME` and `.nojekyll` on every push to `main`.
-One-time setup:
-
-1. **DNS** (Squarespace, for ankityagi.online): a `CNAME` record, host `vihaan`,
-   value `ankityagi.github.io`, the same kind of record as `viraj` and `games`.
-2. **GitHub → VihaanEd → Settings → Pages**: *Source* **GitHub Actions**, custom domain
-   `vihaan.ankityagi.online`, then tick *Enforce HTTPS* once the certificate is issued.
+Published with GitHub Pages from the `main` branch (Settings → Pages → *Deploy from a branch*),
+the same way as viraj.ankityagi.online, so every push to `main` goes live.
+DNS (Squarespace, for ankityagi.online) is a `CNAME` record, host `vihaan`, value
+`ankityagi.github.io`. `.github/workflows/deploy.yml` is a spare manual deploy and does not run on push.

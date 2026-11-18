@@ -228,6 +228,17 @@ h2 { font-size: 1.3rem; font-weight: 600; }
 .toggle input { width: 26px; height: 26px; }
 .build { text-align: center; font: 500 .8rem var(--display); color: var(--muted); padding-block: 0 24px; }
 .build .link { font-size: .8rem; }
+.panel label.f { font: 600 .85rem var(--display); margin-top: 4px; }
+.txt { font: 600 1rem var(--body); color: var(--ink); background: var(--soft); border: 2px solid var(--line); border-radius: 10px; padding: 9px 12px; width: 100%; min-width: 0; }
+.pin-msg { margin: 0; font-size: .92rem; min-height: 1.2em; font-weight: 700; }
+.pin-msg.good { color: var(--grass); } .pin-msg.bad { color: var(--berry); }
+.rep-h { font-size: 1.2rem; margin-top: 10px; }
+.chip { display: inline-block; font: 600 .68rem var(--display); text-transform: uppercase; letter-spacing: .05em; padding: 1px 7px; border-radius: 99px; border: 1.5px solid var(--line); color: var(--muted); }
+.chip.slow { border-color: var(--berry); color: var(--berry); }
+.chip.fast, .chip.ok { border-color: var(--grass); color: var(--grass); }
+.callout { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--bad-bg); border: 2px solid var(--berry); }
+.empty { display: flex; flex-direction: column; gap: 6px; }
+.actions.left { justify-content: flex-start; }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 @media (max-width: 520px) {
@@ -640,11 +651,145 @@ window.VQ = (function () {
 </script>
 
 <script>
+/* Progress sync, same design as Viraj's Math Quest: each played level is saved as one small JSON
+   file in a public GitHub repo, under a player code (never a name).
+   - Saving needs a fine-grained token (Contents: read and write on the data repo only), entered once
+     in Parent > Settings on Vihaan's device and kept in that device's storage, never in the site code.
+   - Reading needs no token, so the parent report works on any device.
+   - Files are only created, never edited. Anything not sent yet waits in a queue and retries later. */
+window.VHSync = (function () {
+  const DEFAULT_REPO = 'ankityagi/mathquest-progress', DEFAULT_BRANCH = 'main';
+  const K_CFG = 'vh.sync', K_QUEUE = 'vh.queue', K_CACHE = 'vh.cache', K_LOG = 'vh.synclog';
+  const API = 'https://api.github.com';
+  const read = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+  const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
+  function config() { const c = read(K_CFG, {}); return { repo: c.repo || DEFAULT_REPO, branch: c.branch || DEFAULT_BRANCH, token: c.token || '' }; }
+  function setConfig(c) { write(K_CFG, { repo: c.repo, branch: c.branch, token: c.token }); }
+  const queue = () => read(K_QUEUE, []);
+  const logResult = (ok, msg) => write(K_LOG, { at: new Date().toISOString(), ok, msg });
+  async function why(r) { try { const j = await r.json(); return j.message ? ` (${j.message})` : ''; } catch (e) { return ''; } }
+  function b64(str) { const bytes = new TextEncoder().encode(str); let bin = ''; bytes.forEach(b => { bin += String.fromCharCode(b); }); return btoa(bin); }
+  const headers = token => Object.assign({ Accept: 'application/vnd.github+json' }, token ? { Authorization: 'Bearer ' + token } : {});
+  function put(c, path, text, message) {
+    return fetch(`${API}/repos/${c.repo}/contents/${path}`, { method: 'PUT', headers: Object.assign(headers(c.token), { 'Content-Type': 'application/json' }), body: JSON.stringify({ message, content: b64(text), branch: c.branch }) });
+  }
+  async function test(c) {
+    if (!c.repo || !/^[\w.-]+\/[\w.-]+$/.test(c.repo)) return { ok: false, message: 'Repo should look like owner/name.' };
+    if (!c.token) return { ok: false, message: 'Paste the access token first.' };
+    try {
+      const r = await fetch(`${API}/repos/${c.repo}`, { headers: headers(c.token) });
+      if (r.status === 401) return { ok: false, message: 'GitHub did not accept that token. Check it was copied in full and has not expired.' };
+      if (r.status === 404) return { ok: false, message: `GitHub can't find ${c.repo}, or the token isn't allowed to see it.` };
+      if (!r.ok) return { ok: false, message: `GitHub answered ${r.status}. Try again in a minute.` };
+      const j = await r.json();
+      const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const w = await put(c, `checks/${stamp}-p2.json`, JSON.stringify({ check: 'connection test', at: stamp }), 'Connection test');
+      if (w.status === 403 || w.status === 404) { const m = 'The token can see the repo but not save to it. Edit the token: Repository access must include this repo, and Permissions → Contents must be "Read and write".' + (await why(w)); logResult(false, m); return { ok: false, message: m }; }
+      if (w.status === 409 || w.status === 422) { const m = `GitHub refused the test file${await why(w)}. Check the branch name (usually main).`; logResult(false, m); return { ok: false, message: m }; }
+      if (!w.ok) { const m = `Saving failed: GitHub answered ${w.status}${await why(w)}.`; logResult(false, m); return { ok: false, message: m }; }
+      logResult(true, 'Connection test file saved.');
+      return { ok: true, message: `Connected to ${j.full_name} and saved a test file.` };
+    } catch (e) { return { ok: false, message: "Can't reach GitHub from here. (The claude.ai preview blocks it; use vihaan.ankityagi.online.)" }; }
+  }
+  function enqueue(path, obj) { const q = queue(); q.push({ path, content: JSON.stringify(obj, null, 1) }); write(K_QUEUE, q.slice(-500)); return flush(); }
+  let flushing = null;
+  function flush() {
+    if (flushing) return flushing;
+    flushing = (async () => {
+      const c = config(); let q = queue(), sent = 0, error = '';
+      if (!c.token) return { sent, pending: q.length, error: 'not set up' };
+      while (q.length) {
+        const item = q[0];
+        try {
+          const r = await put(c, item.path, item.content, `Add ${item.path.split('/').pop()}`);
+          if (!r.ok && r.status !== 422) { error = `GitHub answered ${r.status}${await why(r)}`; break; } // 422: already there
+        } catch (e) { error = 'offline or blocked'; break; }
+        q = q.slice(1); write(K_QUEUE, q); sent++;
+      }
+      if (sent || error) logResult(!error, error ? `Upload failed: ${error}. ${q.length} waiting.` : `Uploaded ${sent} level(s).`);
+      return { sent, pending: q.length, error };
+    })().finally(() => { flushing = null; });
+    return flushing;
+  }
+  async function sessions(player) {
+    const c = config();
+    const tr = await fetch(`${API}/repos/${c.repo}/git/trees/${c.branch}?recursive=1`, { headers: headers(c.token) });
+    if (tr.status === 404 || tr.status === 409) return [];
+    if (!tr.ok) throw new Error(`GitHub answered ${tr.status}`);
+    const paths = (await tr.json()).tree.map(n => n.path).filter(p => p.startsWith(`players/${player}/sessions/`) && p.endsWith('.json'));
+    const cache = read(K_CACHE, {}), missing = paths.filter(p => !cache[p]);
+    for (let i = 0; i < missing.length; i += 6) {
+      await Promise.all(missing.slice(i, i + 6).map(async p => {
+        const r = await fetch(`https://raw.githubusercontent.com/${c.repo}/${c.branch}/${p}`);
+        if (r.ok) { try { cache[p] = await r.json(); } catch (e) { /* skip a bad file */ } }
+      }));
+    }
+    write(K_CACHE, cache);
+    return paths.map(p => cache[p]).filter(Boolean);
+  }
+  return { config, setConfig, test, enqueue, flush, sessions, pending: () => queue().length, lastLog: () => read(K_LOG, null), DEFAULT_REPO };
+})();
+
+/* Parent report, built from session records (one per level played), same as Viraj's. */
+window.VHReport = (function () {
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const median = a => { if (!a.length) return 0; const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+  const secs = s => (s >= 90 ? `${Math.round(s / 6) / 10} min` : s < 10 ? `${Math.round(s * 10) / 10} s` : `${Math.round(s)} s`);
+  const when = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); };
+  function compute(sessions, topics, areas) {
+    const tById = Object.fromEntries(topics.map(t => [t.id, t])), qs = [];
+    sessions.forEach(s => (s.questions || []).forEach(q => qs.push(Object.assign({ topic: s.topic, level: s.level }, q))));
+    const typical = median(qs.map(q => q.seconds).filter(Boolean)) || 20;
+    const types = {};
+    qs.forEach(q => { const k = `${q.topic}|${q.level}|${q.type}`; const g = (types[k] = types[k] || { topic: q.topic, level: q.level, type: q.type, n: 0, right: 0, times: [], hints: 0 }); g.n++; if (q.correct) g.right++; if (q.hint) g.hints++; if (q.seconds) g.times.push(q.seconds); });
+    const typeRows = Object.values(types).map(g => Object.assign(g, { acc: pct(g.right, g.n), med: median(g.times) }));
+    const workOn = typeRows.filter(g => g.n >= 3 && (g.acc < 75 || g.med > typical * 1.6)).sort((a, b) => a.acc - b.acc || b.med - a.med).slice(0, 8);
+    const strong = typeRows.filter(g => g.n >= 3 && g.acc >= 90 && g.med <= typical).sort((a, b) => a.med - b.med).slice(0, 6);
+    const lv = {};
+    sessions.forEach(s => { const k = `${s.topic}|${s.level}`; const g = (lv[k] = lv[k] || { topic: s.topic, level: s.level, title: s.levelTitle, tries: 0, finished: 0, best: 0, last: null, passed: false, times: [] }); g.tries++; if (s.completed) { g.finished++; g.best = Math.max(g.best, s.correct); g.last = s.correct; if (s.stars > 0) g.passed = true; } (s.questions || []).forEach(q => q.seconds && g.times.push(q.seconds)); });
+    const levelRows = Object.values(lv).map(g => Object.assign(g, { med: median(g.times) })).sort((a, b) => (a.topic === b.topic ? a.level - b.level : topics.findIndex(t => t.id === a.topic) - topics.findIndex(t => t.id === b.topic)));
+    const stuck = levelRows.filter(g => !g.passed && g.tries >= 2);
+    const areaRows = areas.map(a => { const aq = qs.filter(q => (tById[q.topic] || {}).area === a.id); return { name: a.name, n: aq.length, acc: pct(aq.filter(q => q.correct).length, aq.length), med: median(aq.map(q => q.seconds).filter(Boolean)) }; }).filter(a => a.n);
+    const recent = sessions.slice().sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1)).slice(0, 12);
+    return { tById, typical, workOn, strong, levelRows, stuck, areaRows, recent, total: { sessions: sessions.length, questions: qs.length, acc: pct(qs.filter(q => q.correct).length, qs.length), hints: qs.filter(q => q.hint).length, last: recent[0] && recent[0].startedAt } };
+  }
+  function render(el, sessions, topics, areas, name, top, note) {
+    if (!sessions.length) { el.innerHTML = `${top || ''}<div class="empty"><h2 class="rep-h">No levels played yet</h2><p class="muted">Each level ${esc(name)} finishes (or stops after answering) shows up here: his score, how many tries each level took, and how long each question took.</p>${note || ''}</div>`; return; }
+    const r = compute(sessions, topics, areas);
+    const tName = id => (r.tById[id] || {}).name || id;
+    const speed = s => (s > r.typical * 1.6 ? '<span class="chip slow">slow</span>' : s < r.typical * 0.7 ? '<span class="chip fast">fast</span>' : '');
+    const typeRow = g => `<tr><td><b>${esc(tName(g.topic))} · L${g.level}</b><br><span class="muted">${esc(g.type)}</span></td><td class="num">${g.acc}%<br><span class="muted">${g.right}/${g.n}</span></td><td class="num">${secs(g.med)} ${speed(g.med)}</td></tr>`;
+    el.innerHTML = `
+      <div class="kpis"><div><b>${r.total.sessions}</b><span>levels played</span></div><div><b>${r.total.questions}</b><span>questions</span></div><div><b>${r.total.acc}%</b><span>correct</span></div><div><b>${secs(r.typical)}</b><span>typical time per question</span></div></div>
+      <p class="muted small">Last played ${esc(when(r.total.last))}. Hints used on ${r.total.hints} questions. "Slow" means more than 1.6× his typical time; "fast" means under 0.7×.</p>
+      ${top || ''}
+      <h2 class="rep-h">Work on next</h2>
+      ${r.workOn.length || r.stuck.length ? `${r.stuck.length ? `<p class="callout">Stuck: ${r.stuck.map(g => `<b>${esc(tName(g.topic))} level ${g.level}</b> (${g.tries} tries, best ${g.best}/10)`).join(', ')}.</p>` : ''}
+        ${r.workOn.length ? `<div class="tablewrap"><table class="rep"><tr><th>Question type</th><th>Correct</th><th>Time</th></tr>${r.workOn.map(typeRow).join('')}</table></div>` : ''}`
+        : '<p class="muted">Nothing stands out yet. A question type shows up here once he has answered it 3 times and is below 75% correct or slow.</p>'}
+      ${r.strong.length ? `<h2 class="rep-h">Strong and quick</h2><div class="tablewrap"><table class="rep"><tr><th>Question type</th><th>Correct</th><th>Time</th></tr>${r.strong.map(typeRow).join('')}</table></div>` : ''}
+      ${r.areaRows.length ? `<h2 class="rep-h">By area</h2><div class="tablewrap"><table class="rep"><tr><th>Area</th><th>Correct</th><th>Typical time</th></tr>${r.areaRows.map(a => `<tr><td>${esc(a.name)}<br><span class="muted">${a.n} questions</span></td><td class="num">${a.acc}%</td><td class="num">${secs(a.med)} ${speed(a.med)}</td></tr>`).join('')}</table></div>` : ''}
+      <h2 class="rep-h">Levels and tries</h2>
+      <div class="tablewrap"><table class="rep"><tr><th>Level</th><th>Tries</th><th>Best</th><th>Last</th><th>Time</th></tr>
+        ${r.levelRows.map(g => `<tr><td><b>${esc(tName(g.topic))} · L${g.level}</b><br><span class="muted">${esc(g.title || '')}</span></td><td class="num">${g.tries}${g.tries > g.finished ? `<br><span class="muted">${g.tries - g.finished} quit</span>` : ''}</td><td class="num">${g.finished ? g.best + '/10' : '–'} ${g.passed ? '<span class="chip ok">passed</span>' : ''}</td><td class="num">${g.last == null ? '–' : g.last + '/10'}</td><td class="num">${secs(g.med)}</td></tr>`).join('')}
+      </table></div>
+      <h2 class="rep-h">Recent sessions</h2>
+      <div class="tablewrap"><table class="rep"><tr><th>When</th><th>Level</th><th>Score</th><th>Time</th></tr>
+        ${r.recent.map(s => `<tr><td>${esc(when(s.startedAt))}</td><td>${esc(tName(s.topic))} · L${s.level}</td><td class="num">${s.correct}/${s.completed ? s.total : (s.questions || []).length}${s.completed ? '' : ' <span class="chip">quit</span>'}${s.stars ? ' ' + '★'.repeat(s.stars) : ''}</td><td class="num">${secs(s.seconds || 0)}</td></tr>`).join('')}
+      </table></div>
+      ${note || ''}`;
+  }
+  return { compute, render };
+})();
+</script>
+
+<script>
 /* ======================= App ======================= */
 (function () {
   const { TOPICS, AREAS, KID } = window.VQ;
   const QUESTIONS = 10, PASS = 8, SILVER = 9;
-  const PLAYER = { id: 'p1', name: KID };
+  const PLAYER = { id: 'p1', name: KID }, CODE = 'p2'; // CODE: anonymous id in the progress repo (Viraj is p1)
   const K_STATE = 'vh.state', K_SESS = 'vh.sessions', K_PINS = 'vh.pins', K_CUR = 'vh.current', K_VOICE = 'vh.voice';
   const lsGet = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
   const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage off: keep going */ } };
@@ -767,7 +912,7 @@ window.VQ = (function () {
       <div class="tiles players"><button class="tile" id="pl"><span class="avatar">V</span><h2>${KID}</h2><span class="tag">${pins().kid ? 'Play' : 'Start'}</span></button></div>`, '#pl');
     app.querySelector('#pl').addEventListener('click', () => pictureCode(pins().kid ? 'enter' : 'set', () => startAs()));
   }
-  function startAs(topic) { loggedIn = true; lsSet(K_CUR, PLAYER.id); parentMode = false; showXP(); topic ? map(topic) : home(); }
+  function startAs(topic) { loggedIn = true; lsSet(K_CUR, PLAYER.id); parentMode = false; showXP(); topic ? map(topic) : home(); window.VHSync.flush(); restore(); }
   function logout() { lsSet(K_CUR, null); parentMode = false; login(); }
 
   function home() {
@@ -971,51 +1116,108 @@ window.VQ = (function () {
     }
   }
 
+  // question "type": wording with numbers and single letters taken out, so the same kind groups together
+  const qType = txt => String(txt || '').replace(/\d+/g, '#').replace(/(^|[\s"'(])[A-Za-z](?=[\s.,?!"')]|$)/g, '$1_').replace(/(#\s*){2,}/g, '# ').slice(0, 90);
+  const K_LOCAL = 'vh.sessions.' + CODE;
+  // the progress repo is public, so names in story problems are swapped out before saving
+  const anon = v => (typeof v === 'string' ? v.replace(/vihaan/gi, 'Kid').replace(/viraj/gi, 'Brother') : v);
+  const saveQs = qs => (qs || []).map(q => { const o = { type: qType(anon(q.prompt)) }; Object.keys(q).forEach(k => { o[k] = anon(q[k]); }); return o; });
   function record(t, li, run, completed, stars) {
-    const s = { at: new Date().toISOString(), topic: t.id, level: li + 1, title: t.levels[li].title, completed, correct: run.right, answered: run.qlog.length, stars, hints: run.hints, seconds: Math.round(run.qlog.reduce((a, q) => a + q.seconds, 0)), questions: run.qlog };
-    const all = lsGet(K_SESS, []); all.push(s); lsSet(K_SESS, all.slice(-300));
+    const now = new Date(), id = now.toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6);
+    const s = { v: 1, id, player: CODE, topic: t.id, level: li + 1, levelTitle: anon(t.levels[li].title), startedAt: run.started, endedAt: now.toISOString(), completed, correct: run.right, total: QUESTIONS, stars, hints: run.hints, seconds: Math.round(run.qlog.reduce((a, q) => a + q.seconds, 0)), questions: saveQs(run.qlog) };
+    const local = lsGet(K_LOCAL, []); local.push(s); lsSet(K_LOCAL, local.slice(-400));
+    return window.VHSync.enqueue(sessionPath(s), s);
+  }
+  const sessionPath = s => `players/${CODE}/sessions/${s.id.slice(0, 4)}/${s.id.slice(5, 7)}/${s.id}-${s.topic}-L${s.level}${s.completed ? '' : '-quit'}.json`;
+  // levels played before saving was added: convert them once and queue them for upload
+  (function migrate() {
+    const old = lsGet(K_SESS, []); if (!old.length || lsGet('vh.migrated', false)) return;
+    const local = lsGet(K_LOCAL, []);
+    old.forEach(o => {
+      const t = TOPICS.find(x => x.id === o.topic); if (!t) return;
+      const id = String(o.at).replace(/[:.]/g, '-') + '-m' + Math.random().toString(36).slice(2, 5);
+      const s = { v: 1, id, player: CODE, topic: o.topic, level: o.level, levelTitle: anon(o.title), startedAt: o.at, endedAt: o.at, completed: o.completed, correct: o.correct, total: QUESTIONS, stars: o.stars, hints: o.hints, seconds: o.seconds, questions: saveQs(o.questions) };
+      local.push(s); window.VHSync.enqueue(sessionPath(s), s);
+    });
+    lsSet(K_LOCAL, local.slice(-400)); lsSet('vh.migrated', true);
+  })();
+  // this device's levels plus any already uploaded (e.g. played on another device)
+  async function allSessions() {
+    const local = lsGet(K_LOCAL, []); let remote = [], note = '';
+    try { remote = await window.VHSync.sessions(CODE); } catch (e) { note = "Couldn't load the online log just now, so this shows this device only."; }
+    const seen = new Set(), out = [];
+    remote.concat(local).forEach(s => { if (s && !seen.has(s.id)) { seen.add(s.id); out.push(s); } });
+    return { sessions: out, note };
+  }
+  // bring stars and XP over from levels played on other devices
+  async function restore() {
+    try {
+      const remote = await window.VHSync.sessions(CODE); let changed = false, xp = 0;
+      remote.forEach(s => {
+        (s.questions || []).forEach(q => { if (q.correct) xp += q.hint ? 5 : 10; });
+        if (!s.completed || !s.stars) return;
+        const pr = prog(s.topic), i = s.level - 1;
+        if ((pr.stars[i] || 0) < s.stars) { pr.stars[i] = s.stars; changed = true; }
+      });
+      if (xp > state.xp) { state.xp = xp; changed = true; }
+      if (changed) { save(); showXP(); }
+    } catch (e) { /* offline: keep local progress */ }
   }
 
-  /* ---------- parent page ---------- */
+  /* ---------- parent page (admin): report and settings ---------- */
   function parentPage(tab = 'report') {
     hush();
+    if (location.hash) history.replaceState(null, '', location.pathname + location.search);
+    const c = window.VHSync.config();
     go(`<nav><button class="link" id="back">← Back to the game</button></nav>
-      <section><p class="eyebrow">Parent</p><h1>${KID}'s progress</h1><p class="lede">Saved on this device only.</p></section>
+      <section><p class="eyebrow">Parent</p><h1>${KID}'s progress</h1></section>
       <div class="tabs" role="tablist"><button class="tab${tab === 'report' ? ' on' : ''}" data-tab="report">Report</button><button class="tab${tab === 'settings' ? ' on' : ''}" data-tab="settings">Settings</button></div>
       <div id="pp"></div>`);
     app.querySelector('#back').addEventListener('click', () => (loggedIn ? home() : login()));
     app.querySelectorAll('[data-tab]').forEach(b => b.addEventListener('click', () => parentPage(b.dataset.tab)));
     const el = app.querySelector('#pp');
     if (tab === 'report') {
-      const S = lsGet(K_SESS, []), qs = S.flatMap(s => s.questions || []);
-      const acc = qs.length ? Math.round(100 * qs.filter(q => q.correct).length / qs.length) : 0;
-      const tname = id => (TOPICS.find(t => t.id === id) || {}).name || id;
-      const date = iso => { try { return new Date(iso).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch (e) { return iso; } };
-      const missed = S.slice().reverse().flatMap(s => (s.questions || []).filter(q => !q.correct).map(q => ({ ...q, topic: s.topic, level: s.level }))).slice(0, 10);
-      el.innerHTML = `<div class="kpis">
-          <div><b>${TOPICS.reduce((a, t) => a + cleared(t), 0)}</b><span>levels cleared of 50</span></div>
-          <div><b>${TOPICS.reduce((a, t) => a + totalStars(t), 0)}</b><span>stars of 150</span></div>
-          <div><b>${qs.length}</b><span>questions answered</span></div>
-          <div><b>${qs.length ? acc + '%' : '–'}</b><span>right first time</span></div></div>
-        <h2 style="margin-top:12px">Quests</h2>
-        <div class="tablewrap"><table class="rep"><thead><tr><th>Quest</th><th class="num">Levels</th><th class="num">Stars</th><th class="num">Right</th></tr></thead><tbody>
-          ${TOPICS.map(t => { const tq = S.filter(s => s.topic === t.id).flatMap(s => s.questions || []); return `<tr><td>${t.name}</td><td class="num">${cleared(t)}/10</td><td class="num">${totalStars(t)}</td><td class="num">${tq.length ? Math.round(100 * tq.filter(q => q.correct).length / tq.length) + '%' : '–'}</td></tr>`; }).join('')}
-        </tbody></table></div>
-        <h2 style="margin-top:12px">Recent levels</h2>
-        ${S.length ? `<div class="tablewrap"><table class="rep"><thead><tr><th>When</th><th>Level</th><th class="num">Score</th><th class="num">Stars</th><th class="num">Hints</th><th class="num">Time</th></tr></thead><tbody>
-          ${S.slice(-15).reverse().map(s => `<tr><td>${date(s.at)}</td><td>${tname(s.topic)}<br><span class="muted small">L${s.level} ${s.title}${s.completed ? '' : ' · stopped early'}</span></td><td class="num">${s.correct}/${s.completed ? QUESTIONS : s.answered}</td><td class="num">${s.stars}</td><td class="num">${s.hints}</td><td class="num">${Math.round(s.seconds / 60)} min</td></tr>`).join('')}
-        </tbody></table></div>` : '<p class="muted">No levels played on this device yet.</p>'}
-        <h2 style="margin-top:12px">Recent misses</h2>
-        ${missed.length ? `<div class="tablewrap"><table class="rep"><thead><tr><th>Question</th><th>Answered</th><th>Right answer</th></tr></thead><tbody>
-          ${missed.map(q => `<tr><td>${q.prompt}<br><span class="muted small">${tname(q.topic)} · L${q.level}</span></td><td>${q.given}</td><td>${q.answer}</td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Nothing missed yet.</p>'}`;
+      el.innerHTML = '<p class="muted">Loading the progress log…</p>';
+      allSessions().then(({ sessions, note }) => {
+        if (!document.body.contains(el)) return;
+        const quests = `<h2 class="rep-h">Quests on this device</h2><div class="tablewrap"><table class="rep"><tr><th>Quest</th><th>Levels</th><th>Stars</th></tr>
+          ${TOPICS.map(t => `<tr><td>${t.name}</td><td class="num">${cleared(t)}/10</td><td class="num">${totalStars(t)}/30</td></tr>`).join('')}</table></div>`;
+        const pend = window.VHSync.pending();
+        window.VHReport.render(el, sessions, TOPICS, AREAS, KID, quests,
+          `<p class="muted small">${note ? note + ' ' : ''}${pend ? `${pend} level(s) on this device are still waiting to upload.` : ''}${!c.token ? ' Saving to GitHub is not set up on this device yet (Settings).' : ''}</p>`);
+      });
     } else {
-      el.innerHTML = `<section class="panel"><h2>Codes</h2>
+      const L = window.VHSync.lastLog();
+      el.innerHTML = `<section class="panel"><h2>Save progress to GitHub</h2>
+          <p class="muted small">Each level is saved as a small text file in <b>${c.repo}</b> under the code <b>${CODE}</b> (no names). Reading the report needs nothing; saving needs an access token, entered here once on ${KID}'s device.</p>
+          <label class="f" for="s-repo">Data repo</label><input id="s-repo" class="txt" value="${c.repo}" autocomplete="off">
+          <label class="f" for="s-branch">Branch</label><input id="s-branch" class="txt" value="${c.branch}" autocomplete="off">
+          <label class="f" for="s-token">Access token</label><input id="s-token" class="txt" type="password" value="${c.token}" autocomplete="off" placeholder="github_pat_…">
+          <div class="actions left"><button class="btn primary" type="button" id="s-save">Save and test</button><button class="btn" type="button" id="s-flush">Upload now</button></div>
+          <p class="pin-msg" id="s-msg" aria-live="polite"></p>
+          <p class="muted small">${c.token ? 'Token saved on this device.' : 'No token saved on this device yet.'} ${window.VHSync.pending()} level(s) waiting to upload.${L ? ` Last upload attempt ${new Date(L.at).toLocaleString()}: ${L.msg}` : ' No uploads tried yet.'}</p></section>
+        <section class="panel"><h2>Codes</h2>
           <p class="muted small">${KID} logs in with 3 secret pictures. The parent PIN opens this page and Parent mode.</p>
-          <div class="actions" style="justify-content:flex-start"><button class="btn" type="button" id="p-parent">Change parent PIN</button><button class="btn" type="button" id="p-kid">Reset ${KID}'s pictures</button></div>
+          <div class="actions left"><button class="btn" type="button" id="p-parent">Change parent PIN</button><button class="btn" type="button" id="p-kid">Reset ${KID}'s pictures</button></div>
           <p class="muted small" id="p-msg" aria-live="polite"></p></section>
         <section class="panel"><h2>Reading out loud</h2>
           <label class="toggle" for="p-voice"><input type="checkbox" id="p-voice" ${voiceOn ? 'checked' : ''}> Read each question out loud</label>
           <p class="muted small">Uses the voice built into this device. ${KID} can also tap 🔊 on any question.</p></section>`;
+      const msg = el.querySelector('#s-msg');
+      el.querySelector('#s-save').addEventListener('click', async () => {
+        const cfg = { repo: el.querySelector('#s-repo').value.trim(), branch: el.querySelector('#s-branch').value.trim() || 'main', token: el.querySelector('#s-token').value.trim() };
+        msg.className = 'pin-msg'; msg.textContent = 'Checking…';
+        const r = await window.VHSync.test(cfg);
+        if (r.ok) window.VHSync.setConfig(cfg);
+        msg.textContent = r.ok ? r.message + ' Saved.' : r.message;
+        msg.className = 'pin-msg ' + (r.ok ? 'good' : 'bad');
+        if (r.ok) { const f = await window.VHSync.flush(); if (f.sent) msg.textContent += ` Uploaded ${f.sent} level(s).`; }
+      });
+      el.querySelector('#s-flush').addEventListener('click', async () => {
+        msg.className = 'pin-msg'; msg.textContent = 'Uploading…';
+        const f = await window.VHSync.flush();
+        msg.textContent = f.error === 'not set up' ? 'Add a token first.' : f.error ? `Couldn't upload (${f.error}). ${f.pending} waiting.` : `Uploaded ${f.sent}. Nothing waiting.`;
+      });
       const m = el.querySelector('#p-msg');
       el.querySelector('#p-parent').addEventListener('click', () => pinDialog('set', () => { m.textContent = 'Parent PIN changed.'; }));
       el.querySelector('#p-kid').addEventListener('click', () => { setPin('kid', null); m.textContent = `${KID} will make new secret pictures next time he logs in.`; });
@@ -1042,6 +1244,8 @@ window.VQ = (function () {
   document.getElementById('home').addEventListener('click', () => (loggedIn ? home() : login()));
   document.getElementById('parent-link').addEventListener('click', () => parentGate(() => parentPage('report')));
   lsGet(K_CUR, null) === PLAYER.id && pins().kid ? startAs() : login();
+  if (location.hash === '#parent' || location.hash === '#admin') parentGate(() => parentPage('report'));
+  window.addEventListener('online', () => window.VHSync.flush());
 })();
 </script>
 </body>
