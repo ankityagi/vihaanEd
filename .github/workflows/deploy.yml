@@ -2,9 +2,8 @@ name: Deploy to GitHub Pages
 
 # Publishes the site to vihaan.ankityagi.online (same setup as games.ankityagi.online).
 # The site is plain HTML/CSS/JS, so there is no build step: the repo root is uploaded as-is.
+# Pages is set to deploy from the main branch, so this only runs by hand.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
