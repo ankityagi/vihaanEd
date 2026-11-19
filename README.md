@@ -30,9 +30,18 @@ natural English voice is used by default), and answers use an on-screen number p
   so it works on any device, and adds anything on this device that hasn't uploaded yet. On a new
   device his stars and XP are brought back from the log when he logs in.
 
+- **Coins for play time** (same as Viraj's site): stars earn coins, each level's best stars
+  counting once, at a rate set in Parent → Settings (default 1 star = 1 coin = 5 minutes). On the
+  coins page (the 🪙 button, or `vihaan.ankityagi.online/#coins`) he trades coins for a 6-character
+  code, read out loud, that BrainPlay (games.ankityagi.online) takes for that much play time. A code
+  works once, on the day it was made. `playcode.js` is the same file as on Viraj's site; the code
+  format is described at its top. Each spend and rate change is saved as a file under
+  `players/p2/spends/` and `players/p2/settings/coins/` in the progress log, so the balance
+  follows him to other devices.
+
 ## Run it
 
-Everything is in `index.html`, with no build step. Open it in a browser or run
+Everything is in `index.html` (plus `playcode.js`), with no build step. Open it in a browser or run
 `python3 -m http.server 8000`.
 
 ## Hosting: vihaan.ankityagi.online
