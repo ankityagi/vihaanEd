@@ -8,7 +8,8 @@ Five quests, each with **10 levels** of 10 fresh random questions:
 
 Same rules as Viraj's site: **8 of 10** right unlocks the next level; 10/10 with no hints is
 3 stars, 9 is 2 stars, 8 is 1 star; +10 XP per right answer (+5 with a hint). Questions are
-read out loud with the device's voice, and answers use an on-screen number pad.
+read out loud with the device's voice (Parent → Settings picks the voice and speed; the most
+natural English voice is used by default), and answers use an on-screen number pad.
 
 - **Login:** Vihaan taps 3 secret pictures. A parent can reset them.
 - **Parent:** the link at the bottom asks for a parent PIN (chosen on first use; only a hash is

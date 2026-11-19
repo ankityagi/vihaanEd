@@ -810,9 +810,22 @@ window.VHReport = (function () {
   function paintVoice() { voiceBtn.textContent = voiceOn ? '🔊 On' : '🔇 Off'; voiceBtn.setAttribute('aria-pressed', String(voiceOn)); voiceBtn.setAttribute('aria-label', voiceOn ? 'Reading out loud is on' : 'Reading out loud is off'); }
   voiceBtn.addEventListener('click', () => { voiceOn = !voiceOn; lsSet(K_VOICE, voiceOn); paintVoice(); if (!voiceOn) hush(); });
   paintVoice();
+  // voice: the parent can pick one in Settings (kept on this device); otherwise the most natural English voice the device has
+  const K_VNAME = 'vh.voiceName', K_VSPEED = 'vh.voiceSpeed';
+  const SPEEDS = { slow: { rate: 0.82, pitch: 1.1, label: 'Slower' }, normal: { rate: 0.95, pitch: 1.15, label: 'Normal' }, quick: { rate: 1.06, pitch: 1.18, label: 'Quicker' } };
   let voice = null;
-  function chooseVoice() { try { const vs = speechSynthesis.getVoices(); voice = vs.find(v => /en-US/i.test(v.lang) && /Samantha|Google US|Aria|Jenny/i.test(v.name)) || vs.find(v => /en-US/i.test(v.lang)) || vs.find(v => /^en/i.test(v.lang)) || null; } catch (e) { voice = null; } }
-  try { chooseVoice(); speechSynthesis.onvoiceschanged = chooseVoice; } catch (e) { /* no speech */ }
+  const enVoices = () => { try { return speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); } catch (e) { return []; } };
+  function voiceRank(v) { // higher is more natural-sounding
+    let r = 0;
+    if (/natural|neural|premium|enhanced|siri/i.test(v.name)) r += 50;
+    if (/Ava|Jenny|Aria|Emma|Ana|Michelle|Zoe|Allison|Samantha|Google US English/i.test(v.name)) r += 20;
+    if (/en-US/i.test(v.lang)) r += 10; else if (/en-(GB|AU|CA|IE|NZ)/i.test(v.lang)) r += 4;
+    if (/compact|eSpeak|Fred|Albert|Bad News|Bells|Boing|Bubbles|Cellos|Jester|Organ|Trinoids|Whisper|Zarvox|Wobble|Superstar|Junior|Ralph|Grandma|Grandpa|Rocko|Shelley|Flo|Eddy|Reed|Sandy/i.test(v.name)) r -= 40;
+    return r;
+  }
+  const rankedVoices = () => enVoices().sort((a, b) => voiceRank(b) - voiceRank(a) || a.name.localeCompare(b.name));
+  function chooseVoice() { const want = lsGet(K_VNAME, ''), vs = rankedVoices(); voice = (want && vs.find(v => v.name === want)) || vs[0] || null; }
+  try { chooseVoice(); speechSynthesis.addEventListener('voiceschanged', chooseVoice); } catch (e) { /* no speech */ }
   function hush() { try { speechSynthesis.cancel(); } catch (e) { /* ignore */ } }
   function speak(text, force) {
     if ((!voiceOn && !force) || !text) return;
@@ -820,7 +833,7 @@ window.VHReport = (function () {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text.replace(/−/g, ' minus ').replace(/_/g, ' blank '));
       if (voice) u.voice = voice;
-      u.rate = 0.88; u.pitch = 1.05; speechSynthesis.speak(u);
+      const sp = SPEEDS[lsGet(K_VSPEED, 'normal')] || SPEEDS.normal; u.rate = sp.rate; u.pitch = sp.pitch; speechSynthesis.speak(u);
     } catch (e) { /* speech not available */ }
   }
 
@@ -1202,7 +1215,10 @@ window.VHReport = (function () {
           <p class="muted small" id="p-msg" aria-live="polite"></p></section>
         <section class="panel"><h2>Reading out loud</h2>
           <label class="toggle" for="p-voice"><input type="checkbox" id="p-voice" ${voiceOn ? 'checked' : ''}> Read each question out loud</label>
-          <p class="muted small">Uses the voice built into this device. ${KID} can also tap 🔊 on any question.</p></section>`;
+          <label class="f" for="p-vname">Voice</label><select id="p-vname" class="txt"></select>
+          <label class="f" for="p-vspeed">Speed</label><select id="p-vspeed" class="txt">${Object.entries(SPEEDS).map(([k, v]) => `<option value="${k}"${lsGet(K_VSPEED, 'normal') === k ? ' selected' : ''}>${v.label}</option>`).join('')}</select>
+          <div class="actions left"><button class="btn" type="button" id="p-vtest">🔊 Test</button></div>
+          <p class="muted small">These are the voices built into this device, most natural first. Microsoft Edge has the best ones (names ending in "Natural", like Ava or Jenny). On a Mac you can add a better voice: System Settings → Accessibility → Spoken Content → System voice → Manage Voices, then pick an English Premium or Enhanced voice and reload this page. The choice is kept on this device.</p></section>`;
       const msg = el.querySelector('#s-msg');
       el.querySelector('#s-save').addEventListener('click', async () => {
         const cfg = { repo: el.querySelector('#s-repo').value.trim(), branch: el.querySelector('#s-branch').value.trim() || 'main', token: el.querySelector('#s-token').value.trim() };
@@ -1222,6 +1238,16 @@ window.VHReport = (function () {
       el.querySelector('#p-parent').addEventListener('click', () => pinDialog('set', () => { m.textContent = 'Parent PIN changed.'; }));
       el.querySelector('#p-kid').addEventListener('click', () => { setPin('kid', null); m.textContent = `${KID} will make new secret pictures next time he logs in.`; });
       el.querySelector('#p-voice').addEventListener('change', e => { voiceOn = e.target.checked; lsSet(K_VOICE, voiceOn); paintVoice(); });
+      const vsel = el.querySelector('#p-vname');
+      const fillVoices = () => {
+        const want = lsGet(K_VNAME, ''), vs = rankedVoices();
+        vsel.innerHTML = `<option value="">Automatic${vs[0] ? ` (${vs[0].name.replace(/[<>&"]/g, '')})` : ''}</option>` + vs.map(v => { const n = v.name.replace(/[<>&"]/g, ''); return `<option value="${n}"${n === want ? ' selected' : ''}>${n} · ${v.lang}</option>`; }).join('');
+        if (!vs.length) vsel.innerHTML = '<option value="">No voices found on this device</option>';
+      };
+      fillVoices(); try { speechSynthesis.addEventListener('voiceschanged', fillVoices); } catch (e) { /* no speech */ }
+      vsel.addEventListener('change', () => { lsSet(K_VNAME, vsel.value); chooseVoice(); speak(`Hi ${KID}! Let's do some math.`, true); });
+      el.querySelector('#p-vspeed').addEventListener('change', e => { lsSet(K_VSPEED, e.target.value); speak(`Hi ${KID}! Let's do some math.`, true); });
+      el.querySelector('#p-vtest').addEventListener('click', () => speak(`Hi ${KID}! ${KID} has 5 apples. He gets 3 more. How many now?`, true));
     }
   }
 
