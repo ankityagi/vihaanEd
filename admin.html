@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Vihaan's Progress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+:root {
+  --bg: #eaf4ff; --rule: rgba(43,125,224,.10); --card: #fff; --ink: #1f2a44; --muted: #56647e; --line: #c6d8ee;
+  --sky: #2b7de0; --sun: #ffc93a; --sun-ink: #5c4100; --grass: #23935a; --berry: #dc3d55; --good-bg: #e2f6ea; --bad-bg: #fde7ea; --soft: #f3f8ff;
+  --display: 'Fredoka', 'Trebuchet MS', system-ui, sans-serif; --body: 'Andika', system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; --r: 18px;
+  --c-series: #2a78d6; --c-crit: #d03b3b; --c-s1: #86b6ef; --c-s2: #3987e5; --c-s3: #1c5cab; --c-zone: rgba(208,59,59,.07); --c-grid: #e3e9f1;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f1a2c; --rule: rgba(160,200,255,.06); --card: #1a2740; --ink: #eef3fb; --muted: #a8b6cd; --line: #2d4063; --sky: #6ea9ff; --sun: #ffd25e; --sun-ink: #3a2a00;
+  --grass: #4fd18a; --berry: #ff7a8c; --good-bg: #133524; --bad-bg: #3d1b22; --soft: #142139; color-scheme: dark;
+  --c-series: #3987e5; --c-crit: #e66767; --c-s1: #3987e5; --c-s2: #6da7ec; --c-s3: #9ec5f4; --c-zone: rgba(230,103,103,.10); --c-grid: #2a3a55;
+} }
+:root[data-theme="dark"] {
+  --bg: #0f1a2c; --rule: rgba(160,200,255,.06); --card: #1a2740; --ink: #eef3fb; --muted: #a8b6cd; --line: #2d4063; --sky: #6ea9ff; --sun: #ffd25e; --sun-ink: #3a2a00;
+  --grass: #4fd18a; --berry: #ff7a8c; --good-bg: #133524; --bad-bg: #3d1b22; --soft: #142139; color-scheme: dark;
+  --c-series: #3987e5; --c-crit: #e66767; --c-s1: #3987e5; --c-s2: #6da7ec; --c-s3: #9ec5f4; --c-zone: rgba(230,103,103,.10); --c-grid: #2a3a55;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 17px/1.45 var(--body); color: var(--ink); background-color: var(--bg); background-image: linear-gradient(var(--rule) 2px, transparent 2px); background-size: 100% 40px; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 4px solid var(--sky); outline-offset: 3px; border-radius: 8px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.wide { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-block: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; font: 700 1.35rem var(--display); text-decoration: none; color: inherit; }
+.mark { width: 40px; height: 40px; border-radius: 12px; background: var(--sun); color: var(--sun-ink); display: grid; place-items: center; transform: rotate(-6deg); border: 3px solid var(--ink); }
+.right { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.who { font-size: .85rem; color: var(--muted); white-space: nowrap; }
+.link { color: var(--sky); font-weight: 700; text-decoration: none; font-size: .9rem; }
+h1, h2 { font-family: var(--display); line-height: 1.1; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(1.7rem, 5vw, 2.4rem); font-weight: 700; }
+.eyebrow { margin: 0 0 4px; font: 600 .8rem var(--display); text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+.lede { margin: 8px 0 0; color: var(--muted); max-width: 58ch; }
+.btn { border: 3px solid var(--ink); background: var(--card); border-radius: 14px; padding: 8px 16px; font: 600 1rem var(--display); cursor: pointer; box-shadow: 0 3px 0 var(--ink); }
+.btn:active { transform: translateY(3px); box-shadow: none; }
+.btn.primary { background: var(--sun); color: var(--sun-ink); }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.pin { font: 700 1.4rem var(--display); letter-spacing: .3em; text-align: center; color: var(--ink); background: var(--soft); border: 3px solid var(--ink); border-radius: 14px; padding: 10px; width: 100%; }
+.err { margin: 0; color: var(--berry); font-weight: 700; font-size: .95rem; }
+.panel { background: var(--card); border: 3px solid var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.tablewrap { overflow-x: auto; }
+.rep { border-collapse: collapse; width: 100%; font-size: .9rem; background: var(--card); }
+.rep th, .rep td { border-bottom: 2px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+.rep th { font: 600 .72rem var(--display); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--soft); }
+.rep .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.muted { color: var(--muted); } .small { font-size: .85rem; }
+.chip { display: inline-block; font: 600 .68rem var(--display); text-transform: uppercase; letter-spacing: .05em; padding: 1px 7px; border-radius: 99px; border: 1.5px solid var(--line); color: var(--muted); }
+.chip.slow { border-color: var(--berry); color: var(--berry); }
+.chip.ok { border-color: var(--grass); color: var(--grass); }
+.chip.bad { border-color: var(--c-crit); color: var(--c-crit); }
+#admin { display: flex; flex-direction: column; gap: 18px; padding-block: 6px 56px; }
+.ahead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.ahead .muted { margin: 6px 0 0; }
+.controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.segs { display: inline-flex; border: 2px solid var(--ink); border-radius: 12px; overflow: hidden; }
+.seg { background: var(--card); border: 0; padding: 8px 12px; font-weight: 700; font-size: .85rem; cursor: pointer; color: var(--muted); }
+.seg + .seg { border-left: 2px solid var(--ink); }
+.seg.on { background: var(--sun); color: var(--sun-ink); }
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.kpi { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kpi span { font-size: .82rem; color: var(--muted); font-weight: 700; }
+.kpi b { font: 700 2rem/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.kpi small { color: var(--muted); font-size: .8rem; }
+.panel h2 { font-size: 1.15rem; }
+.phead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 16px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px; }
+.grid2.wide-left { grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); }
+@media (min-width: 980px) { .grid2.wide-left { grid-template-columns: 1.4fr 1fr; } }
+.chart { width: 100%; min-width: 0; }
+.chart svg { display: block; max-width: 100%; height: auto; }
+.hl { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 6px; max-width: 80ch; }
+.todo { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 12px; }
+.kinds { margin: 10px 0 0; display: grid; gap: 4px 0; font-size: .88rem; }
+.kinds dt { font-weight: 700; margin-top: 6px; } .kinds dd { margin: 0; }
+.c-grid { stroke: var(--c-grid); stroke-width: 1; }
+.c-axis { stroke: var(--muted); stroke-width: 1.5; }
+.c-tick { font: 600 11px var(--mono); fill: var(--muted); }
+.c-label { font: 600 13px var(--body); fill: var(--ink); }
+.c-value { font: 700 12px var(--mono); fill: var(--ink); }
+.c-axislabel { font: 600 12px var(--body); fill: var(--muted); }
+.c-bar { fill: var(--c-series); } .c-bar.muted { fill: var(--muted); opacity: .45; }
+.c-line { fill: none; stroke: var(--c-series); stroke-width: 2; stroke-linejoin: round; }
+.c-dot { fill: var(--c-series); stroke: var(--card); stroke-width: 2; }
+.c-ref { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.c-reflabel { font: 600 11px var(--body); fill: var(--muted); }
+.c-zone { fill: var(--c-zone); }
+.c-pt { fill: var(--c-series); fill-opacity: .55; stroke: var(--card); stroke-width: 2; }
+.c-pt.bad { fill: var(--c-crit); fill-opacity: .8; }
+.c-hit { fill: transparent; outline: none; }
+.c-hit:focus-visible { stroke: var(--sky); stroke-width: 2; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--c-series); opacity: .7; display: inline-block; }
+.legend .dot.bad { background: var(--c-crit); opacity: 1; }
+.legend .cell { width: 16px; height: 16px; font-size: 0; }
+.qmap { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.qrow { display: grid; grid-template-columns: 210px 1fr; gap: 12px; align-items: center; }
+.qname { display: flex; flex-direction: column; min-width: 0; }
+.qname small { color: var(--muted); font-size: .78rem; }
+.cells { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+.cell { position: relative; display: inline-grid; place-items: center; height: 34px; border-radius: 7px; font: 700 .78rem var(--mono); background: var(--soft); border: 1.5px solid var(--line); color: var(--muted); }
+.cell .hz { position: absolute; top: -7px; right: -4px; font-style: normal; font-size: .72rem; }
+.cell.tried { background: var(--card); border: 2px dashed var(--c-crit); color: var(--ink); }
+.cell.skip { background: var(--good-bg); border: 2px solid var(--grass); color: var(--ink); }
+.cell.s1 { background: var(--c-s1); border-color: var(--c-s1); color: #0d1b2e; }
+.cell.s2 { background: var(--c-s2); border-color: var(--c-s2); color: #fff; }
+.cell.s3 { background: var(--c-s3); border-color: var(--c-s3); color: #fff; }
+:root[data-theme="dark"] .cell.s1, :root[data-theme="dark"] .cell.s2 { color: #fff; }
+:root[data-theme="dark"] .cell.s3 { color: #0d1b2e; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cell.s1, :root:not([data-theme="light"]) .cell.s2 { color: #fff; } :root:not([data-theme="light"]) .cell.s3 { color: #0d1b2e; } }
+@media (max-width: 640px) { .qrow { grid-template-columns: 1fr; gap: 4px; } .cell { height: 28px; } .top .who { display: none; } }
+.sessions { display: flex; flex-direction: column; gap: 6px; }
+.sessions details { border: 1.5px solid var(--line); border-radius: 10px; background: var(--card); }
+.sessions summary { display: grid; grid-template-columns: 140px 1fr 110px 70px; gap: 10px; padding: 9px 12px; cursor: pointer; font-size: .9rem; align-items: center; }
+.sessions summary .num { text-align: right; font-variant-numeric: tabular-nums; }
+.sessions details[open] summary { border-bottom: 1.5px solid var(--line); }
+@media (max-width: 640px) { .sessions summary { grid-template-columns: 1fr auto; } .sessions summary span:first-child { grid-column: 1 / -1; color: var(--muted); font-size: .8rem; } }
+.rep.q td { font-size: .85rem; }
+.rep tr.wrongrow td { background: var(--bad-bg); }
+.gate { max-width: 420px; margin: 40px auto; width: 100%; }
+.foot { margin: 0; }
+.tip { position: fixed; z-index: 80; pointer-events: none; max-width: 300px; background: var(--ink); color: var(--card); border-radius: 10px; padding: 8px 11px; font-size: .82rem; line-height: 1.4; box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+</style>
+</head>
+<body>
+<header class="top wide">
+  <a class="brand" href="./" aria-label="Back to the game"><span class="mark">V</span><span>Vihaan's Quest</span></a>
+  <span class="right"><span class="who">Parent dashboard</span><a class="link" href="./">Back to the game</a></span>
+</header>
+<main id="admin" class="wide"><p class="muted">Loading…</p></main>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<script>
+/* Quest and level names, copied from index.html (rebuild this list when levels change). */
+window.VH_TOPICS = [{"id":"addsub","name":"Adding & Taking Away","area":"math","hidden":false,"levels":["Count and Add","Add to 10","Take Away","Make 10","Add to 20","Take Away to 20","Missing Number","Story Problems","Three Numbers","Boss Level"]},
+{"id":"tens","name":"Numbers & Tens","area":"math","hidden":false,"levels":["Count It","Before & After","Skip Counting","Tens & Ones","Place Value","Bigger or Smaller","10 More, 10 Less","Add Tens","Big Adding","Boss Level"]},
+{"id":"shapes","name":"Shapes, Time & Measuring","area":"math","hidden":false,"levels":["Name the Shape","Sides & Corners","Halves & Quarters","Longer or Shorter","Measure It","O'Clock","Half Past","Picture Graphs","Time Puzzles","Boss Level"]},
+{"id":"letters","name":"Big & Small Letters","area":"abc","hidden":false,"levels":["Find the Small Letter","Find the Big Letter","Big or Small?","b, d, p, q","Letter Pairs","Names Start Big","Sentence Start","ABC Order","Spot the Mistake","Boss Level"]},
+{"id":"read","name":"Reading Quest","area":"abc","hidden":false,"levels":["First Sounds","Last Sounds","Rhymes","Read a, i Words","Read o, u, e Words","Sight Words 1","Sight Words 2","Middle Sound","Read a Sentence","Boss Level"]},
+{"id":"write","name":"Write d and m","area":"abc","hidden":true,"levels":["Trace d","Trace m","Find d","Find m","Trace d Again","Trace m Again","First Sounds","Just the Dots","Right Way Round","Boss Level"]}];
+</script>
+<script>
+/* Parent dashboard (admin.html), the same as Viraj's.
+   Reads the anonymous progress log (one JSON file per level played, player code p2) from the
+   public data repo, merges anything still waiting on this device, and shows practice time,
+   accuracy, the quest map, speed vs accuracy by question type, mistake patterns, tries per
+   level, Hard mode, warm-ups, test-outs and every session. Behind the parent PIN set on this device. */
+(function () {
+  const PLAYER = { id: 'p2', name: 'Vihaan' };
+  const PASS_PCT = 80;
+  const root = document.getElementById('admin');
+  const tip = document.getElementById('tip');
+  const TOPICS = window.VH_TOPICS;
+  const AREAS = { math: 'Math', abc: 'Letters & Reading' };
+  const tById = Object.fromEntries(TOPICS.map(t => [t.id, t]));
+  tById.warmup = { id: 'warmup', name: 'Warm-up', levels: [] };
+
+  /* ---------- small helpers ---------- */
+  const esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const lsGet = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* ignore */ } };
+  const median = a => { if (!a.length) return 0; const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+  const sum = a => a.reduce((s, v) => s + v, 0);
+  const secs = s => (s >= 90 ? `${Math.round(s / 6) / 10} min` : s < 10 ? `${Math.round(s * 10) / 10} s` : `${Math.round(s)} s`);
+  const mins = s => (s >= 3600 ? `${Math.floor(s / 3600)} h ${Math.round((s % 3600) / 60)} min` : `${Math.max(1, Math.round(s / 60))} min`);
+  const dayKey = iso => { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  const dayLabel = k => new Date(k + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  const when = iso => new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const tName = id => (tById[id] || {}).name || id;
+  const lvTitle = (id, l) => ((tById[id] || {}).levels || [])[l - 1] || '';
+  const MODE = { hard: ' ⚡ Hard', warmup: '', testout: ' · test out' };
+  const sLabel = s => `${tName(s.topic)}${s.level ? ` · L${s.level}` : ''}${MODE[s.mode] || ''}`;
+
+  /* ---------- reading the log (read only; the game does the saving) ---------- */
+  const Log = (function () {
+    const c = (() => { const x = lsGet('vh.sync', {}); return { repo: x.repo || 'ankityagi/mathquest-progress', branch: x.branch || 'main', token: x.token || '' }; })();
+    const headers = c.token ? { Accept: 'application/vnd.github+json', Authorization: 'Bearer ' + c.token } : { Accept: 'application/vnd.github+json' };
+    async function sessions(player) {
+      const tr = await fetch(`https://api.github.com/repos/${c.repo}/git/trees/${c.branch}?recursive=1`, { headers });
+      if (tr.status === 404 || tr.status === 409) return [];
+      if (!tr.ok) throw new Error(`GitHub answered ${tr.status}`);
+      const prefix = `players/${player}/sessions/`;
+      const paths = (await tr.json()).tree.map(n => n.path).filter(p => p.startsWith(prefix) && p.endsWith('.json'));
+      const cache = lsGet('vh.cache', {}), missing = paths.filter(p => !cache[p]);
+      for (let i = 0; i < missing.length; i += 6) {
+        await Promise.all(missing.slice(i, i + 6).map(async p => {
+          const r = await fetch(`https://raw.githubusercontent.com/${c.repo}/${c.branch}/${p}`);
+          if (r.ok) { try { cache[p] = await r.json(); } catch (e) { /* skip a bad file */ } }
+        }));
+      }
+      lsSet('vh.cache', cache);
+      return paths.map(p => cache[p]).filter(Boolean);
+    }
+    return { sessions, repo: c.repo };
+  })();
+
+  /* ---------- parent PIN (same hash and storage as the game) ---------- */
+  function pinHash(pin) {
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57; const s = 'vh:' + pin;
+    for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  function gate(onOk) {
+    let open = false; try { open = sessionStorage.getItem('vh.admin') === '1'; } catch (e) { /* ignore */ }
+    if (open) return onOk();
+    const pins = lsGet('vh.pins', {}), setting = !pins.parent;
+    root.innerHTML = `<section class="gate panel">
+        <h1>${setting ? 'Set a parent PIN' : 'Parent PIN'}</h1>
+        <p class="lede">${setting ? 'This device has no parent PIN yet. Choose 4 to 8 digits; you will use it to open this dashboard here.' : `Enter the parent PIN to see ${PLAYER.name}'s progress.`}</p>
+        <label class="sr" for="g1">PIN</label><input id="g1" class="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="PIN">
+        ${setting ? '<label class="sr" for="g2">Type it again</label><input id="g2" class="pin" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="Type it again">' : ''}
+        <p class="err" id="gerr" hidden></p>
+        <div class="actions left"><button class="btn primary" type="button" id="gok">${setting ? 'Save PIN and open' : 'Open dashboard'}</button></div>
+      </section>`;
+    const g1 = document.getElementById('g1'), g2 = document.getElementById('g2'), err = document.getElementById('gerr');
+    const fail = m => { err.textContent = m; err.hidden = false; g1.value = ''; if (g2) g2.value = ''; g1.focus(); };
+    const ok = () => {
+      const a = g1.value.trim();
+      if (setting) {
+        if (!/^\d{4,8}$/.test(a)) return fail('Use 4 to 8 digits.');
+        if (a !== g2.value.trim()) return fail('The two PINs do not match.');
+        const p = lsGet('vh.pins', {}); p.parent = pinHash(a); lsSet('vh.pins', p);
+      } else if (pinHash(a) !== lsGet('vh.pins', {}).parent) return fail('That PIN is not right.');
+      try { sessionStorage.setItem('vh.admin', '1'); } catch (e) { /* ignore */ }
+      onOk();
+    };
+    document.getElementById('gok').addEventListener('click', ok);
+    [g1, g2].forEach(i => i && i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); ok(); } }));
+    g1.focus();
+  }
+
+  /* ---------- mistake patterns (Grade 1 kinds) ---------- */
+  const num = s => { const m = String(s || '').replace(/,/g, '').trim().match(/^-?\d+(\.\d+)?$/); return m ? +m[0] : NaN; };
+  const KINDS = {
+    offby1: { name: 'Off by one', help: 'One more or one less than the answer, e.g. counting a cube twice or starting the count at the wrong place. Touching each thing as he counts helps.' },
+    joined: { name: 'Wrote the numbers side by side', help: 'Put two numbers from the question next to each other instead of working them out, e.g. 6 and 6 → 66.' },
+    close: { name: 'Small slip', help: 'Within 2 of a right answer of 10 or more: the method was right, a step of counting on or back slipped.' },
+    swap: { name: 'Picked a look-alike', help: 'Picked a wrong option in a multiple-choice question. The pairs he mixes up are listed.' },
+    other: { name: 'Other wrong answer', help: 'Not one of the patterns above.' }
+  };
+  function mistakeKind(q) {
+    if (q.correct) return null;
+    const a = num(q.answer), g = num(q.given);
+    if (isNaN(a) || isNaN(g)) return 'swap';
+    if (Math.abs(g - a) === 1) return 'offby1';
+    const ns = (q.prompt || '').match(/\d+/g) || [];
+    for (let i = 0; i < ns.length; i++) for (let j = 0; j < ns.length; j++) if (i !== j && ns[i] + ns[j] === String(g)) return 'joined';
+    if (String(g).length === 2 && g % 11 === 0 && ns.includes(String(g / 11))) return 'joined';
+    if (Math.abs(a) >= 10 && Math.abs(g - a) <= 2) return 'close';
+    return 'other';
+  }
+
+  /* ---------- crunch the numbers ---------- */
+  function analyse(all, range) {
+    const now = Date.now(), cut = range === 'all' ? 0 : now - (range === '7' ? 7 : 30) * 864e5;
+    const S = all.filter(s => new Date(s.startedAt).getTime() >= cut).sort((a, b) => (a.startedAt < b.startedAt ? -1 : 1));
+    const Q = [];
+    S.forEach(s => (s.questions || []).forEach(q => Q.push(Object.assign({ topic: s.topic, level: s.level, mode: s.mode === 'hard' ? 'hard' : '', at: s.startedAt, sid: s.id }, q, { kind: mistakeKind(q) }))));
+    const typical = median(Q.map(q => q.seconds).filter(Boolean)) || 10;
+
+    const days = {};
+    S.forEach(s => {
+      const k = dayKey(s.startedAt), d = (days[k] = days[k] || { k, secs: 0, n: 0, right: 0, sessions: 0 });
+      d.sessions++; (s.questions || []).forEach(q => { d.secs += q.seconds || 0; d.n++; if (q.correct) d.right++; });
+    });
+    const dayRows = Object.values(days).sort((a, b) => (a.k < b.k ? -1 : 1));
+
+    const lv = {};
+    S.forEach(s => {
+      if (s.mode === 'warmup' || s.mode === 'testout') return;
+      const mode = s.mode || '', k = `${s.topic}|${s.level}|${mode}`;
+      const g = (lv[k] = lv[k] || { topic: s.topic, level: s.level, mode, tries: 0, quits: 0, best: 0, last: null, stars: 0, passedOn: 0, times: [] });
+      g.tries++;
+      if (!s.completed) g.quits++;
+      else { g.best = Math.max(g.best, s.correct); g.last = s.correct; if (s.stars > g.stars) g.stars = s.stars; if (s.stars > 0 && !g.passedOn) g.passedOn = g.tries; }
+      (s.questions || []).forEach(q => q.seconds && g.times.push(q.seconds));
+    });
+    const order = id => { const i = TOPICS.findIndex(t => t.id === id); return i < 0 ? 99 : i; };
+    const levels = Object.values(lv).map(g => Object.assign(g, { med: median(g.times) }))
+      .sort((a, b) => (a.topic === b.topic ? a.level - b.level || (a.mode < b.mode ? -1 : 1) : order(a.topic) - order(b.topic)));
+    const skipped = {};
+    all.filter(s => s.mode === 'testout' && Array.isArray(s.skipped)).forEach(s => s.skipped.forEach(l => { skipped[`${s.topic}|${l}`] = true; }));
+
+    const ty = {};
+    Q.forEach(q => {
+      const k = `${q.topic}|${q.level}|${q.mode}|${q.type}`;
+      const g = (ty[k] = ty[k] || { topic: q.topic, level: q.level, mode: q.mode, type: q.type, n: 0, right: 0, times: [], wrong: [] });
+      g.n++; if (q.correct) g.right++; else g.wrong.push(q); if (q.seconds) g.times.push(q.seconds);
+    });
+    const types = Object.values(ty).map(g => Object.assign(g, { acc: pct(g.right, g.n), med: median(g.times) }));
+    const needs = g => g.n >= 3 && (g.acc < 75 || g.med > typical * 1.6);
+    const workOn = types.filter(needs).sort((a, b) => a.acc - b.acc || b.med - a.med);
+
+    const wrong = Q.filter(q => !q.correct);
+    const kinds = Object.keys(KINDS).map(k => ({ k, n: wrong.filter(q => q.kind === k).length, ex: wrong.filter(q => q.kind === k) })).filter(r => r.n);
+    const swaps = {};
+    wrong.filter(q => q.kind === 'swap').forEach(q => { const k = `${q.answer} → picked ${q.given}`; swaps[k] = (swaps[k] || 0) + 1; });
+    const swapRows = Object.entries(swaps).sort((a, b) => b[1] - a[1]);
+    const warm = S.filter(s => s.mode === 'warmup'), tests = S.filter(s => s.mode === 'testout');
+
+    return { S, Q, typical, dayRows, levels, skipped, types, workOn, kinds, swapRows, wrong, warm, tests };
+  }
+  const lvName = g => `${tName(g.topic)} · L${g.level}${g.mode === 'hard' ? ' ⚡' : ''}`;
+
+  function highlights(a) {
+    const out = [];
+    const normal = a.levels.filter(g => !g.mode);
+    const passedHard = normal.filter(g => g.passedOn >= 3).sort((x, y) => y.passedOn - x.passedOn)[0];
+    if (passedHard) out.push(`<b>Stuck with it:</b> passed ${esc(tName(passedHard.topic))} level ${passedHard.level} (${esc(lvTitle(passedHard.topic, passedHard.level))}) on try ${passedHard.passedOn}${passedHard.quits ? `, after quitting ${passedHard.quits} time${passedHard.quits > 1 ? 's' : ''}` : ''}.`);
+    const perfect = a.S.filter(s => s.stars === 3 && !s.mode);
+    if (perfect.length) { const names = [...new Set(perfect.map(s => `${tName(s.topic)} L${s.level}`))]; out.push(`<b>Perfect levels:</b> ${perfect.length} with 10/10 and no hints (${names.slice(0, 4).map(esc).join('; ')}${names.length > 4 ? ` and ${names.length - 4} more` : ''}).`); }
+    const hardS = a.S.filter(s => s.mode === 'hard');
+    if (hardS.length) { const best = a.levels.filter(g => g.mode === 'hard'); out.push(`<b>Hard mode:</b> ${hardS.length} tr${hardS.length === 1 ? 'y' : 'ies'} on ${best.length} level${best.length === 1 ? '' : 's'}, ${best.filter(g => g.stars).length} cleared, ${pct(sum(hardS.map(s => s.correct)), sum(hardS.map(s => (s.questions || []).length)))}% correct.`); }
+    if (a.tests.length) a.tests.forEach(s => out.push(`<b>Tested out:</b> ${esc(tName(s.topic))}, ${s.skipped && s.skipped.length ? `skipped level${s.skipped.length > 1 ? 's' : ''} ${s.skipped.length > 1 ? `1 to ${s.skipped.length}` : '1'}` : 'started at level 1'} (${s.correct}/${(s.questions || []).length} right before the first miss).`));
+    if (a.warm.length) { const wq = a.warm.flatMap(s => s.questions || []); out.push(`<b>Warm-ups:</b> ${a.warm.length} done, ${pct(wq.filter(q => q.correct).length, wq.length)}% correct on his tricky levels.`); }
+    const topKind = a.kinds.filter(k => k.k !== 'other' && k.k !== 'swap').sort((x, y) => y.n - x.n)[0];
+    if (topKind && topKind.n >= 2) { const e = topKind.ex[0]; out.push(`<b>Most common slip: ${esc(KINDS[topKind.k].name.toLowerCase())}</b> (${topKind.n} times), e.g. “${esc(e.prompt)}” → he answered <b>${esc(e.given)}</b>, answer ${esc(e.answer)}.`); }
+    if (a.swapRows.length && a.swapRows[0][1] >= 2) out.push(`<b>Mix-up to clear up:</b> ${esc(a.swapRows[0][0])} (${a.swapRows[0][1]} times).`);
+    const quitty = normal.filter(g => g.quits >= 3).sort((x, y) => y.quits - x.quits)[0];
+    if (quitty) out.push(`<b>Quit often:</b> ${esc(tName(quitty.topic))} level ${quitty.level}, ${quitty.quits} of ${quitty.tries} tries. Worth sitting with him for one round.`);
+    const slow = a.types.filter(g => g.n >= 3).sort((x, y) => y.med - x.med)[0];
+    if (slow && slow.med > a.typical * 1.6) out.push(`<b>Slowest question type:</b> “${esc(slow.type)}” takes him about ${secs(slow.med)} (typical is ${secs(a.typical)}).`);
+    return out;
+  }
+
+  /* ---------- charts (SVG, sized to their container) ---------- */
+  const W = el => Math.max(280, Math.floor(el.clientWidth));
+  function niceTicks(max, count = 4) {
+    const raw = Math.max(max, 1) / count, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw);
+    const top = Math.ceil(max / step) * step || step;
+    const t = []; for (let v = 0; v <= top + 1e-9; v += step) t.push(Math.round(v * 100) / 100);
+    return { top, t };
+  }
+  const roundedTop = (x, y, w, h, r) => { r = Math.min(r, w / 2, h); return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`; };
+
+  function columnChart(el, rows, opt) {
+    const w = W(el), h = 210, L = 40, R = 8, T = 10, B = 28, pw = w - L - R, ph = h - T - B;
+    const { top, t } = niceTicks(Math.max(...rows.map(r => r.v), 1));
+    const y = v => T + ph - (v / top) * ph, band = pw / Math.max(rows.length, 1), bw = Math.min(46, band - 2);
+    let s = t.map(v => `<line class="c-grid" x1="${L}" x2="${w - R}" y1="${y(v)}" y2="${y(v)}"/><text class="c-tick" x="${L - 6}" y="${y(v)}" text-anchor="end" dominant-baseline="middle">${v}</text>`).join('');
+    const every = Math.ceil(rows.length / Math.floor(pw / 52));
+    rows.forEach((r, i) => {
+      const cx = L + band * (i + 0.5), bh = (r.v / top) * ph;
+      if (bh > 0) s += `<path class="c-bar" d="${roundedTop(cx - bw / 2, y(r.v), bw, bh, 4)}"/>`;
+      s += `<rect class="c-hit" x="${L + band * i}" y="${T}" width="${band}" height="${ph}" data-tip="${esc(r.tip)}" tabindex="0"/>`;
+      if (i % every === 0) s += `<text class="c-tick" x="${cx}" y="${h - 9}" text-anchor="middle">${esc(r.label)}</text>`;
+    });
+    s += `<line class="c-axis" x1="${L}" x2="${w - R}" y1="${T + ph}" y2="${T + ph}"/>`;
+    el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${esc(opt.alt)}">${s}</svg>`;
+  }
+
+  function accuracyChart(el, rows) {
+    const w = W(el), h = 210, L = 40, R = 14, T = 12, B = 28, pw = w - L - R, ph = h - T - B;
+    const y = v => T + ph - (v / 100) * ph, x = i => L + (rows.length === 1 ? pw / 2 : (pw * i) / (rows.length - 1));
+    let s = [0, 25, 50, 75, 100].map(v => `<line class="c-grid" x1="${L}" x2="${w - R}" y1="${y(v)}" y2="${y(v)}"/><text class="c-tick" x="${L - 6}" y="${y(v)}" text-anchor="end" dominant-baseline="middle">${v}%</text>`).join('');
+    s += `<line class="c-ref" x1="${L}" x2="${w - R}" y1="${y(PASS_PCT)}" y2="${y(PASS_PCT)}"/><text class="c-reflabel" x="${w - R}" y="${y(PASS_PCT) - 6}" text-anchor="end">${PASS_PCT}% clears a level</text>`;
+    if (rows.length > 1) s += `<path class="c-line" d="${rows.map((r, i) => `${i ? 'L' : 'M'}${x(i)},${y(r.v)}`).join('')}"/>`;
+    const every = Math.ceil(rows.length / Math.floor(pw / 52));
+    rows.forEach((r, i) => {
+      s += `<circle class="c-dot" cx="${x(i)}" cy="${y(r.v)}" r="5"/><circle class="c-hit" cx="${x(i)}" cy="${y(r.v)}" r="16" data-tip="${esc(r.tip)}" tabindex="0"/>`;
+      const anc = rows.length > 1 && i === 0 ? 'start' : rows.length > 1 && i === rows.length - 1 ? 'end' : 'middle';
+      if (i % every === 0 || i === rows.length - 1) s += `<text class="c-tick" x="${x(i)}" y="${h - 9}" text-anchor="${anc}">${esc(r.label)}</text>`;
+    });
+    el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="Accuracy per day">${s}</svg>`;
+  }
+
+  function scatter(el, a) {
+    const pts = a.types.filter(g => g.n >= 2);
+    const w = W(el), h = 300, L = 44, R = 16, T = 14, B = 40, pw = w - L - R, ph = h - T - B;
+    const xmax = niceTicks(Math.max(15, ...pts.map(p => p.med)) * 1.05, 5);
+    const x = v => L + (Math.min(v, xmax.top) / xmax.top) * pw, y = v => T + ph - (v / 100) * ph;
+    const slowX = a.typical * 1.6;
+    let s = `<rect class="c-zone" x="${L}" y="${y(75)}" width="${pw}" height="${y(0) - y(75)}"/>`;
+    if (x(slowX) < w - R) s += `<rect class="c-zone" x="${x(slowX)}" y="${T}" width="${w - R - x(slowX)}" height="${y(75) - T}"/>`;
+    s += `<text class="c-reflabel" x="${L + 6}" y="${y(0) - 8}">Under 75% correct</text>`;
+    if (x(slowX) < w - R - 60) s += `<text class="c-reflabel" x="${w - R - 4}" y="${T + 12}" text-anchor="end">Slow (over ${secs(slowX)})</text>`;
+    s += [0, 25, 50, 75, 100].map(v => `<line class="c-grid" x1="${L}" x2="${w - R}" y1="${y(v)}" y2="${y(v)}"/><text class="c-tick" x="${L - 6}" y="${y(v)}" text-anchor="end" dominant-baseline="middle">${v}%</text>`).join('');
+    s += xmax.t.map(v => `<text class="c-tick" x="${x(v)}" y="${T + ph + 16}" text-anchor="middle">${v}s</text>`).join('');
+    s += `<text class="c-axislabel" x="${L + pw / 2}" y="${h - 4}" text-anchor="middle">Typical seconds per question →</text>`;
+    pts.sort((p, q) => q.n - p.n).forEach(p => {
+      const r = Math.min(13, 5 + Math.sqrt(p.n) * 1.6), bad = p.n >= 3 && (p.acc < 75 || p.med > slowX);
+      const t = `<b>${esc(lvName(p))}</b><br>${esc(p.type)}<br>${p.acc}% correct (${p.right}/${p.n}) · ${secs(p.med)}`;
+      s += `<circle class="c-pt${bad ? ' bad' : ''}" cx="${x(p.med)}" cy="${y(p.acc)}" r="${r}"/><circle class="c-hit" cx="${x(p.med)}" cy="${y(p.acc)}" r="${r + 6}" data-tip="${esc(t)}" tabindex="0"/>`;
+    });
+    el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="Speed and accuracy by question type">${s}</svg>`;
+  }
+
+  function hbars(el, rows) {
+    const w = W(el), stack = w < 520, rowH = stack ? 46 : 30, L = stack ? 0 : Math.min(240, w * 0.45), R = 36, h = rows.length * rowH + 6, pw = w - L - R;
+    const max = Math.max(...rows.map(r => r.v), 1);
+    let s = '';
+    rows.forEach((r, i) => {
+      const y0 = 3 + i * rowH + (stack ? 16 : 0), bw = Math.max(2, (r.v / max) * pw);
+      s += stack ? `<text class="c-label" x="0" y="${y0 - 6}">${esc(r.label)}</text>`
+        : `<text class="c-label" x="${L - 10}" y="${y0 + 15}" text-anchor="end" dominant-baseline="middle">${esc(r.label)}</text>`;
+      const b0 = y0 + 5, b1 = y0 + 25;
+      s += `<path class="c-bar${r.cls ? ' ' + r.cls : ''}" d="M${L},${b0}H${L + bw - 4}Q${L + bw},${b0} ${L + bw},${b0 + 4}V${b1 - 4}Q${L + bw},${b1} ${L + bw - 4},${b1}H${L}Z"/>`;
+      s += `<text class="c-value" x="${L + bw + 6}" y="${y0 + 15}" dominant-baseline="middle">${r.v}</text>`;
+      s += `<rect class="c-hit" x="0" y="${y0 - (stack ? 16 : 0)}" width="${w}" height="${rowH}" data-tip="${esc(r.tip)}" tabindex="0"/>`;
+    });
+    el.innerHTML = `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="Mistake patterns">${s}</svg>`;
+  }
+
+  /* ---------- tooltip ---------- */
+  function placeTip(target, ev) {
+    tip.innerHTML = target.getAttribute('data-tip'); tip.hidden = false;
+    const r = target.getBoundingClientRect(), tw = tip.offsetWidth, th = tip.offsetHeight;
+    let px = ev && ev.clientX != null ? ev.clientX : r.left + r.width / 2, py = ev && ev.clientY != null ? ev.clientY : r.top;
+    px = Math.min(Math.max(8, px - tw / 2), innerWidth - tw - 8); py = py - th - 14 < 8 ? py + 18 : py - th - 14;
+    tip.style.left = px + 'px'; tip.style.top = py + 'px';
+  }
+  document.addEventListener('pointermove', e => { const t = e.target.closest && e.target.closest('[data-tip]'); if (t) placeTip(t, e); else tip.hidden = true; });
+  document.addEventListener('focusin', e => { const t = e.target.closest && e.target.closest('[data-tip]'); if (t) placeTip(t); });
+  document.addEventListener('focusout', () => { tip.hidden = true; });
+  document.addEventListener('scroll', () => { tip.hidden = true; }, true);
+
+  /* ---------- page ---------- */
+  let ALL = [], RANGE = lsGet('vh.admin.range', 'all'), SOURCE = '';
+
+  function render() {
+    const a = analyse(ALL, RANGE);
+    const rangeBtns = [['7', 'Last 7 days'], ['30', 'Last 30 days'], ['all', 'All time']].map(([k, l]) => `<button class="seg${RANGE === k ? ' on' : ''}" data-range="${k}" aria-pressed="${RANGE === k}">${l}</button>`).join('');
+    const totalSecs = sum(a.Q.map(q => q.seconds || 0));
+    const cleared = new Set(ALL.filter(s => s.completed && s.stars > 0 && !s.mode).map(s => `${s.topic}|${s.level}`)).size;
+    const last = ALL.length ? ALL.reduce((m, s) => (s.startedAt > m ? s.startedAt : m), '') : null;
+    const hl = highlights(a);
+    const shown = TOPICS.filter(t => !t.hidden || ALL.some(s => s.topic === t.id));
+
+    root.innerHTML = `
+      <section class="ahead">
+        <div><p class="eyebrow">Parent dashboard</p><h1>${PLAYER.name}'s progress</h1>
+        <p class="muted">${last ? `Last played ${esc(when(last))}. ` : ''}${esc(SOURCE)}</p></div>
+        <div class="controls"><div class="segs" role="group" aria-label="Date range">${rangeBtns}</div><button class="btn" id="refresh" type="button">Refresh</button></div>
+      </section>
+      ${!a.S.length ? `<section class="panel"><h2>No practice in this range</h2><p class="muted">Pick a longer range, or check back after ${PLAYER.name} plays.</p></section>` : `
+      <section class="kpi-row">
+        <div class="kpi"><span>Time practising</span><b>${mins(totalSecs)}</b><small>${a.dayRows.length} day${a.dayRows.length === 1 ? '' : 's'} active</small></div>
+        <div class="kpi"><span>Questions answered</span><b>${a.Q.length}</b><small>in ${a.S.length} level plays</small></div>
+        <div class="kpi"><span>Correct</span><b>${pct(a.Q.filter(q => q.correct).length, a.Q.length)}%</b><small>${a.Q.filter(q => q.hint).length} with a hint</small></div>
+        <div class="kpi"><span>Levels cleared</span><b>${cleared}</b><small>of ${shown.length * 10} (all time)</small></div>
+        <div class="kpi"><span>Typical time</span><b>${secs(a.typical)}</b><small>per question</small></div>
+      </section>
+
+      ${hl.length ? `<section class="panel"><h2>What stands out</h2><ul class="hl">${hl.map(h => `<li>${h}</li>`).join('')}</ul></section>` : ''}
+
+      <section class="grid2">
+        <div class="panel"><h2>Minutes practised per day</h2><div class="chart" id="c-mins"></div></div>
+        <div class="panel"><h2>Percent correct per day</h2><div class="chart" id="c-acc"></div></div>
+      </section>
+
+      <section class="panel">
+        <div class="phead"><h2>Quest map</h2>
+          <div class="legend" aria-label="Legend"><span><i class="cell s3"></i>3 stars</span><span><i class="cell s2"></i>2</span><span><i class="cell s1"></i>1 star (cleared)</span><span><i class="cell tried"></i>tried, not cleared</span><span><i class="cell skip"></i>tested out</span><span><i class="cell"></i>not tried</span><span>⚡ Hard mode cleared</span></div></div>
+        <div class="qmap">${shown.map(t => `<div class="qrow"><div class="qname"><b>${esc(t.name)}</b><small>${esc(AREAS[t.area] || '')}${t.hidden ? ' · off the home screen' : ''}</small></div><div class="cells">${t.levels.map((title, i) => {
+          const g = a.levels.find(x => x.topic === t.id && x.level === i + 1 && !x.mode), h = a.levels.find(x => x.topic === t.id && x.level === i + 1 && x.mode === 'hard');
+          const sk = a.skipped[`${t.id}|${i + 1}`];
+          const cls = g && g.stars ? 's' + g.stars : sk ? 'skip' : g ? 'tried' : '';
+          const tipT = `<b>${esc(t.name)} · Level ${i + 1}</b><br>${esc(title)}<br>${g ? `${g.tries} tr${g.tries === 1 ? 'y' : 'ies'}${g.quits ? `, ${g.quits} quit` : ''} · best ${g.best}/10${g.passedOn ? ` · cleared on try ${g.passedOn}` : ''}` : sk ? 'Tested out' : 'Not tried yet'}${h ? `<br>⚡ Hard: ${h.tries} tr${h.tries === 1 ? 'y' : 'ies'}, best ${h.best}/10${h.stars ? ' ' + '★'.repeat(h.stars) : ''}` : ''}`;
+          return `<span class="cell ${cls}" data-tip="${esc(tipT)}" tabindex="0" aria-label="Level ${i + 1}">${i + 1}${h && h.stars ? '<i class="hz">⚡</i>' : ''}</span>`;
+        }).join('')}</div></div>`).join('')}</div>
+      </section>
+
+      <section class="grid2 wide-left">
+        <div class="panel"><div class="phead"><h2>Speed and accuracy by question type</h2>
+          <div class="legend"><span><i class="dot"></i>question type</span><span><i class="dot bad"></i>needs work</span></div></div>
+          <p class="muted small">Each circle is one kind of question (bigger = answered more often). Top-left is good: right and quick. Shaded areas are where to look.</p>
+          <div class="chart" id="c-scatter"></div></div>
+        <div class="panel"><h2>Work on next</h2>
+          ${a.workOn.length ? `<ol class="todo">${a.workOn.slice(0, 7).map(g => { const k = g.wrong.map(q => q.kind).filter(Boolean); const top = k.sort((x, y) => k.filter(v => v === y).length - k.filter(v => v === x).length)[0]; const ex = g.wrong[0];
+            return `<li><b>${esc(lvName(g))}</b> <span class="chip ${g.acc < 75 ? 'bad' : 'slow'}">${g.acc < 75 ? `${g.acc}% correct` : 'slow'}</span><br>${esc(lvTitle(g.topic, g.level))}: ${esc(g.type)}<br><span class="muted small">${g.right}/${g.n} right · ${secs(g.med)}${top ? ` · ${esc(KINDS[top].name.toLowerCase())}` : ''}${ex ? ` · e.g. answered ${esc(ex.given)}, answer ${esc(ex.answer)}` : ''}</span></li>`; }).join('')}</ol>`
+            : '<p class="muted">Nothing yet. A question type appears here after 3 tries if he is under 75% correct or much slower than usual.</p>'}
+          <p class="muted small">The daily warm-up in the game picks its questions from his weakest levels.</p>
+        </div>
+      </section>
+
+      <section class="grid2">
+        <div class="panel"><h2>Mistake patterns</h2><p class="muted small">${a.wrong.length} wrong answers, sorted by what kind of mistake they look like.</p><div class="chart" id="c-kinds"></div>
+          <dl class="kinds">${a.kinds.map(k => `<dt>${esc(KINDS[k.k].name)}</dt><dd>${esc(KINDS[k.k].help)}${k.k !== 'swap' && k.ex.length ? `<br><span class="muted small">e.g. ${k.ex.slice(0, 2).map(q => `“${esc(String(q.prompt).slice(0, 70))}” → ${esc(q.given)} (answer ${esc(q.answer)})`).join('; ')}</span>` : ''}</dd>`).join('')}</dl></div>
+        <div class="panel"><h2>Mixed-up pairs</h2>
+          ${a.swapRows.length ? `<div class="tablewrap"><table class="rep"><tr><th>Right answer → what he picked</th><th class="num">Times</th></tr>${a.swapRows.slice(0, 8).map(([k, n]) => `<tr><td>${esc(k)}</td><td class="num">${n}</td></tr>`).join('')}</table></div>` : '<p class="muted">No multiple-choice mix-ups yet.</p>'}
+        </div>
+      </section>
+
+      <section class="panel"><h2>Levels and tries</h2>
+        <div class="tablewrap"><table class="rep"><tr><th>Level</th><th class="num">Tries</th><th class="num">Quit</th><th class="num">Best</th><th class="num">Last</th><th>Cleared</th><th class="num">Typical time</th></tr>
+        ${a.levels.map(g => `<tr><td><b>${esc(lvName(g))}</b><br><span class="muted small">${esc(lvTitle(g.topic, g.level))}${g.mode === 'hard' ? ' (Hard)' : ''}</span></td><td class="num">${g.tries}</td><td class="num">${g.quits || '–'}</td><td class="num">${g.tries > g.quits ? g.best + '/10' : '–'}</td><td class="num">${g.last == null ? '–' : g.last + '/10'}</td><td>${g.passedOn ? `<span class="chip ok">✓ try ${g.passedOn}</span> ${'★'.repeat(g.stars)}` : '<span class="chip">not yet</span>'}</td><td class="num">${secs(g.med)}</td></tr>`).join('')}
+        </table></div></section>
+
+      <section class="panel"><h2>Every session</h2><p class="muted small">Tap a session to see each question, his answer and how long it took.</p>
+        <div class="sessions">${a.S.slice().reverse().map(s => `<details><summary><span>${esc(when(s.startedAt))}</span><span><b>${esc(sLabel(s))}</b> ${s.mode ? '' : esc(s.levelTitle || '')}</span><span class="num">${s.correct}/${(s.questions || []).length}${s.completed ? '' : ' <span class="chip">quit</span>'}${s.stars ? ' ' + '★'.repeat(s.stars) : ''}</span><span class="num">${secs(s.seconds || 0)}</span></summary>
+          <div class="tablewrap"><table class="rep q"><tr><th>#</th><th>Question</th><th>Answer</th><th>He answered</th><th class="num">Time</th></tr>${(s.questions || []).map(q => `<tr class="${q.correct ? '' : 'wrongrow'}"><td>${q.n}</td><td>${q.topic && s.mode ? `<span class="muted small">${esc(tName(q.topic))} L${q.level}</span><br>` : ''}${esc(q.prompt)}</td><td>${esc(q.answer)}</td><td>${q.correct ? '✓ ' : '✗ '}${esc(q.given)}${q.hint ? ' <span class="chip">hint</span>' : ''}${!q.correct && mistakeKind(q) && mistakeKind(q) !== 'other' && mistakeKind(q) !== 'swap' ? `<br><span class="muted small">${esc(KINDS[mistakeKind(q)].name.toLowerCase())}</span>` : ''}</td><td class="num">${secs(q.seconds || 0)}</td></tr>`).join('')}</table></div></details>`).join('')}</div>
+      </section>`}
+      <p class="muted small foot">Data: ${esc(Log.repo)} (anonymous player code ${PLAYER.id}). Speeds compare with his own typical time, ${secs(a.typical)} per question.</p>`;
+
+    root.querySelectorAll('[data-range]').forEach(b => b.addEventListener('click', () => { RANGE = b.dataset.range; lsSet('vh.admin.range', RANGE); render(); }));
+    document.getElementById('refresh').addEventListener('click', load);
+    if (!a.S.length) return;
+    drawCharts(a);
+  }
+
+  function drawCharts(a) {
+    const days = a.dayRows.map(d => ({ label: dayLabel(d.k), v: Math.round(d.secs / 60), tip: `<b>${dayLabel(d.k)}</b><br>${mins(d.secs)} · ${d.sessions} level play${d.sessions === 1 ? '' : 's'}<br>${d.n} questions, ${pct(d.right, d.n)}% correct` }));
+    columnChart(document.getElementById('c-mins'), days, { alt: 'Minutes practised per day' });
+    accuracyChart(document.getElementById('c-acc'), a.dayRows.map(d => ({ label: dayLabel(d.k), v: pct(d.right, d.n), tip: `<b>${dayLabel(d.k)}</b><br>${pct(d.right, d.n)}% correct (${d.right}/${d.n})` })));
+    scatter(document.getElementById('c-scatter'), a);
+    const kRows = a.kinds.map(k => ({ label: KINDS[k.k].name, v: k.n, cls: k.k === 'other' ? 'muted' : '', tip: `<b>${esc(KINDS[k.k].name)}</b><br>${k.n} wrong answer${k.n === 1 ? '' : 's'}` }));
+    hbars(document.getElementById('c-kinds'), kRows);
+  }
+  let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => ALL.length && drawCharts(analyse(ALL, RANGE)), 150); });
+
+  async function load() {
+    const rb = root.querySelector('#refresh'); if (rb) rb.textContent = 'Loading…';
+    const local = lsGet('vh.sessions.' + PLAYER.id, []);
+    let remote = [];
+    try { remote = await Log.sessions(PLAYER.id); SOURCE = `Loaded ${remote.length} level plays from the online log.`; }
+    catch (e) { SOURCE = "Couldn't reach the online log just now; showing this device only."; }
+    const seen = new Set(); ALL = [];
+    remote.concat(local).forEach(s => { if (s && s.id && !seen.has(s.id)) { seen.add(s.id); ALL.push(s); } });
+    const extra = ALL.length - remote.length; if (extra > 0) SOURCE += ` Plus ${extra} from this device not uploaded yet.`;
+    render();
+  }
+
+  gate(load);
+})();
+</script>
+</body>
+</html>
