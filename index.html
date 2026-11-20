@@ -981,8 +981,9 @@ window.VHReport = (function () {
   const earned = () => Math.floor(allStars() / rateOf().starsPerCoin);
   const spentCoins = () => spends().reduce((s, x) => s + (+x.coins || 0), 0);
   const balance = () => Math.max(0, earned() - spentCoins());
-  // n coins buy n × minutesPerCoin minutes, up to 80 (the most a code holds)
-  const playOptions = () => { const m = rateOf().minutesPerCoin; return [1, 2, 3, 4, 6, 8, 12, 16].filter(n => n * m <= 80 && (n * m) % 5 === 0).map(n => ({ coins: n, minutes: n * m })); };
+  // play codes hold 5 to 80 minutes in steps of 5, so offer those amounts that a whole number of coins buys
+  // (at 1 minute per coin: 5 min costs 5 coins, 10 min costs 10, and so on)
+  const playOptions = () => { const m = rateOf().minutesPerCoin; return [5, 10, 15, 20, 30, 40, 60, 80].filter(min => min % m === 0).slice(0, 8).map(min => ({ coins: min / m, minutes: min })); };
   const stampId = now => now.toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6);
   const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
@@ -1051,7 +1052,7 @@ window.VHReport = (function () {
           <div><dt>Coins spent</dt><dd>${spentCoins()}</dd></div>
           <div><dt>Minutes bought</dt><dd>${minutesBought}</dd></div>
         </dl>
-        <p class="lede">${per}, and 1 coin is ${r.minutesPerCoin} minutes. Win new levels or get more stars to earn more.</p>
+        <p class="lede">${per}, and 1 coin is ${plural(r.minutesPerCoin, 'minute')}. Win new levels or get more stars to earn more.</p>
         <h2 class="area-h">Get play time</h2>
         <div class="playopts">${opts.map(o => `<button class="btn${o.coins <= bal ? ' primary' : ''}" type="button" data-coins="${o.coins}" ${o.coins <= bal ? '' : 'disabled'}><b>${o.minutes} min</b><small>${plural(o.coins, 'coin')}</small></button>`).join('')}</div>
         ${!opts.length || bal < opts[0].coins ? '<p class="lede">Win a new level or get more stars to earn coins.</p>' : ''}
@@ -1371,7 +1372,7 @@ window.VHReport = (function () {
       el.innerHTML = `<section class="panel"><h2>Coins for play time</h2>
           <p class="muted small">${KID} earns coins from stars (each level's best stars count once) and trades them for codes that open play time on BrainPlay. Set the rate here.</p>
           <label class="f" for="c-stars">Stars for 1 coin</label><input id="c-stars" class="txt" type="number" inputmode="numeric" min="1" max="10" step="1" value="${cr.starsPerCoin}">
-          <label class="f" for="c-min">Minutes of play for 1 coin</label><select id="c-min" class="txt">${[5, 10, 15, 20].map(m => `<option value="${m}"${m === cr.minutesPerCoin ? ' selected' : ''}>${m} minutes</option>`).join('')}</select>
+          <label class="f" for="c-min">Minutes of play for 1 coin</label><select id="c-min" class="txt">${[1, 2, 3, 4, 5, 10, 15, 20].map(m => `<option value="${m}"${m === cr.minutesPerCoin ? ' selected' : ''}>${plural(m, 'minute')}</option>`).join('')}</select>
           <div class="actions left"><button class="btn primary" type="button" id="c-save">Save rate</button></div>
           <p class="pin-msg" id="c-msg" aria-live="polite"></p>
           <p class="muted small">Now: ${allStars()} stars, ${plural(earned(), 'coin')} earned, ${spentCoins()} spent, ${balance()} left.</p></section>
@@ -1415,7 +1416,7 @@ window.VHReport = (function () {
         const f = await setRate({ starsPerCoin: sp, minutesPerCoin: mp });
         showXP();
         cm.className = 'pin-msg good';
-        cm.textContent = `Saved: ${plural(sp, 'star')} = 1 coin = ${mp} minutes.` + (f.error ? ' It will reach his other devices once this one uploads.' : '');
+        cm.textContent = `Saved: ${plural(sp, 'star')} = 1 coin = ${plural(mp, 'minute')}.` + (f.error ? ' It will reach his other devices once this one uploads.' : '');
       });
       const m = el.querySelector('#p-msg');
       el.querySelector('#p-parent').addEventListener('click', () => pinDialog('set', () => { m.textContent = 'Parent PIN changed.'; }));
