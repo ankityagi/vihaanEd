@@ -110,6 +110,13 @@ h2 { font-size: 1.3rem; font-weight: 600; }
 .lvl-b b { font: 600 1.15rem var(--display); }
 .lvl-b small { color: var(--muted); font-size: .88rem; }
 .parent-note { margin: 0; font-size: .9rem; color: var(--muted); }
+.modep { background: var(--card); border: 3px solid var(--ink); border-radius: var(--r); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.modep h2 { margin: 0; font: 600 1.2rem var(--display); }
+.modep p { margin: 0; }
+.hardbtns { display: flex; flex-wrap: wrap; gap: 8px; }
+.hardbtns .btn { display: inline-flex; gap: 8px; align-items: center; }
+.warmnote { margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--soft); border: 2px dashed var(--sun); }
+.skipchip { font: 600 .8rem var(--display); color: var(--grass); white-space: nowrap; }
 
 /* play */
 .playtop { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: space-between; }
@@ -639,15 +646,181 @@ window.VQ = (function () {
   ];
   write[9].variants = [trace('d', 2), trace('m', 2), ...write[2].variants, ...write[3].variants, ...write[6].variants, ...write[8].variants];
 
+  /* ======================= TOPIC 6: Reading Quest =======================
+     Sounding out, rhymes, sight words, then reading a whole sentence. The read-aloud never says
+     the word he is meant to read: it says what to do, and the word stays on the screen. */
+  const CVC = { a: [['cat', '🐱'], ['bat', '🦇'], ['hat', '🎩'], ['map', '🗺️'], ['pan', '🍳'], ['van', '🚐'], ['rat', '🐀'], ['cap', '🧢'], ['bag', '👜'], ['man', '👨'], ['ram', '🐏']],
+    e: [['bed', '🛏️'], ['hen', '🐔'], ['pen', '🖊️'], ['web', '🕸️'], ['net', '🥅'], ['jet', '✈️'], ['ten', '🔟'], ['leg', '🦵']],
+    i: [['pig', '🐷'], ['lip', '👄'], ['bin', '🗑️'], ['six', '6️⃣'], ['pin', '📌'], ['kid', '🧒']],
+    o: [['dog', '🐶'], ['fox', '🦊'], ['box', '📦'], ['log', '🪵'], ['pot', '🍲']],
+    u: [['sun', '☀️'], ['bus', '🚌'], ['bug', '🐛'], ['mug', '☕'], ['cup', '🥤'], ['nut', '🥜'], ['tub', '🛁']] };
+  const ALLCVC = Object.values(CVC).flat();
+  const VOW = 'aeiou'.split('');
+  const big = e => `<span style="font-size:4.5rem;line-height:1">${e}</span>`;
+  const START = [['apple', '🍎'], ['ball', '⚽'], ['cat', '🐱'], ['dog', '🐶'], ['egg', '🥚'], ['fish', '🐟'], ['goat', '🐐'], ['hat', '🎩'], ['jet', '✈️'], ['kite', '🪁'], ['lion', '🦁'], ['moon', '🌙'], ['nest', '🪺'], ['owl', '🦉'], ['pig', '🐷'], ['queen', '👸'], ['rabbit', '🐰'], ['sun', '☀️'], ['tiger', '🐯'], ['umbrella', '☂️'], ['van', '🚐'], ['web', '🕸️'], ['yo-yo', '🪀'], ['zebra', '🦓']];
+  const ALIKE = { b: 'dpv', d: 'btg', p: 'bdq', m: 'nwb', n: 'mhu', f: 'vst', v: 'fwb', c: 'kgs', k: 'cgh', g: 'kcj', s: 'zcf', z: 'snx', t: 'dpk', j: 'gyh', y: 'jwv', w: 'vmy', l: 'rni', r: 'lwn', h: 'nkf', q: 'kgc', x: 'ksz', a: 'eou', e: 'aiu', i: 'eau', o: 'aue', u: 'oai' };
+  const alike = (l, n = 3) => shuffle((ALIKE[l] || 'stm').split('')).slice(0, n);
+  const vowelSwaps = w => shuffle(VOW.filter(v => v !== w[1])).map(v => w[0] + v + w[2]);
+  const firstSwap = w => { const same = ALLCVC.map(x => x[0]).filter(x => x !== w && x.slice(1) === w.slice(1)); return same.length ? pick(same) : pick('bdmpst'.split('').filter(c => c !== w[0])) + w.slice(1); };
+  const RHYME = [['cat', 'hat', 'bat', 'rat'], ['pan', 'van', 'man', 'fan'], ['map', 'cap', 'tap'], ['hen', 'pen', 'ten'], ['net', 'jet', 'wet'], ['pig', 'wig', 'dig'], ['bin', 'pin', 'fin'], ['fox', 'box'], ['dog', 'log', 'frog'], ['bug', 'mug', 'rug'], ['sun', 'run', 'bun'], ['bed', 'red', 'fed'], ['pot', 'hot', 'dot']];
+  const SIGHT1 = ['the', 'and', 'a', 'to', 'is', 'in', 'it', 'you', 'can', 'see', 'look', 'we', 'my', 'up', 'go', 'me', 'here', 'for', 'big', 'not', 'one', 'two', 'red', 'play'];
+  const SIGHT2 = ['was', 'are', 'they', 'have', 'what', 'this', 'that', 'with', 'there', 'out', 'said', 'come', 'like', 'into', 'saw', 'she', 'he', 'all', 'do', 'no', 'so', 'on', 'went', 'where'];
+  const lookAlikes = (w, list) => { const same = list.filter(x => x !== w && (x[0] === w[0] || x.length === w.length)); return shuffle(same.length >= 3 ? same : list.filter(x => x !== w)).slice(0, 3); };
+  const scramble = w => { if (w.length < 2) return [w + w, 'i', 'o']; const out = new Set(); let g = 0; while (out.size < 3 && g++ < 40) { const a = shuffle(w.split('')).join(''); if (a !== w) out.add(a); } return [...out]; };
+  const hearWord = list => () => { const w = pick(list); const m = mc(w, lookAlikes(w, list)); return { kind: 'choice', cls: 'word', prompt: 'Listen, then tap the word you hear. Tap 🔊 to hear it again.', say: `Tap the word: ${w}.`, ...m, hint: 'Say each word out loud. Which one sounds right?', explain: `That word is ${w}.` }; };
+  const findWord = list => () => { const w = pick(list.filter(x => x.length > 2)); const m = mc(w, scramble(w)); return { kind: 'choice', cls: 'word', prompt: `Find the word <b>${w}</b>. Check every letter.`, say: 'Find the word at the top. Check every letter, in order.', ...m, hint: 'Look at the first letter, then the next, then the next.', explain: `${w} is spelled ${w.split('').join(', ')}.` }; };
+  const SENTS = [['The ___ can bark.', 'dog', ['cat', 'sun']], ['I sleep in a ___.', 'bed', ['bus', 'cup']], ['A ___ says oink.', 'pig', ['hen', 'box']], ['I drink from a ___.', 'cup', ['bed', 'fox']], ['A ___ lays eggs.', 'hen', ['pig', 'van']], ['We ride on the ___.', 'bus', ['cat', 'pen']], ['I write with a ___.', 'pen', ['dog', 'sun']], ['The ___ is up in the sky.', 'sun', ['pig', 'bed']], ['I put my toys in a ___.', 'box', ['hen', 'sun']], ['A ___ has six legs.', 'bug', ['dog', 'man']]];
+  const ASK = [['Can a dog run?', 'Yes'], ['Can a cat fly a jet?', 'No'], ['Is the sun hot?', 'Yes'], ['Can a fish swim?', 'Yes'], ['Can a bus sing?', 'No'], ['Is a box a dog?', 'No'], ['Can you sit on a bed?', 'Yes'], ['Can a pig fit in a cup?', 'No'], ['Is ten more than two?', 'Yes'], ['Can a hen get on a bus?', 'Yes'], ['Is a bug as big as a van?', 'No']];
+  const WHO = [['cat', '🐱'], ['dog', '🐶'], ['pig', '🐷'], ['hen', '🐔'], ['bug', '🐛'], ['fox', '🦊']];
+  const WHERE = [['box', '📦'], ['bed', '🛏️'], ['bus', '🚌'], ['log', '🪵'], ['tub', '🛁']];
+  const scene = (a, p) => `<span style="font-size:2.4rem;letter-spacing:.1em">${a}${p}</span>`;
+  const read = [
+    { title: 'First Sounds', skill: 'What sound does the word start with?', variants: [
+      () => { const [w, e] = pick(START); const l = w[0]; const m = mc(l, alike(l)); return { kind: 'choice', cls: 'letter', prompt: 'Which letter does it <b>start</b> with?', say: `${w}. Which letter does ${w} start with?`, fig: big(e), ...m, hint: `Say it slowly: ${w}. Listen to the very first sound.`, explain: `${w} starts with ${l}.` }; }
+    ] },
+    { title: 'Last Sounds', skill: 'What sound does the word end with?', variants: [
+      () => { const [w, e] = pick(ALLCVC); const l = w[2]; const m = mc(l, uniq([w[0], ...alike(l)]).filter(x => x !== l)); return { kind: 'choice', cls: 'letter', prompt: 'Which letter does it <b>end</b> with?', say: `${w}. Which letter does ${w} end with?`, fig: big(e), ...m, hint: `Say it slowly and stretch the end: ${w}.`, explain: `${w} ends with ${l}.` }; }
+    ] },
+    { title: 'Rhymes', skill: 'Words that sound the same at the end', variants: [
+      () => { const fam = pick(RHYME), others = shuffle(RHYME.filter(f => f !== fam)); const [w, r] = shuffle(fam); const m = mc(r, [others[0][0], others[1][0], others[2][0]]); return { kind: 'choice', cls: 'word', prompt: `Which word <b>rhymes</b> with <b>${w}</b>?`, say: `Which word rhymes with ${w}? ${m.choices.join(', ')}.`, ...m, hint: 'Rhyming words have the same ending sound, like cat and hat.', explain: `${w} and ${r} rhyme. They both end in ${w.slice(1)}.` }; },
+      () => { const fam = pick(RHYME.filter(f => f.length > 2)), odd = pick(RHYME.filter(f => f !== fam))[0]; const all = shuffle([...shuffle(fam).slice(0, 2), odd]); return { kind: 'choice', cls: 'word', prompt: 'Which word does <b>not</b> rhyme?', say: `Which word does not rhyme? ${all.join(', ')}.`, choices: all, answer: all.indexOf(odd), hint: 'Say them out loud. Two of them sound the same at the end.', explain: `${odd} does not rhyme with the other two.` }; }
+    ] },
+    { title: 'Read a, i Words', skill: 'Sound out short a and short i words', variants: [
+      () => { const [w, e] = pick([...CVC.a, ...CVC.i]); const m = mc(w, [...vowelSwaps(w).slice(0, 2), firstSwap(w)]); return { kind: 'choice', cls: 'word', prompt: 'Which word matches the picture?', say: 'Which word matches the picture? Sound out each word.', fig: big(e), ...m, hint: 'Point to each letter and say its sound, then blend them together.', explain: `The picture is a ${w}: ${w.split('').join('-')}, ${w}.` }; }
+    ] },
+    { title: 'Read o, u, e Words', skill: 'Sound out short o, u and e words', variants: [
+      () => { const [w, e] = pick([...CVC.o, ...CVC.u, ...CVC.e]); const m = mc(w, [...vowelSwaps(w).slice(0, 2), firstSwap(w)]); return { kind: 'choice', cls: 'word', prompt: 'Which word matches the picture?', say: 'Which word matches the picture? Sound out each word.', fig: big(e), ...m, hint: 'Look closely at the middle letter. It makes the middle sound.', explain: `The picture is a ${w}: ${w.split('').join('-')}, ${w}.` }; }
+    ] },
+    { title: 'Sight Words 1', skill: 'Words to know by sight: the, and, you…', variants: [hearWord(SIGHT1), hearWord(SIGHT1), findWord(SIGHT1)] },
+    { title: 'Sight Words 2', skill: 'More sight words: was, they, said…', variants: [hearWord(SIGHT2), hearWord(SIGHT2), findWord(SIGHT2)] },
+    { title: 'Middle Sound', skill: 'Find the missing vowel', variants: [
+      () => { const [w, e] = pick(ALLCVC); const m = mc(w[1], VOW.filter(v => v !== w[1])); return { kind: 'choice', cls: 'letter', prompt: eq(`${w[0]} _ ${w[2]}`.replace('_', '?')), say: `${w}. Which sound is in the middle of ${w}?`, fig: big(e), ...m, hint: `Stretch the word: ${w.split('').join('... ')}.`, explain: `${w} is ${w.split('').join('-')}. The middle sound is ${w[1]}.` }; }
+    ] },
+    { title: 'Read a Sentence', skill: 'Read a whole sentence and show you understand', variants: [
+      () => { const s = pick(SENTS); const m = mc(s[1], s[2]); return { kind: 'choice', cls: 'word', prompt: `${s[0].replace('___', '<b>___</b>')}<br><small>Which word fits?</small>`, say: 'Read the sentence. Which word fits in the gap?', ...m, hint: 'Read the sentence with each word in the gap. Which one makes sense?', explain: s[0].replace('___', s[1]) }; },
+      () => { const q = pick(ASK); return { kind: 'choice', cls: 'word', prompt: `<b>${q[0]}</b>`, say: 'Read the question. Then tap yes or no.', choices: ['Yes', 'No'], answer: q[1] === 'Yes' ? 0 : 1, hint: 'Read it one word at a time. Then think: is it true?', explain: `${q[0]} ${q[1]}.` }; },
+      () => { const a = pick(WHO), p = pick(WHERE), a2 = pick(WHO.filter(x => x !== a)), p2 = pick(WHERE.filter(x => x !== p)); const opts = shuffle([[a, p], [a2, p], [a, p2]]); return { kind: 'choice', prompt: `<b>The ${a[0]} is in the ${p[0]}.</b><br><small>Which picture matches?</small>`, say: 'Read the sentence. Which picture matches it?', choices: opts.map(o => scene(o[0][1], o[1][1])), answer: opts.findIndex(o => o[0] === a && o[1] === p), hint: 'Find the animal word first, then the place word.', explain: `The ${a[0]} is in the ${p[0]}.` }; }
+    ] },
+    { title: 'Boss Level', skill: 'A mix of everything', variants: [] }
+  ];
+  read[9].variants = [...read[0].variants, ...read[1].variants, ...read[2].variants, ...read[4].variants, ...read[6].variants, ...read[7].variants, ...read[8].variants];
+
+  /* ======================= Hard mode =======================
+     A tougher version of each level, offered once that level has 3 stars: numbers to 100 (and to
+     1,000 for place value), time to 5 minutes, look-alike choices, and more typed answers. */
+  const mm = m => String(m).padStart(2, '0');
+  const tm = (h, m) => `${h}:${mm(m)}`;
+  const wrapH = h => ((h - 1 + 120) % 12) + 1;
+  const HARD = {
+    addsub: [
+      [() => { const [e, n] = pick(FRUIT), a = R(3, 7), b = R(2, 6), c = R(2, 6); return { kind: 'num', prompt: `How many ${n} in all?`, say: `${a} ${n}, ${b} ${n} and ${c} ${n}. How many in all?`, fig: pics(e, a) + '<span class="plus">+</span>' + pics(e, b) + '<span class="plus">+</span>' + pics(e, c), answer: a + b + c, hint: 'Count the first group, then keep counting on.', explain: `${a} + ${b} + ${c} = ${a + b + c}` }; },
+       () => { const [, n] = pick(FRUIT), a = R(6, 12), b = R(4, 8); return { kind: 'num', prompt: `${KID} has <b>${a}</b> ${n}. ${BRO} has <b>${b}</b>. How many do they have together?`, say: `${KID} has ${a} ${n}. ${BRO} has ${b}. How many do they have together?`, answer: a + b, hint: `Start at ${a} and count on ${b}.`, explain: `${a} + ${b} = ${a + b}` }; }],
+      [() => { const a = R(5, 9), b = R(5, 9); return { kind: 'num', prompt: eq(`${a} + ${b} = ?`), say: `${a} plus ${b}`, answer: a + b, hint: `Make 10 first: ${a} + ${10 - a} = 10.`, explain: `${a} + ${b} = ${a + b}` }; },
+       () => { const a = R(4, 9), c = R(a + 3, 18); return { kind: 'num', prompt: eq(`${a} + ? = ${c}`), say: `${a} plus what makes ${c}?`, answer: c - a, hint: `Count up from ${a} to ${c}.`, explain: `${a} + ${c - a} = ${c}` }; }],
+      [() => { const a = R(11, 18), b = R(3, 9); return { kind: 'num', prompt: eq(`${a} − ${b} = ?`), say: `${a} take away ${b}`, answer: a - b, hint: `Take away to get to 10 first, then the rest.`, explain: `${a} − ${b} = ${a - b}` }; },
+       () => { const a = R(10, 18), c = R(2, a - 3); return { kind: 'num', prompt: eq(`${a} − ? = ${c}`), say: `${a} take away what leaves ${c}?`, answer: a - c, hint: `Count up from ${c} to ${a}.`, explain: `${a} − ${a - c} = ${c}` }; }],
+      [() => { const n = R(12, 88); if (n % 10 === 0) return { kind: 'num', prompt: eq(`${n} + ? = ${n + 10}`), say: `${n} plus what makes ${n + 10}?`, answer: 10, hint: 'It is already a ten.', explain: `${n} + 10 = ${n + 10}` }; const t = Math.ceil(n / 10) * 10; return { kind: 'num', prompt: eq(`${n} + ? = ${t}`), say: `${n} plus what makes ${t}?`, answer: t - n, hint: `Look at the ones: ${n % 10} + what makes 10?`, explain: `${n} + ${t - n} = ${t}` }; },
+       () => { const a = R(1, 9) * 10; return { kind: 'num', prompt: eq(`${a} + ? = 100`), say: `${a} plus what makes 100?`, answer: 100 - a, hint: `${a / 10} tens and how many tens make 10 tens?`, explain: `${a} + ${100 - a} = 100` }; },
+       () => { const a = R(1, 19); return { kind: 'num', prompt: eq(`${a} + ? = 20`), say: `${a} plus what makes 20?`, answer: 20 - a, hint: 'Count up to 20.', explain: `${a} + ${20 - a} = 20` }; }],
+      [() => { const t = R(1, 7), o = R(5, 9), b = R(10 - o + 1, 9), n = t * 10 + o; return { kind: 'num', prompt: eq(`${n} + ${b} = ?`), say: `${n} plus ${b}`, answer: n + b, hint: `Get to the next ten first: ${n} + ${10 - o} = ${n + 10 - o}.`, explain: `${n} + ${b} = ${n + b}` }; },
+       () => { const a = R(11, 48), b = R(1, 4) * 10; return { kind: 'num', prompt: eq(`${a} + ${b} = ?`), say: `${a} plus ${b}`, answer: a + b, hint: `Add ${b / 10} to the tens. The ones stay ${a % 10}.`, explain: `${a} + ${b} = ${a + b}` }; }],
+      [() => { const t = R(2, 9), o = R(0, 6), b = R(o + 1, 9), n = t * 10 + o; return { kind: 'num', prompt: eq(`${n} − ${b} = ?`), say: `${n} take away ${b}`, answer: n - b, hint: o ? `Take away ${o} to get to ${t * 10}, then the rest.` : `Take away from ${t * 10}: go back to ${t * 10 - 10} first.`, explain: `${n} − ${b} = ${n - b}` }; },
+       () => { const n = R(41, 99), b = R(1, Math.floor(n / 10) - 1) * 10; return { kind: 'num', prompt: eq(`${n} − ${b} = ?`), say: `${n} take away ${b}`, answer: n - b, hint: 'Only the tens change.', explain: `${n} − ${b} = ${n - b}` }; }],
+      [() => { const a = R(12, 60), b = R(5, 35); return { kind: 'num', prompt: eq(`${a} + ? = ${a + b}`), say: `${a} plus what makes ${a + b}?`, answer: b, hint: `Jump by tens from ${a}, then by ones.`, explain: `${a} + ${b} = ${a + b}` }; },
+       () => { const b = R(1, 5) * 10, c = R(11, 49); return { kind: 'num', prompt: eq(`? − ${b} = ${c}`), say: `What number take away ${b} leaves ${c}?`, answer: b + c, hint: `Add them back: ${c} + ${b}.`, explain: `${b + c} − ${b} = ${c}` }; }],
+      [() => { const a = R(8, 15), b = R(3, 7), c = R(2, 6); return { kind: 'num', prompt: `${KID} has <b>${a}</b> stickers. He gets <b>${b}</b> more, then gives <b>${c}</b> to ${BRO}. How many does ${KID} have now?`, say: `${KID} has ${a} stickers. He gets ${b} more, then gives ${c} to ${BRO}. How many does ${KID} have now?`, answer: a + b - c, hint: 'Two steps: add first, then take away.', explain: `${a} + ${b} = ${a + b}, and ${a + b} − ${c} = ${a + b - c}.` }; },
+       () => { const a = R(20, 45), b = R(10, 30); return { kind: 'num', prompt: `A class read <b>${a}</b> books in May and <b>${b}</b> books in June. How many books in all?`, say: `A class read ${a} books in May and ${b} books in June. How many books in all?`, answer: a + b, hint: 'Add the tens, then add the ones.', explain: `${a} + ${b} = ${a + b}` }; },
+       () => { const a = R(30, 60), b = R(8, 25); return { kind: 'num', prompt: `There were <b>${a}</b> ducks. <b>${b}</b> flew away. How many are left?`, say: `There were ${a} ducks. ${b} flew away. How many are left?`, answer: a - b, hint: 'Take away the tens, then the ones.', explain: `${a} − ${b} = ${a - b}` }; }],
+      [() => { const a = R(1, 4) * 10, b = R(11, 35), c = R(1, 9); return { kind: 'num', prompt: eq(`${a} + ${b} + ${c} = ?`), say: `${a} plus ${b} plus ${c}`, answer: a + b + c, hint: 'Add the tens first, then the ones.', explain: `${a} + ${b} + ${c} = ${a + b + c}` }; },
+       () => { const a = R(1, 9), b = 10 - a, c = R(2, 8), d = 10 - c; const o = shuffle([a, b, c, d]); return { kind: 'num', prompt: eq(`${o.join(' + ')} = ?`), say: `${o.join(' plus ')}`, answer: 20, hint: 'Find two pairs that each make 10.', explain: `${a} + ${b} = 10 and ${c} + ${d} = 10, so it is 20.` }; },
+       () => { const a = R(10, 40), b = R(5, 30), t = Math.random() < .5, c = R(5, a + b - 5), d = a + b - c + (t ? 0 : pick([-10, -1, 1, 10])); return { kind: 'choice', prompt: 'Is this true or false?' + eq(`${a} + ${b} = ${c} + ${d}`), say: `Is this true or false? ${a} plus ${b} equals ${c} plus ${d}.`, choices: ['True', 'False'], answer: t ? 0 : 1, hint: 'Work out each side.', explain: `${a} + ${b} = ${a + b}, and ${c} + ${d} = ${c + d}.` }; }],
+      []
+    ],
+    tens: [
+      [() => { const [e, n] = pick(FRUIT), k = R(21, 40); return { kind: 'num', prompt: `How many ${n}?`, say: `How many ${n}? Count by fives.`, fig: grid5(e, k), answer: k, hint: 'Each row has 5. Count 5, 10, 15, then the rest.', explain: `There are ${k}.` }; },
+       () => { const t = R(10, 12); return { kind: 'num', prompt: `How many <b>tens</b> make <b>${t * 10}</b>?`, say: `How many tens make ${t * 10}?`, answer: t, hint: 'Count by tens: 10, 20, 30…', explain: `${t} tens make ${t * 10}.` }; }],
+      [() => { const n = R(100, 998); return { kind: 'num', prompt: `What number comes right <b>after</b> ${n}?`, say: `What number comes right after ${n}?`, answer: n + 1, hint: 'One more.', explain: `${n}, ${n + 1}` }; },
+       () => { const n = pick([100, 200, 300, 400, 500, 110, 120, 210, 310]) ; return { kind: 'num', prompt: `What number comes right <b>before</b> ${n}?`, say: `What number comes right before ${n}?`, answer: n - 1, hint: 'One less. Careful with the zeros.', explain: `${n - 1}, ${n}` }; },
+       () => { const n = R(98, 497); return { kind: 'num', prompt: eq(`${n}, ?, ${n + 2}`), say: `What number goes between ${n} and ${n + 2}?`, answer: n + 1, hint: 'Count on from the first number.', explain: `${n}, ${n + 1}, ${n + 2}` }; }],
+      [() => { const s = R(5, 12) * 10; return { kind: 'num', prompt: eq(`${s}, ${s - 10}, ${s - 20}, ?`), say: `Count back by tens. ${s}, ${s - 10}, ${s - 20}, what comes next?`, answer: s - 30, hint: 'Take away 1 ten each time.', explain: `${s - 20} − 10 = ${s - 30}` }; },
+       () => { const s = R(1, 6) * 100; return { kind: 'num', prompt: eq(`${s}, ${s + 100}, ${s + 200}, ?`), say: `Count by hundreds. ${s}, ${s + 100}, ${s + 200}, what comes next?`, answer: s + 300, hint: 'Add 1 hundred each time.', explain: `${s + 200} + 100 = ${s + 300}` }; },
+       () => { const s = R(5, 20) * 5; return { kind: 'num', prompt: eq(`${s}, ${s - 5}, ${s - 10}, ?`), say: `Count back by fives. ${s}, ${s - 5}, ${s - 10}, what comes next?`, answer: s - 15, hint: 'Take away 5 each time.', explain: `${s - 10} − 5 = ${s - 15}` }; },
+       () => { const s = R(2, 30) * 2 + 1; return { kind: 'num', prompt: eq(`${s}, ${s + 2}, ${s + 4}, ?`), say: `Count by twos. ${s}, ${s + 2}, ${s + 4}, what comes next?`, answer: s + 6, hint: 'Odd numbers: skip one number each time.', explain: `${s + 4} + 2 = ${s + 6}` }; }],
+      [() => { const t = R(1, 5), o = R(10, 15); return { kind: 'num', prompt: 'Each blue stick is <b>10</b>. Each yellow cube is <b>1</b>. What number is this?', say: 'Each blue stick is 10. Each yellow cube is 1. Careful, there are lots of cubes. What number is this?', fig: blocks(t, o), answer: t * 10 + o, hint: 'Ten cubes make another ten.', explain: `${t} tens and ${o} ones is ${t * 10 + o}.` }; },
+       () => { const n = R(23, 89), t = Math.floor(n / 10); return { kind: 'num', prompt: `<b>${n}</b> is <b>${t - 1}</b> tens and how many ones?`, say: `${n} is ${t - 1} tens and how many ones?`, answer: n - (t - 1) * 10, hint: `${t - 1} tens is ${(t - 1) * 10}. How many more to get to ${n}?`, explain: `${(t - 1) * 10} + ${n - (t - 1) * 10} = ${n}` }; }],
+      [() => { const n = R(101, 999); return { kind: 'num', prompt: `How many <b>hundreds</b> are in <b>${n}</b>?`, say: `How many hundreds are in ${n}?`, answer: Math.floor(n / 100), hint: 'The hundreds digit is the first one.', explain: `${n} is ${Math.floor(n / 100)} hundreds, ${Math.floor(n / 10) % 10} tens and ${n % 10} ones.` }; },
+       () => { const n = R(101, 999); return { kind: 'num', prompt: `How many <b>tens</b> are in the tens place of <b>${n}</b>?`, say: `What digit is in the tens place of ${n}?`, answer: Math.floor(n / 10) % 10, hint: 'The tens digit is the middle one.', explain: `${n} is ${Math.floor(n / 100)} hundreds, ${Math.floor(n / 10) % 10} tens and ${n % 10} ones.` }; },
+       () => { const h = R(1, 9), t = R(0, 9), o = R(0, 9); return { kind: 'num', prompt: `<b>${h}</b> hundreds, <b>${t}</b> tens and <b>${o}</b> ones make what number?`, say: `${h} hundreds, ${t} tens and ${o} ones make what number?`, answer: h * 100 + t * 10 + o, hint: `${h} hundreds is ${h * 100}.`, explain: `${h * 100} + ${t * 10} + ${o} = ${h * 100 + t * 10 + o}` }; },
+       () => { const t = R(3, 8), o = R(10, 16); return { kind: 'num', prompt: `<b>${t}</b> tens and <b>${o}</b> ones make what number?`, say: `${t} tens and ${o} ones make what number?`, answer: t * 10 + o, hint: `${o} ones is 1 ten and ${o - 10} ones.`, explain: `${t * 10} + ${o} = ${t * 10 + o}` }; }],
+      [() => { const a = R(100, 999); let b = R(100, 999); if (Math.random() < .5) b = Number(String(a).split('').reverse().join('')) || b; if (Math.random() < .12) b = a; const ans = a < b ? 0 : a > b ? 1 : 2; return { kind: 'choice', prompt: eq(`${a}  ?  ${b}`), say: `Which sign goes between ${a} and ${b}?`, choices: ['&lt;', '&gt;', '='], answer: ans, hint: 'Look at the hundreds first, then the tens.', explain: `${a} ${['is less than', 'is more than', 'is equal to'][ans]} ${b}.` }; },
+       () => { const a = R(2, 8) * 10, b = R(1, 9), c = a + b + pick([-1, 0, 1, 10, -10]); const ans = a + b < c ? 0 : a + b > c ? 1 : 2; return { kind: 'choice', prompt: eq(`${a} + ${b}  ?  ${c}`), say: `Which sign goes between ${a} plus ${b}, and ${c}?`, choices: ['&lt;', '&gt;', '='], answer: ans, hint: `Work out ${a} + ${b} first.`, explain: `${a} + ${b} = ${a + b}, and ${a + b} ${['is less than', 'is more than', 'is equal to'][ans]} ${c}.` }; },
+       () => { const t = R(2, 8), d = uniq([R(0, 9), R(0, 9), R(0, 9)]); while (d.length < 3) d.push((d[d.length - 1] + 3) % 10); const ns = uniq(d.map(o => t * 10 + o)).slice(0, 3); const mx = Math.max(...ns); return { kind: 'choice', prompt: 'Which number is the <b>biggest</b>?', say: 'Which number is the biggest?', choices: ns.map(String), answer: ns.indexOf(mx), hint: 'The tens are all the same. Look at the ones.', explain: `${mx} is the biggest.` }; }],
+      [() => { const n = R(100, 899); return { kind: 'num', prompt: `What is <b>100 more</b> than ${n}?`, say: `What is 100 more than ${n}?`, answer: n + 100, hint: 'Only the hundreds digit changes.', explain: `${n} + 100 = ${n + 100}` }; },
+       () => { const n = R(90, 99); return { kind: 'num', prompt: `What is <b>10 more</b> than ${n}?`, say: `What is 10 more than ${n}?`, answer: n + 10, hint: '9 tens and 1 more ten is 10 tens, which is 100.', explain: `${n} + 10 = ${n + 10}` }; },
+       () => { const n = R(30, 99); return { kind: 'num', prompt: `What is <b>20 less</b> than ${n}?`, say: `What is 20 less than ${n}?`, answer: n - 20, hint: 'Take away 2 tens.', explain: `${n} − 20 = ${n - 20}` }; }],
+      [() => { const a = R(11, 59), b = R(1, 4) * 10; return { kind: 'num', prompt: eq(`${a} + ${b} = ?`), say: `${a} plus ${b}`, answer: a + b, hint: 'Add to the tens. The ones stay the same.', explain: `${a} + ${b} = ${a + b}` }; },
+       () => { const b = R(1, 9) * 10; return { kind: 'num', prompt: eq(`100 − ${b} = ?`), say: `100 take away ${b}`, answer: 100 - b, hint: `10 tens take away ${b / 10} tens.`, explain: `100 − ${b} = ${100 - b}` }; },
+       () => { const a = R(5, 9) * 10, b = R(1, 3) * 10, c = R(1, 3) * 10; return { kind: 'num', prompt: eq(`${a} − ${b} + ${c} = ?`), say: `${a} take away ${b}, plus ${c}`, answer: a - b + c, hint: 'Go left to right, one step at a time.', explain: `${a} − ${b} = ${a - b}, and ${a - b} + ${c} = ${a - b + c}.` }; }],
+      [() => { const t1 = R(1, 5), t2 = R(1, 8 - t1), o1 = R(0, 8), o2 = R(1, 9 - o1), a = t1 * 10 + o1, b = t2 * 10 + o2; return { kind: 'num', prompt: eq(`${a} + ${b} = ?`), say: `${a} plus ${b}`, answer: a + b, hint: 'Add the tens, then add the ones.', explain: `${t1 * 10} + ${t2 * 10} = ${(t1 + t2) * 10}, and ${o1} + ${o2} = ${o1 + o2}, so ${a + b}.` }; },
+       () => { const t1 = R(1, 5), t2 = R(1, 7 - t1), o1 = R(3, 9), o2 = R(10 - o1, 9), a = t1 * 10 + o1, b = t2 * 10 + o2; return { kind: 'num', prompt: eq(`${a} + ${b} = ?`), say: `${a} plus ${b}`, answer: a + b, hint: `The ones make ${o1 + o2}. That is a new ten.`, explain: `${t1 * 10} + ${t2 * 10} = ${(t1 + t2) * 10}, and ${o1} + ${o2} = ${o1 + o2}, so ${a + b}.` }; }],
+      []
+    ],
+    shapes: [
+      [() => { const fours = ['square', 'rectangle', 'rhombus', 'trapezoid']; const s = pick(fours); const m = mc(s, fours.filter(x => x !== s)); return { kind: 'choice', prompt: 'What shape is this? Look closely.', say: 'What shape is this? They all have 4 sides, so look closely.', fig: shape(s), ...m, hint: 'Are the sides all the same length? Are the corners square?', explain: `It is a ${s}.` }; },
+       () => { const groups = [['square', 'rhombus'], ['rectangle', 'trapezoid'], ['pentagon', 'hexagon'], ['triangle', 'trapezoid'], ['circle', 'hexagon']]; const [s0, odd] = shuffle(pick(groups)); const all = shuffle([s0, s0, odd]); return { kind: 'choice', prompt: `Which one is <b>not</b> a ${s0}?`, say: `Which one is not a ${s0}?`, choices: all.map((x, i) => shape(x, 90, ['var(--sky)', 'var(--grass)', 'var(--sun)'][i])), answer: all.indexOf(odd), hint: 'Count the sides and corners of each one.', explain: `That one is a ${odd}.` }; }],
+      [() => { const a = pick(['triangle', 'square', 'pentagon', 'hexagon']), b = pick(['triangle', 'square', 'pentagon', 'hexagon']); return { kind: 'num', prompt: `How many sides do a <b>${a}</b> and a <b>${b}</b> have <b>altogether</b>?`, say: `How many sides do a ${a} and a ${b} have altogether?`, fig: shape(a, 100) + shape(b, 100), answer: SHAPES[a].sides + SHAPES[b].sides, hint: 'Count the sides of each, then add.', explain: `${SHAPES[a].sides} + ${SHAPES[b].sides} = ${SHAPES[a].sides + SHAPES[b].sides}` }; },
+       () => { const k = R(2, 4), s = pick(['triangle', 'square']); return { kind: 'num', prompt: `How many <b>corners</b> do <b>${k}</b> ${s}s have?`, say: `How many corners do ${k} ${s}s have?`, fig: Array.from({ length: k }, () => shape(s, 70)).join(''), answer: k * SHAPES[s].corners, hint: 'Count the corners on every shape.', explain: `${k} × ${SHAPES[s].corners} = ${k * SHAPES[s].corners}` }; }],
+      [() => { const n = pick([2, 3, 4]); return { kind: 'num', prompt: `How many <b>quarters</b> are in <b>${n}</b> whole pizzas?`, say: `How many quarters are in ${n} whole pizzas?`, fig: parts('quarter', 'circle'), answer: n * 4, hint: 'Each pizza has 4 quarters.', explain: `${n} pizzas × 4 = ${n * 4} quarters.` }; },
+       () => { const n = pick([4, 6, 8, 10, 12]); return { kind: 'num', prompt: `${KID} eats <b>half</b> of <b>${n}</b> grapes. How many does he eat?`, say: `${KID} eats half of ${n} grapes. How many does he eat?`, answer: n / 2, hint: 'Half means 2 equal groups.', explain: `Half of ${n} is ${n / 2}.` }; },
+       () => { const m = mc('a half', ['a quarter', 'they are the same']); return { kind: 'choice', prompt: 'Which piece of the same pizza is <b>bigger</b>?', say: 'Which piece of the same pizza is bigger, a half or a quarter?', fig: parts('half', 'circle') + parts('quarter', 'circle'), ...m, hint: 'More pieces means each piece is smaller.', explain: 'A half is bigger. A quarter is half of a half.' }; }],
+      [() => { const r = R(4, 8), d = R(2, 5); return { kind: 'num', prompt: `The red crayon is <b>${r}</b> cubes long. The blue crayon is <b>${d}</b> cubes longer. How long is the blue crayon?`, say: `The red crayon is ${r} cubes long. The blue crayon is ${d} cubes longer. How long is the blue crayon?`, answer: r + d, hint: 'Longer means add.', explain: `${r} + ${d} = ${r + d}` }; },
+       () => { const ls = shuffle([R(2, 4), R(6, 8), R(10, 13)]); const names = ['Red', 'Blue', 'Green'], cols = ['var(--berry)', 'var(--sky)', 'var(--grass)']; const order = ls.map((l, i) => [l, names[i]]).sort((a, b) => a[0] - b[0]).map(x => x[1]); const right = order.join(', '); const m = mc(right, [order.slice().reverse().join(', '), [order[1], order[0], order[2]].join(', '), [order[0], order[2], order[1]].join(', ')]); return { kind: 'choice', cls: 'word', prompt: 'Put them in order, <b>shortest first</b>.', say: 'Put the ribbons in order, shortest first.', fig: lengths(ls.map((l, i) => ({ len: l, col: cols[i], label: names[i] })), 0), ...m, hint: 'Find the shortest one first.', explain: `Shortest to longest: ${right}.` }; }],
+      [() => { const a = R(3, 7), b = R(2, 6); return { kind: 'num', prompt: 'The two ribbons are put end to end. How many cubes long are they <b>together</b>?', say: 'The two ribbons are put end to end. How many cubes long are they together?', fig: lengths([{ len: a, col: 'var(--sky)', label: 'Blue' }, { len: b, col: 'var(--berry)', label: 'Red' }], 13), answer: a + b, hint: 'Measure each one, then add.', explain: `${a} + ${b} = ${a + b}` }; }],
+      [() => { const h = R(1, 12), m = pick([5, 10, 15, 20, 25, 35, 40, 45, 50, 55]); const right = tm(h, m); const wr = [tm(wrapH(h + 1), m), tm(h, m === 55 ? 50 : m + 5), tm(h, (m + 30) % 60)]; const mcq = mc(right, wr); return { kind: 'choice', prompt: 'What time is it?', say: 'What time is it? The long hand counts by fives.', fig: clock(h, m), ...mcq, hint: 'Short hand: the hour it has passed. Long hand: count by 5 from the 12.', explain: `It is ${right}.` }; },
+       () => { const h = R(1, 12), k = R(2, 5); const ans = wrapH(h + k); const mcq = mc(hr(ans), [hr(wrapH(ans + 1)), hr(wrapH(ans - 1)), hr(wrapH(h - k))]); return { kind: 'choice', prompt: `It is <b>${hr(h)}</b>. What time will it be in <b>${k} hours</b>?`, say: `It is ${h} o'clock. What time will it be in ${k} hours?`, ...mcq, hint: 'Count on around the clock. After 12 comes 1.', explain: `${k} hours after ${hr(h)} is ${hr(ans)}.` }; }],
+      [() => { const h = R(1, 12), q = pick([15, 45]); const right = tm(h, q); const mcq = mc(right, [tm(wrapH(h + 1), q), tm(h, q === 15 ? 45 : 15), tm(h, 30)]); return { kind: 'choice', prompt: 'What time is it?', say: 'What time is it? Look where the long hand points.', fig: clock(h, q), ...mcq, hint: 'Long hand on 3 is 15 minutes. Long hand on 9 is 45 minutes.', explain: `It is ${right}.` }; },
+       () => { const h = R(1, 11); return { kind: 'num', prompt: `How many <b>minutes</b> from <b>${tm(h, 0)}</b> to <b>${tm(h, 30)}</b>?`, say: `How many minutes from ${h} o'clock to ${h} thirty?`, answer: 30, hint: 'Half an hour.', explain: 'Half an hour is 30 minutes.' }; }],
+      [() => { const g = graph(), [a, b] = shuffle(g.rows).slice(0, 2); return { kind: 'num', prompt: `How many <b>${a.n.toLowerCase()}</b> and <b>${b.n.toLowerCase()}</b> together?`, say: `How many ${a.n.toLowerCase()} and ${b.n.toLowerCase()} together?`, fig: g.fig, answer: a.c + b.c, hint: 'Count both rows, then add.', explain: `${a.c} + ${b.c} = ${a.c + b.c}` }; },
+       () => { const g = graph(), s = g.rows.slice().sort((a, b) => b.c - a.c); return { kind: 'num', prompt: `How many more <b>${s[2].n.toLowerCase()}</b> are needed to have as many as ${s[0].n.toLowerCase()}?`, say: `How many more ${s[2].n.toLowerCase()} are needed to have as many as ${s[0].n.toLowerCase()}?`, fig: g.fig, answer: s[0].c - s[2].c, hint: 'Count up from the small row to the big row.', explain: `${s[0].c} − ${s[2].c} = ${s[0].c - s[2].c}` }; }],
+      [() => { const h = R(1, 10); const mcq = mc(tm(h + 1, 30), [tm(h + 1, 0), tm(h, 30), tm(h + 2, 0)]); return { kind: 'choice', prompt: `Swimming starts at <b>${tm(h, 0)}</b> and lasts <b>an hour and a half</b>. When does it end?`, say: `Swimming starts at ${h} o'clock and lasts an hour and a half. When does it end?`, ...mcq, hint: 'Add 1 hour first, then half an hour.', explain: `${tm(h, 0)} + 1 hour = ${tm(h + 1, 0)}, + half an hour = ${tm(h + 1, 30)}.` }; },
+       () => ({ kind: 'num', prompt: 'How many <b>minutes</b> are in <b>one hour</b>?', say: 'How many minutes are in one hour?', answer: 60, hint: 'The long hand goes all the way round once.', explain: 'One hour is 60 minutes.' }),
+       () => { const d = pick([['Monday', 'Tuesday'], ['Tuesday', 'Wednesday'], ['Wednesday', 'Thursday'], ['Thursday', 'Friday'], ['Friday', 'Saturday'], ['Saturday', 'Sunday'], ['Sunday', 'Monday']]); const mcq = mc(d[1], ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].filter(x => x !== d[0] && x !== d[1]).slice(0, 3)); return { kind: 'choice', cls: 'word', prompt: `Today is <b>${d[0]}</b>. What day is <b>tomorrow</b>?`, say: `Today is ${d[0]}. What day is tomorrow?`, ...mcq, hint: 'Say the days of the week in order.', explain: `After ${d[0]} comes ${d[1]}.` }; }],
+      []
+    ],
+    letters: [
+      [() => { const w = pick(SPOT); const m = mc(w, [firstSwapL(w), ...vowelSwapsL(w)]); return { kind: 'choice', cls: 'word', prompt: `Find <b>${w.toUpperCase()}</b> in small letters.`, say: `Find this word in small letters.`, ...m, hint: 'Match each big letter to its small letter, in order.', explain: `${w.toUpperCase()} in small letters is ${w}.` }; }],
+      [() => { const w = pick(SPOT); const m = mc(w.toUpperCase(), [firstSwapL(w), ...vowelSwapsL(w)].map(x => x.toUpperCase())); return { kind: 'choice', cls: 'word', prompt: `Find <b>${w}</b> in big letters.`, say: `Find this word in big letters.`, ...m, hint: 'Match each small letter to its big letter, in order.', explain: `${w} in big letters is ${w.toUpperCase()}.` }; }],
+      [() => { const w = pick(SPOT.concat(['moon', 'dad'])); const s = w.split('').map(c => (Math.random() < .4 ? c.toUpperCase() : c)); if (!s.some(c => c !== c.toLowerCase())) s[0] = s[0].toUpperCase(); const n = s.filter(c => c !== c.toLowerCase()).length; return { kind: 'num', prompt: `How many <b>big</b> letters are in <span class="lt">${s.join('')}</span>?`, say: 'How many big letters are in this word?', answer: n, hint: 'Look at the size of each letter. Some look alike, like o and O.', explain: `There ${n === 1 ? 'is' : 'are'} ${n}.` }; }],
+      [() => { const w = pick(['bed', 'dog', 'bad', 'dip', 'pod', 'bud', 'pad', 'bib', 'dab', 'bog']); const flip = { b: 'd', d: 'b', p: 'q', q: 'p' }; const wr = uniq([w.split('').map(c => flip[c] || c).join(''), w.replace(/[bdpq]/, c => ({ b: 'p', d: 'q', p: 'b', q: 'd' })[c]), w.split('').reverse().join('')]).filter(x => x !== w); const m = mc(w, wr); return { kind: 'choice', cls: 'word', prompt: `Find the word <b>${w}</b>.`, say: 'Find the word at the top. Watch out for b, d, p and q.', ...m, hint: 'For b, the line comes first. For d, the round part comes first.', explain: `${w} is spelled ${w.split('').join(', ')}.` }; }],
+      [() => { const U = pick(DIFF), l = U.toLowerCase(); const good = shuffle(DIFF.filter(x => x !== U)).slice(0, 2).map(x => x + x.toLowerCase()); const bad = U + (LOOK_LOW[l] || 'x')[0]; const all = shuffle([...good, bad]); return { kind: 'choice', cls: 'letter', prompt: 'Which pair does <b>not</b> match?', say: 'Which pair does not match? One big letter has the wrong small letter.', choices: all, answer: all.indexOf(bad), hint: 'Say the name of both letters in each pair.', explain: `${bad[0]} goes with ${l}, not ${bad[1]}.` }; }],
+      [() => { const n = pick(NAMES.filter(x => !['Seattle', 'Monday'].includes(x[0]))); const s = pick(['I play with', 'This is', 'We went to see', 'I gave it to']); const right = `${s} ${n[0]}.`; const m = mc(right, [`${s} ${n[1]}.`, `${s} ${n[2]}.`, `${s.toLowerCase()} ${n[0]}.`], 3); return { kind: 'choice', cls: 'word', prompt: 'Which sentence is written the <b>right</b> way?', say: 'Which sentence is written the right way? Check the start and the name.', ...m, hint: 'The sentence starts big. A name starts big too, even in the middle.', explain: right }; }],
+      [() => { const n = pick(NAMES.filter(x => !['Seattle', 'Monday'].includes(x[0]))); const right = `I saw ${n[0]} on Monday.`; const m = mc(right, [`i saw ${n[0]} on Monday.`, `I saw ${n[1]} on Monday.`, `I saw ${n[0]} on monday.`]); return { kind: 'choice', cls: 'word', prompt: 'Which sentence is written the <b>right</b> way?', say: 'Which sentence is written the right way? Look at I, the name and the day.', ...m, hint: 'I is always big. Names and days start big.', explain: right }; }],
+      [() => { const ws = shuffle(['ant', 'bat', 'cat', 'dog', 'egg', 'fox', 'hat', 'jam', 'map', 'pig', 'sun', 'top']).slice(0, 3); const first = ws.slice().sort()[0]; const m = mc(first, ws.filter(w => w !== first)); return { kind: 'choice', cls: 'word', prompt: 'Which word comes <b>first</b> in ABC order?', say: 'Which word comes first in ABC order?', ...m, hint: 'Look at the first letter of each word. Which comes first in the alphabet?', explain: `${ws.slice().sort().join(', ')}` }; },
+       () => { const i = R(1, 22); const right = LOW[i] + ' ' + LOW[i + 1]; const m = mc(right, [LOW[i + 1] + ' ' + LOW[i], LOW[i] + ' ' + LOW[i + 2], LOW[i - 1] + ' ' + LOW[i + 1]]); return { kind: 'choice', cls: 'letter', prompt: eq(`${LOW[i - 1]} ? ? ${LOW[i + 2]}`), say: `Which two letters are missing? ${LOW[i - 1]}, blank, blank, ${LOW[i + 2]}.`, ...m, hint: 'Sing the ABC song from the first letter.', explain: `${LOW[i - 1]} ${LOW[i]} ${LOW[i + 1]} ${LOW[i + 2]}` }; }],
+      [() => { const s = pick(SENT); const w = s[0].split(' '); const k = R(1, w.length - 1); const bad = w.map((x, i) => (i === k ? x[0].toUpperCase() + x.slice(1) : x)).join(' '); const m = mc(s[0], [bad, s[1], s[2]].filter(x => x !== s[0]), 3); return { kind: 'choice', cls: 'word', prompt: 'Which sentence has <b>no mistakes</b>?', say: 'Which sentence has no mistakes?', ...m, hint: 'Only the first word starts big. Check every word.', explain: s[0] }; }],
+      []
+    ]
+  };
+  // look-alike spellings for whole-word letter matching
+  const firstSwapL = w => (LOOK_LOW[w[0]] || 'b')[0] + w.slice(1);
+  const vowelSwapsL = w => { const i = w.search(/[aeiou]/); return i < 0 ? [w + 's', w.slice(1) + w[0]] : shuffle(VOW.filter(v => v !== w[i])).slice(0, 2).map(v => w.slice(0, i) + v + w.slice(i + 1)); };
+  HARD.addsub[9] = [...HARD.addsub[4], ...HARD.addsub[5], ...HARD.addsub[6], ...HARD.addsub[7], ...HARD.addsub[8]];
+  HARD.tens[9] = [...HARD.tens[4], ...HARD.tens[5], ...HARD.tens[6], ...HARD.tens[7], ...HARD.tens[8]];
+  HARD.shapes[9] = [...HARD.shapes[1], ...HARD.shapes[2], ...HARD.shapes[5], ...HARD.shapes[6], ...HARD.shapes[8]];
+  HARD.letters[9] = [...HARD.letters[3], ...HARD.letters[5], ...HARD.letters[6], ...HARD.letters[7], ...HARD.letters[8]];
+  [['addsub', addsub], ['tens', tens], ['shapes', shapes], ['letters', letters]].forEach(([id, lv]) => lv.forEach((L, i) => { if (HARD[id][i] && HARD[id][i].length) L.hard = HARD[id][i]; }));
+
   const TOPICS = [
     { id: 'addsub', area: 'math', name: 'Adding & Taking Away', blurb: 'Add and subtract to 20, story problems, then bigger numbers.', mark: '+', color: 'c-sky', grade: 'Grade 1 → 2', levels: addsub },
     { id: 'tens', area: 'math', name: 'Numbers & Tens', blurb: 'Count to 120, tens and ones, compare with < and >.', mark: '10', color: 'c-grass', grade: 'Grade 1 → 2', levels: tens },
     { id: 'shapes', area: 'math', name: 'Shapes, Time & Measuring', blurb: 'Shapes, halves and quarters, clocks and picture graphs.', mark: '◆', color: 'c-grape', grade: 'Grade 1', levels: shapes },
     { id: 'letters', area: 'abc', name: 'Big & Small Letters', blurb: 'Match capitals to small letters, b d p q, names and sentences.', mark: 'Aa', color: 'c-berry', grade: 'Grade 1', levels: letters },
-    { id: 'write', area: 'abc', name: 'Write d and m', blurb: 'Trace d and m with your finger, then spot them in words.', mark: 'dm', color: 'c-sun', grade: 'Grade 1', levels: write }
+    { id: 'read', area: 'abc', name: 'Reading Quest', blurb: 'Sound out words, rhymes, sight words, then read a whole sentence.', mark: 'cat', color: 'c-sun', grade: 'Grade 1', levels: read },
+    // tracing is mastered, so it is off the home screen; its stars still count for coins and the report
+    { id: 'write', area: 'abc', name: 'Write d and m', blurb: 'Trace d and m with your finger, then spot them in words.', mark: 'dm', color: 'c-sun', grade: 'Grade 1', levels: write, hidden: true }
   ];
   const AREAS = [
-    { id: 'abc', name: 'Letters & Writing', focus: true },
+    { id: 'abc', name: 'Letters & Reading', focus: true },
     { id: 'math', name: 'Math' }
   ];
 
@@ -782,17 +955,18 @@ window.VHReport = (function () {
   const when = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }); };
   function compute(sessions, topics, areas) {
     const tById = Object.fromEntries(topics.map(t => [t.id, t])), qs = [];
-    sessions.forEach(s => (s.questions || []).forEach(q => qs.push(Object.assign({ topic: s.topic, level: s.level }, q))));
+    tById.warmup = { name: 'Warm-up', area: '' };
+    sessions.forEach(s => (s.questions || []).forEach(q => qs.push(Object.assign({ topic: s.topic, level: s.level, mode: s.mode === 'hard' ? 'hard' : '' }, q))));
     const typical = median(qs.map(q => q.seconds).filter(Boolean)) || 20;
     const types = {};
-    qs.forEach(q => { const k = `${q.topic}|${q.level}|${q.type}`; const g = (types[k] = types[k] || { topic: q.topic, level: q.level, type: q.type, n: 0, right: 0, times: [], hints: 0 }); g.n++; if (q.correct) g.right++; if (q.hint) g.hints++; if (q.seconds) g.times.push(q.seconds); });
+    qs.forEach(q => { const k = `${q.topic}|${q.level}|${q.mode}|${q.type}`; const g = (types[k] = types[k] || { topic: q.topic, level: q.level, mode: q.mode, type: q.type, n: 0, right: 0, times: [], hints: 0 }); g.n++; if (q.correct) g.right++; if (q.hint) g.hints++; if (q.seconds) g.times.push(q.seconds); });
     const typeRows = Object.values(types).map(g => Object.assign(g, { acc: pct(g.right, g.n), med: median(g.times) }));
     const workOn = typeRows.filter(g => g.n >= 3 && (g.acc < 75 || g.med > typical * 1.6)).sort((a, b) => a.acc - b.acc || b.med - a.med).slice(0, 8);
     const strong = typeRows.filter(g => g.n >= 3 && g.acc >= 90 && g.med <= typical).sort((a, b) => a.med - b.med).slice(0, 6);
     const lv = {};
-    sessions.forEach(s => { const k = `${s.topic}|${s.level}`; const g = (lv[k] = lv[k] || { topic: s.topic, level: s.level, title: s.levelTitle, tries: 0, finished: 0, best: 0, last: null, passed: false, times: [] }); g.tries++; if (s.completed) { g.finished++; g.best = Math.max(g.best, s.correct); g.last = s.correct; if (s.stars > 0) g.passed = true; } (s.questions || []).forEach(q => q.seconds && g.times.push(q.seconds)); });
+    sessions.forEach(s => { if (s.mode === 'warmup' || s.mode === 'testout') return; const k = `${s.topic}|${s.level}|${s.mode || ''}`; const g = (lv[k] = lv[k] || { topic: s.topic, level: s.level, mode: s.mode || '', title: s.levelTitle, tries: 0, finished: 0, best: 0, last: null, passed: false, times: [] }); g.tries++; if (s.completed) { g.finished++; g.best = Math.max(g.best, s.correct); g.last = s.correct; if (s.stars > 0) g.passed = true; } (s.questions || []).forEach(q => q.seconds && g.times.push(q.seconds)); });
     const levelRows = Object.values(lv).map(g => Object.assign(g, { med: median(g.times) })).sort((a, b) => (a.topic === b.topic ? a.level - b.level : topics.findIndex(t => t.id === a.topic) - topics.findIndex(t => t.id === b.topic)));
-    const stuck = levelRows.filter(g => !g.passed && g.tries >= 2);
+    const stuck = levelRows.filter(g => !g.passed && g.tries >= 2 && !g.mode);
     const areaRows = areas.map(a => { const aq = qs.filter(q => (tById[q.topic] || {}).area === a.id); return { name: a.name, n: aq.length, acc: pct(aq.filter(q => q.correct).length, aq.length), med: median(aq.map(q => q.seconds).filter(Boolean)) }; }).filter(a => a.n);
     const recent = sessions.slice().sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1)).slice(0, 12);
     return { tById, typical, workOn, strong, levelRows, stuck, areaRows, recent, total: { sessions: sessions.length, questions: qs.length, acc: pct(qs.filter(q => q.correct).length, qs.length), hints: qs.filter(q => q.hint).length, last: recent[0] && recent[0].startedAt } };
@@ -802,7 +976,7 @@ window.VHReport = (function () {
     const r = compute(sessions, topics, areas);
     const tName = id => (r.tById[id] || {}).name || id;
     const speed = s => (s > r.typical * 1.6 ? '<span class="chip slow">slow</span>' : s < r.typical * 0.7 ? '<span class="chip fast">fast</span>' : '');
-    const typeRow = g => `<tr><td><b>${esc(tName(g.topic))} · L${g.level}</b><br><span class="muted">${esc(g.type)}</span></td><td class="num">${g.acc}%<br><span class="muted">${g.right}/${g.n}</span></td><td class="num">${secs(g.med)} ${speed(g.med)}</td></tr>`;
+    const typeRow = g => `<tr><td><b>${esc(tName(g.topic))} · L${g.level}${g.mode === 'hard' ? ' ⚡' : ''}</b><br><span class="muted">${esc(g.type)}</span></td><td class="num">${g.acc}%<br><span class="muted">${g.right}/${g.n}</span></td><td class="num">${secs(g.med)} ${speed(g.med)}</td></tr>`;
     el.innerHTML = `
       <div class="kpis"><div><b>${r.total.sessions}</b><span>levels played</span></div><div><b>${r.total.questions}</b><span>questions</span></div><div><b>${r.total.acc}%</b><span>correct</span></div><div><b>${secs(r.typical)}</b><span>typical time per question</span></div></div>
       <p class="muted small">Last played ${esc(when(r.total.last))}. Hints used on ${r.total.hints} questions. "Slow" means more than 1.6× his typical time; "fast" means under 0.7×.</p>
@@ -819,7 +993,7 @@ window.VHReport = (function () {
       </table></div>
       <h2 class="rep-h">Recent sessions</h2>
       <div class="tablewrap"><table class="rep"><tr><th>When</th><th>Level</th><th>Score</th><th>Time</th></tr>
-        ${r.recent.map(s => `<tr><td>${esc(when(s.startedAt))}</td><td>${esc(tName(s.topic))} · L${s.level}</td><td class="num">${s.correct}/${s.completed ? s.total : (s.questions || []).length}${s.completed ? '' : ' <span class="chip">quit</span>'}${s.stars ? ' ' + '★'.repeat(s.stars) : ''}</td><td class="num">${secs(s.seconds || 0)}</td></tr>`).join('')}
+        ${r.recent.map(s => `<tr><td>${esc(when(s.startedAt))}</td><td>${esc(tName(s.topic))}${s.level ? ` · L${s.level}` : ''}${s.mode === 'hard' ? ' ⚡' : s.mode === 'testout' ? ' · test out' : ''}</td><td class="num">${s.correct}/${s.completed ? s.total : (s.questions || []).length}${s.completed ? '' : ' <span class="chip">quit</span>'}${s.stars ? ' ' + '★'.repeat(s.stars) : ''}</td><td class="num">${secs(s.seconds || 0)}</td></tr>`).join('')}
       </table></div>
       ${note || ''}`;
   }
@@ -844,8 +1018,11 @@ window.VHReport = (function () {
   const prog = id => (state.topics[id] = state.topics[id] || { stars: {} });
   const starsFor = (t, i) => prog(t.id).stars[i] || 0;
   let parentMode = false, loggedIn = false;
-  const unlocked = (t, i) => parentMode || i === 0 || starsFor(t, i - 1) > 0;
-  const cleared = t => t.levels.filter((_, i) => starsFor(t, i) > 0).length;
+  const hardFor = (t, i) => (prog(t.id).hard || {})[i] || 0;
+  const skipped = (t, i) => !!(prog(t.id).skip || {})[i]; // tested out: open, but no stars
+  const done = (t, i) => starsFor(t, i) > 0 || skipped(t, i);
+  const unlocked = (t, i) => parentMode || i === 0 || done(t, i - 1);
+  const cleared = t => t.levels.filter((_, i) => done(t, i)).length;
   const totalStars = t => t.levels.reduce((s, _, i) => s + starsFor(t, i), 0);
 
   /* ---------- read aloud ---------- */
@@ -977,7 +1154,8 @@ window.VHReport = (function () {
   const K_RATE = 'vh.coinrate', K_SPENDS = 'vh.spends';
   const rateOf = () => { const r = lsGet(K_RATE, null); return r && r.starsPerCoin > 0 && r.minutesPerCoin > 0 ? r : Object.assign({ at: '' }, DEFAULT_RATE); };
   const spends = () => lsGet(K_SPENDS, []);
-  const allStars = () => Object.values(state.topics).reduce((s, p) => s + Object.values(p.stars || {}).reduce((a, b) => a + (+b || 0), 0), 0);
+  const sumStars = o => Object.values(o || {}).reduce((a, b) => a + (+b || 0), 0);
+  const allStars = () => Object.values(state.topics).reduce((s, p) => s + sumStars(p.stars) + sumStars(p.hard), 0); // Hard mode stars count too
   const earned = () => Math.floor(allStars() / rateOf().starsPerCoin);
   const spentCoins = () => spends().reduce((s, x) => s + (+x.coins || 0), 0);
   const balance = () => Math.max(0, earned() - spentCoins());
@@ -1100,53 +1278,101 @@ window.VHReport = (function () {
         <div class="foot"><div class="meter" aria-hidden="true"><i style="width:${(c / n) * 100}%"></i></div><span>${c}/${n} levels · ${starRow(Math.min(3, Math.round(totalStars(t) / n)))}</span></div>
         <span class="tag">${c === 0 ? 'Start' : c === n ? 'Replay' : 'Go on'}</span></button>`;
     };
-    const sections = AREAS.map(a => `<section class="area"><h2 class="area-h">${a.name}${a.focus ? ' <span class="pill">Practice most</span>' : ''}</h2><div class="tiles">${TOPICS.filter(t => t.area === a.id).map(tile).join('')}</div></section>`).join('');
+    const sections = AREAS.map(a => `<section class="area"><h2 class="area-h">${a.name}${a.focus ? ' <span class="pill">Practice most</span>' : ''}</h2><div class="tiles">${TOPICS.filter(t => t.area === a.id && !t.hidden).map(tile).join('')}</div></section>`).join('');
     go(`<section><p class="eyebrow">Pick a quest</p><h1>Hi ${KID}! What shall we do?</h1>
-        <p class="lede">Every quest has 10 levels. Get ${PASS} out of ${QUESTIONS} right to open the next level. Tap 🔊 to hear any question.</p></section>
+        <p class="lede">Every quest has 10 levels. Get ${PASS} out of ${QUESTIONS} right to open the next level. Tap 🔊 to hear any question.</p>${warmDue() ? `<p class="warmnote"><b>🔥 Warm-up first.</b> ${WARM_N} quick questions on the tricky ones, then pick any quest.</p>` : ''}</section>
         <button class="coinbar" id="coinbar" type="button"><span class="coinbig" aria-hidden="true">🪙</span><span><b>${plural(balance(), 'coin')}</b><small>Stars earn coins. Trade them for game time.</small></span><span class="go">Get play time</span></button>${sections}`);
     app.querySelector('#coinbar').addEventListener('click', () => coinsPage());
-    app.querySelectorAll('[data-topic]').forEach(b => b.addEventListener('click', () => map(TOPICS.find(t => t.id === b.dataset.topic))));
+    app.querySelectorAll('[data-topic]').forEach(b => b.addEventListener('click', () => { const t = TOPICS.find(x => x.id === b.dataset.topic); warmDue() ? warmUp(() => map(t), `Go to ${t.name} →`) : map(t); }));
     speak(`Hi ${KID}! Pick a quest.`);
   }
 
   function map(t) {
     const c = cleared(t);
-    const nextIdx = t.levels.findIndex((_, i) => unlocked(t, i) && starsFor(t, i) === 0);
+    const nextIdx = t.levels.findIndex((_, i) => unlocked(t, i) && !done(t, i));
     const cards = t.levels.map((L, i) => {
       const open = unlocked(t, i), s = starsFor(t, i);
-      return `<button class="lvl${open ? '' : ' locked'}${i === nextIdx ? ' next' : ''}${s ? ' done' : ''}" data-i="${i}" ${open ? '' : 'disabled'}>
+      return `<button class="lvl${open ? '' : ' locked'}${i === nextIdx ? ' next' : ''}${done(t, i) ? ' done' : ''}" data-i="${i}" ${open ? '' : 'disabled'}>
         <span class="lvl-n">${i + 1}</span>
         <span class="lvl-b"><b>${L.title}</b><small>${open ? L.skill : 'Finish level ' + i + ' to open'}</small></span>
-        <span>${open ? starRow(s) : '🔒'}</span></button>`;
+        <span>${!open ? '🔒' : skipped(t, i) && !s ? '<span class="skipchip">Tested out ✓</span>' : starRow(s)}</span></button>`;
     }).join('');
+    const hardList = t.levels.map((L, i) => ({ L, i })).filter(x => x.L.hard && starsFor(t, x.i) === 3);
+    const hardHtml = hardList.length ? `<section class="modep"><h2>⚡ Hard mode</h2><p class="muted small">Three stars on these levels, so each one has a tougher version: bigger numbers, more typing, trickier choices.</p>
+      <div class="hardbtns">${hardList.map(x => `<button class="btn" type="button" data-hard="${x.i}">${x.i + 1}. ${x.L.title} ⚡ <span>${starRow(hardFor(t, x.i))}</span></button>`).join('')}</div></section>` : '';
+    const testHtml = c === 0 && t.levels.length > 2 ? `<section class="modep"><h2>Already know this?</h2><p class="muted small">Take a quick test: ${TEST_PER} questions from each level. Every level you get right opens up, so you start where it gets tricky. The test stops at the first miss.</p>
+      <div class="actions left"><button class="btn primary" type="button" id="testout">Take the test</button></div></section>` : '';
     go(`<nav><button class="link" id="back">← All quests</button></nav>
       <section><p class="eyebrow">${t.grade}</p><h1>${t.name}</h1><p class="lede">${c} of ${t.levels.length} levels done · ${totalStars(t)} of ${t.levels.length * 3} stars</p>
-      <div class="path" aria-hidden="true">${t.levels.map((_, i) => `<span class="${starsFor(t, i) ? 'on' : ''}"></span>`).join('')}</div></section>
+      <div class="path" aria-hidden="true">${t.levels.map((_, i) => `<span class="${done(t, i) ? 'on' : ''}"></span>`).join('')}</div></section>
+      ${testHtml}
       <div class="levels">${cards}</div>
+      ${hardHtml}
       <p class="parent-note">${parentMode ? `<b>Parent mode is on.</b> Every level is open until you turn it off or reload. <button class="link" id="pm-off">Turn off</button>` : `<button class="link" id="pm-on">🔒 Parent mode</button> opens every level (needs the parent PIN).`}</p>`, '.lvl.next');
     app.querySelector('#back').addEventListener('click', home);
     const on = app.querySelector('#pm-on'), off = app.querySelector('#pm-off');
     if (on) on.addEventListener('click', () => parentGate(() => { parentMode = true; map(t); }));
     if (off) off.addEventListener('click', () => { parentMode = false; map(t); });
     app.querySelectorAll('.lvl:not(.locked)').forEach(b => b.addEventListener('click', () => play(t, +b.dataset.i)));
+    app.querySelectorAll('[data-hard]').forEach(b => b.addEventListener('click', () => play(t, +b.dataset.hard, 'hard')));
+    const to = app.querySelector('#testout'); if (to) to.addEventListener('click', () => testOut(t));
+  }
+
+  /* ---------- test out: 2 questions per level, in order, stopping at the first miss ---------- */
+  const TEST_PER = 2;
+  function testOut(t) {
+    const qs = [];
+    t.levels.slice(0, -1).forEach((L, i) => makeQuestions(L, 'normal', TEST_PER).forEach(q => qs.push(Object.assign(q, { tid: t.id, li: i }))));
+    play(t, 0, 'testout', { qs });
+  }
+
+  /* ---------- daily warm-up on his weak spots ----------
+     Once a day, before his first quest: 6 questions from the 3 levels where his last 20 answers
+     are weakest (under 80% right, at least 5 answers). A parent can turn it off in Settings. */
+  const WARM_N = 6, K_WARM = 'vh.warmday', K_WARMON = 'vh.warmup';
+  const WARM_FALLBACK = [['shapes', 6], ['shapes', 4], ['addsub', 5]]; // Half Past, Measure It, Take Away to 20
+  const WARM_T = { id: 'warmup', name: 'Warm-up', levels: [{ title: 'Warm-up', variants: [] }] };
+  const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+  function weakSpots() {
+    const seen = new Set(), all = [];
+    Object.values(lsGet('vh.cache', {})).concat(lsGet(K_LOCAL, [])).forEach(x => { if (x && x.player === CODE && Array.isArray(x.questions) && !seen.has(x.id)) { seen.add(x.id); all.push(x); } });
+    all.sort((a, b) => (a.startedAt < b.startedAt ? -1 : 1));
+    const by = {};
+    all.forEach(x => { if (x.mode === 'hard') return; x.questions.forEach(q => { const k = `${q.topic || x.topic}|${q.level || x.level}`; (by[k] = by[k] || []).push(!!q.correct); }); });
+    const ok = (t, i) => t && !t.hidden && t.levels[i] && t.levels[i].variants.length && unlocked(t, i);
+    const spots = Object.entries(by).map(([k, v]) => { const [tid, l] = k.split('|'); const last = v.slice(-20); return { t: TOPICS.find(x => x.id === tid), i: +l - 1, n: last.length, acc: last.filter(Boolean).length / last.length }; })
+      .filter(x => x.n >= 5 && x.acc < 0.8 && ok(x.t, x.i)).sort((a, b) => a.acc - b.acc).slice(0, 3);
+    if (!spots.length && all.length) WARM_FALLBACK.forEach(([tid, i]) => { const t = TOPICS.find(x => x.id === tid); if (ok(t, i) && starsFor(t, i) < 3) spots.push({ t, i }); });
+    return spots;
+  }
+  const warmDue = () => lsGet(K_WARMON, true) && lsGet(K_WARM, '') !== today() && weakSpots().length > 0;
+  function warmUp(after, label) {
+    const spots = weakSpots(), per = Math.ceil(WARM_N / spots.length), qs = [];
+    spots.forEach(sp => makeQuestions(sp.t.levels[sp.i], 'normal', per).forEach(q => qs.push(Object.assign(q, { tid: sp.t.id, li: sp.i }))));
+    play(WARM_T, 0, 'warmup', { qs: window.VQ.util.shuffle(qs).slice(0, WARM_N), after, label });
   }
 
   /* ---------- playing ---------- */
-  function makeQuestions(L) {
+  // Hard mode types the answer whenever every choice is a plain number
+  const typed = q => (q.kind === 'choice' && q.choices.every(c => /^\d+$/.test(String(c))) ? Object.assign({}, q, { kind: 'num', answer: +q.choices[q.answer], choices: undefined }) : q);
+  function makeQuestions(L, mode = 'normal', n = QUESTIONS) {
+    const src = mode === 'hard' && L.hard ? L.hard : L.variants;
     const key = q => (q.prompt || '') + (q.fig || '') + (q.choices ? q.choices.slice().sort().join('|') : '') + (q.kind === 'trace' ? q.letter + Math.random() : '');
     const out = [], seen = new Set(); let pool = [];
-    while (out.length < QUESTIONS) {
-      if (!pool.length) pool = window.VQ.util.shuffle(L.variants);
+    while (out.length < n) {
+      if (!pool.length) pool = window.VQ.util.shuffle(src);
       const v = pool.pop(); let q, tries = 0;
       do { q = v(); tries++; } while (seen.has(key(q)) && tries < 25);
-      seen.add(key(q)); out.push(q);
+      seen.add(key(q)); out.push(mode === 'hard' ? typed(q) : q);
     }
     return out;
   }
 
-  function play(t, li) {
+  function play(t, li, mode = 'normal', opts = {}) {
     const L = t.levels[li];
-    const run = { qs: makeQuestions(L), i: 0, right: 0, hints: 0, log: [], qlog: [], started: new Date().toISOString() };
+    const run = { qs: opts.qs || makeQuestions(L, mode), i: 0, right: 0, hints: 0, log: [], qlog: [], started: new Date().toISOString() };
+    const N = run.qs.length;
+    const label = mode === 'warmup' ? '🔥 Warm-up' : mode === 'testout' ? `Test out · ${t.name}` : `Level ${li + 1} · ${L.title}${mode === 'hard' ? ' ⚡ Hard' : ''}`;
     question();
     function dots() { return run.qs.map((_, k) => { const r = run.log[k]; return `<i class="${r === true ? 'ok' : r === false ? 'no' : k === run.i ? 'cur' : ''}"></i>`; }).join(''); }
 
@@ -1158,9 +1384,9 @@ window.VHReport = (function () {
           <div class="pad" id="pad">${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(n => `<button type="button" data-n="${n}">${n}</button>`).join('')}<button type="button" class="wide" data-n="del" aria-label="Delete">⌫</button><button type="button" class="go" id="check">Check ✓</button></div></div>`;
       else ui = `<div class="tracebox"><canvas id="cv" width="300" height="300" aria-label="Tracing box for the letter ${q.letter}"></canvas><p class="tracemsg" id="tmsg"></p>
           <div class="tracebtns"><button class="btn" type="button" id="tclear">Clear</button><button class="btn primary" type="button" id="check">Check ✓</button></div></div>`;
-      go(`<div class="playtop"><button class="link" id="quit">✕ Stop</button><span class="where">Level ${li + 1} · ${L.title}</span><span class="dots" aria-label="Question ${run.i + 1} of ${QUESTIONS}">${dots()}</span></div>
+      go(`<div class="playtop"><button class="link" id="quit">✕ Stop</button><span class="where">${label}</span><span class="dots" aria-label="Question ${run.i + 1} of ${N}">${dots()}</span></div>
         <article class="qcard">
-          <div class="qhead"><p class="qnum">Question ${run.i + 1} of ${QUESTIONS}</p><button class="say" id="say" type="button">🔊 Read to me</button></div>
+          <div class="qhead"><p class="qnum">Question ${run.i + 1} of ${N}</p><button class="say" id="say" type="button">🔊 Read to me</button></div>
           <div class="prompt">${q.prompt}</div>
           ${q.fig ? `<figure class="fig">${q.fig}</figure>` : ''}
           ${ui}
@@ -1170,7 +1396,7 @@ window.VHReport = (function () {
       q.t0 = performance.now();
       speak(q.say);
       app.querySelector('#say').addEventListener('click', () => speak(q.say, true));
-      app.querySelector('#quit').addEventListener('click', () => { if (run.qlog.length) record(t, li, run, false, 0); map(t); });
+      app.querySelector('#quit').addEventListener('click', () => { if (run.qlog.length) record(t, li, run, false, 0, mode); mode === 'warmup' ? home() : map(t); });
       app.querySelector('#hint').addEventListener('click', e => { const ht = app.querySelector('#hinttext'); ht.hidden = false; q.usedHint = true; e.target.hidden = true; speak(q.hint, true); });
       if (q.kind === 'choice') app.querySelectorAll('.choice').forEach(b => b.addEventListener('click', () => check(+b.dataset.k, b)));
       else if (q.kind === 'num') numPad(q);
@@ -1181,7 +1407,7 @@ window.VHReport = (function () {
       let val = '';
       const scr = app.querySelector('#screen');
       const paint = () => { scr.textContent = val || '?'; scr.classList.toggle('empty', !val); };
-      const press = n => { if (scr.classList.contains('right') || scr.classList.contains('wrong')) return; if (n === 'del') val = val.slice(0, -1); else if (val.length < 3) val = (val === '0' ? '' : val) + n; paint(); };
+      const press = n => { if (scr.classList.contains('right') || scr.classList.contains('wrong')) return; if (n === 'del') val = val.slice(0, -1); else if (val.length < 4) val = (val === '0' ? '' : val) + n; paint(); };
       app.querySelectorAll('[data-n]').forEach(b => b.addEventListener('click', () => press(b.dataset.n)));
       const submit = () => { if (!val) { speak('Tap the numbers to type your answer.', true); return; } check(+val, null, val); };
       app.querySelector('#check').addEventListener('click', submit);
@@ -1245,6 +1471,7 @@ window.VHReport = (function () {
       const q = run.qs[run.i];
       const ok = q.kind === 'trace' ? v === 1 : v === q.answer;
       run.log[run.i] = ok;
+      if (mode === 'testout' && !ok) run.stop = true;
       if (ok) { run.right++; state.xp += q.usedHint ? 5 : 10; save(); showXP(); }
       if (q.usedHint) run.hints++;
       app.querySelectorAll('.choice, .pad button, #check').forEach(el => (el.disabled = true));
@@ -1258,40 +1485,72 @@ window.VHReport = (function () {
       else correct = q.letter;
       const plain = s => { const d = document.createElement('div'); d.innerHTML = String(s); return d.textContent.replace(/\s+/g, ' ').trim(); };
       run.qlog.push({ n: run.i + 1, prompt: plain(q.prompt).slice(0, 160), answer: /<svg/.test(correct) ? 'picture ' + (q.answer + 1) : plain(correct), given: q.kind === 'choice' ? (/<svg/.test(q.choices[v]) ? 'picture ' + (v + 1) : plain(q.choices[v])) : String(given), correct: ok, hint: !!q.usedHint, seconds: Math.min(600, Math.round((performance.now() - q.t0) / 100) / 10) });
+      if (q.tid) Object.assign(run.qlog[run.qlog.length - 1], { topic: q.tid, level: q.li + 1 });
       const cheer = q.kind === 'trace' ? pick(['Beautiful ' + q.letter + '!', 'Great tracing!', 'Super writing!']) : pick(['Yes! Great job!', 'You got it!', 'Super!', 'Awesome!']);
       const fb = app.querySelector('#fb');
       fb.className = 'feedback ' + (ok ? 'good' : 'bad');
       const showAns = q.kind === 'choice' && /<svg/.test(correct) ? 'the green one' : q.kind === 'trace' ? '' : `<b>${correct}</b>`;
       fb.innerHTML = `<p class="verdict">${ok ? `${cheer} <span class="plusxp">+${q.usedHint ? 5 : 10} XP</span>` : q.kind === 'trace' ? 'Good try! Keep practising.' : `Not quite. It is ${showAns}.`}</p>
         <p class="why">${q.explain}</p>
-        <button class="btn primary" id="next">${run.i + 1 < QUESTIONS ? 'Next →' : 'See my stars'}</button>`;
+        <button class="btn primary" id="next">${run.i + 1 < N && !run.stop ? 'Next →' : mode === 'warmup' || mode === 'testout' ? 'See how I did' : 'See my stars'}</button>`;
       fb.hidden = false;
       speak(ok ? cheer : (q.kind === 'trace' ? 'Good try! ' : 'Not quite. ') + plain(q.explain).replace(/−/g, ' minus '));
       app.querySelector('.dots').innerHTML = dots();
       const nb = app.querySelector('#next');
-      nb.addEventListener('click', () => { run.i++; run.i < QUESTIONS ? question() : results(); });
+      nb.addEventListener('click', () => { run.i++; run.i < N && !run.stop ? question() : results(); });
       nb.focus({ preventScroll: true });
       fb.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
 
     function results() {
-      const stars = run.right === QUESTIONS && run.hints === 0 ? 3 : run.right >= SILVER ? 2 : run.right >= PASS ? 1 : 0;
+      if (mode === 'warmup') return warmResults();
+      if (mode === 'testout') return testResults();
+      const stars = run.right === N && run.hints === 0 ? 3 : run.right >= SILVER ? 2 : run.right >= PASS ? 1 : 0;
       const passed = stars > 0, p = prog(t.id), coinsBefore = earned();
-      p.stars[li] = Math.max(p.stars[li] || 0, stars); save();
+      if (mode === 'hard') { p.hard = p.hard || {}; p.hard[li] = Math.max(p.hard[li] || 0, stars); } else p.stars[li] = Math.max(p.stars[li] || 0, stars);
+      save();
       const gotCoins = earned() - coinsBefore; showXP();
-      record(t, li, run, true, stars);
-      const hasNext = li + 1 < t.levels.length;
-      const title = !passed ? 'So close!' : !hasNext ? 'Quest complete!' : stars === 3 ? 'Perfect!' : 'Level done!';
-      const msg = !passed ? `You got ${run.right} out of ${QUESTIONS}. Get ${PASS} to open level ${li + 2}. The questions change every time. Try again!`
-        : stars === 3 ? 'All right, with no hints. Three stars!' : stars === 2 ? `You got ${run.right} out of ${QUESTIONS}. Get them all with no hints for 3 stars.` : `You got ${run.right} out of ${QUESTIONS}. Get ${SILVER} for 2 stars.`;
-      go(`<section class="result ${passed ? 'win' : 'lose'}"><p class="eyebrow">Level ${li + 1} · ${L.title}</p><h1>${title}</h1><div class="bigstars">${starRow(stars)}</div><p class="lede">${msg}</p>
+      record(t, li, run, true, stars, mode);
+      const hasNext = mode === 'normal' && li + 1 < t.levels.length;
+      const title = !passed ? 'So close!' : mode === 'hard' ? (stars === 3 ? 'Hard mode, perfect!' : 'Hard level done!') : !hasNext ? 'Quest complete!' : stars === 3 ? 'Perfect!' : 'Level done!';
+      const msg = !passed ? `You got ${run.right} out of ${N}. Get ${PASS} ${mode === 'hard' ? 'for a star' : `to open level ${li + 2}`}. The questions change every time. Try again!`
+        : stars === 3 ? 'All right, with no hints. Three stars!' : stars === 2 ? `You got ${run.right} out of ${N}. Get them all with no hints for 3 stars.` : `You got ${run.right} out of ${N}. Get ${SILVER} for 2 stars.`;
+      go(`<section class="result ${passed ? 'win' : 'lose'}"><p class="eyebrow">${label}</p><h1>${title}</h1><div class="bigstars">${starRow(stars)}</div><p class="lede">${msg}</p>
           ${gotCoins > 0 ? `<p class="coin-note"><span aria-hidden="true">🪙</span> +${plural(gotCoins, 'coin')}! You have ${balance()}. <button class="link" id="tocoins">Get play time</button></p>` : ''}
           <div class="actions">${passed && hasNext ? `<button class="btn primary" id="nextlvl">Level ${li + 2} →</button>` : ''}<button class="btn ${passed && hasNext ? '' : 'primary'}" id="again">${passed ? 'Play again' : 'Try again'}</button><button class="btn" id="tomap">All levels</button></div></section>`, '.actions .primary');
       speak(`${title} ${msg}` + (gotCoins > 0 ? ` You got ${plural(gotCoins, 'new coin')}!` : ''));
       if (passed) confetti();
       const tc = app.querySelector('#tocoins'); if (tc) tc.addEventListener('click', () => coinsPage());
       const nl = app.querySelector('#nextlvl'); if (nl) nl.addEventListener('click', () => play(t, li + 1));
-      app.querySelector('#again').addEventListener('click', () => play(t, li));
+      app.querySelector('#again').addEventListener('click', () => play(t, li, mode));
+      app.querySelector('#tomap').addEventListener('click', () => map(t));
+    }
+
+    function warmResults() {
+      lsSet(K_WARM, today());
+      record(t, li, run, true, 0, mode);
+      const msg = `You got ${run.right} out of ${N}. ` + (run.right === N ? 'All right! These used to be tricky.' : 'These are the tricky ones, and every try makes them easier.');
+      go(`<section class="result win"><p class="eyebrow">🔥 Warm-up</p><h1>Warmed up!</h1><div class="bigstars" aria-hidden="true">🔥</div><p class="lede">${msg}</p>
+          <div class="actions"><button class="btn primary" id="wgo">${opts.label || 'Pick a quest →'}</button></div></section>`);
+      speak('Warmed up! ' + msg);
+      app.querySelector('#wgo').addEventListener('click', () => (opts.after ? opts.after() : home()));
+    }
+
+    function testResults() {
+      const per = {};
+      run.qs.forEach((q, k) => { if (run.log[k] !== undefined) (per[q.li] = per[q.li] || []).push(run.log[k]); });
+      const passedLv = [];
+      for (let i = 0; i < t.levels.length - 1; i++) { const r = per[i]; if (r && r.length === TEST_PER && r.every(Boolean)) passedLv.push(i); else break; }
+      const p = prog(t.id); p.skip = p.skip || {}; passedLv.forEach(i => { p.skip[i] = true; }); save();
+      record(t, li, run, true, 0, mode, { skipped: passedLv.map(i => i + 1) });
+      const k = passedLv.length;
+      const title = k ? `You can skip ${plural(k, 'level')}!` : 'Good try!';
+      const msg = k ? `Level${k > 1 ? `s 1 to ${k} are` : ' 1 is'} open, so you start at level ${k + 1}: ${t.levels[k].title}.` : 'Start at level 1. It gets harder fast, so that is the right place to start.';
+      go(`<section class="result ${k ? 'win' : 'lose'}"><p class="eyebrow">${label}</p><h1>${title}</h1><p class="lede">${msg}</p>
+          <div class="actions"><button class="btn primary" id="tstart">Start level ${k + 1} →</button><button class="btn" id="tomap">See the levels</button></div></section>`);
+      speak(`${title} ${msg}`);
+      if (k) confetti();
+      app.querySelector('#tstart').addEventListener('click', () => play(t, k));
       app.querySelector('#tomap').addEventListener('click', () => map(t));
     }
   }
@@ -1304,13 +1563,19 @@ window.VHReport = (function () {
   const swapName = (m, w) => (m === m.toLowerCase() ? w.toLowerCase() : m === m.toUpperCase() ? w.toUpperCase() : m[0] === m[0].toUpperCase() && m.slice(1) === m.slice(1).toLowerCase() ? w : w[0].toLowerCase() + w.slice(1).toUpperCase());
   const anon = v => (typeof v === 'string' ? v.replace(/vihaan/gi, m => swapName(m, 'Kid')).replace(/viraj/gi, m => swapName(m, 'Brother')) : v);
   const saveQs = qs => (qs || []).map(q => { const o = { type: qType(anon(q.prompt)) }; Object.keys(q).forEach(k => { o[k] = anon(q[k]); }); return o; });
-  function record(t, li, run, completed, stars) {
+  // mode: normal, hard (tougher version of a level), warmup (mixed weak spots; each question names
+  // its own topic and level) or testout (2 per level; skipped lists the levels it opened)
+  function record(t, li, run, completed, stars, mode = 'normal', meta = {}) {
     const now = new Date(), id = now.toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6);
-    const s = { v: 1, id, player: CODE, topic: t.id, level: li + 1, levelTitle: anon(t.levels[li].title), startedAt: run.started, endedAt: now.toISOString(), completed, correct: run.right, total: QUESTIONS, stars, hints: run.hints, seconds: Math.round(run.qlog.reduce((a, q) => a + q.seconds, 0)), questions: saveQs(run.qlog) };
+    const whole = mode === 'warmup' || mode === 'testout';
+    const title = mode === 'warmup' ? 'Warm-up' : mode === 'testout' ? 'Test out' : t.levels[li].title + (mode === 'hard' ? ' (Hard)' : '');
+    const s = { v: 1, id, player: CODE, topic: t.id, level: whole ? 0 : li + 1, levelTitle: anon(title), startedAt: run.started, endedAt: now.toISOString(), completed, correct: run.right, total: run.qs.length, stars, hints: run.hints, seconds: Math.round(run.qlog.reduce((a, q) => a + q.seconds, 0)), questions: saveQs(run.qlog) };
+    if (mode !== 'normal') s.mode = mode;
+    if (meta.skipped) s.skipped = meta.skipped;
     const local = lsGet(K_LOCAL, []); local.push(s); lsSet(K_LOCAL, local.slice(-400));
     return window.VHSync.enqueue(sessionPath(s), s);
   }
-  const sessionPath = s => `players/${CODE}/sessions/${s.id.slice(0, 4)}/${s.id.slice(5, 7)}/${s.id}-${s.topic}-L${s.level}${s.completed ? '' : '-quit'}.json`;
+  const sessionPath = s => `players/${CODE}/sessions/${s.id.slice(0, 4)}/${s.id.slice(5, 7)}/${s.id}-${s.topic}-L${s.level}${s.mode ? '-' + s.mode : ''}${s.completed ? '' : '-quit'}.json`;
   // levels played before saving was added: convert them once and queue them for upload
   (function migrate() {
     const old = lsGet(K_SESS, []); if (!old.length || lsGet('vh.migrated', false)) return;
@@ -1337,8 +1602,12 @@ window.VHReport = (function () {
       const remote = await window.VHSync.sessions(CODE); let changed = false, xp = 0;
       remote.forEach(s => {
         (s.questions || []).forEach(q => { if (q.correct) xp += q.hint ? 5 : 10; });
+        if (!TOPICS.some(t => t.id === s.topic)) return;
+        if (s.mode === 'testout' && Array.isArray(s.skipped)) { const pr = prog(s.topic); pr.skip = pr.skip || {}; s.skipped.forEach(l => { if (!pr.skip[l - 1]) { pr.skip[l - 1] = true; changed = true; } }); return; }
         if (!s.completed || !s.stars) return;
         const pr = prog(s.topic), i = s.level - 1;
+        if (s.mode === 'hard') { pr.hard = pr.hard || {}; if ((pr.hard[i] || 0) < s.stars) { pr.hard[i] = s.stars; changed = true; } return; }
+        if (s.mode) return;
         if ((pr.stars[i] || 0) < s.stars) { pr.stars[i] = s.stars; changed = true; }
       });
       if (xp > state.xp) { state.xp = xp; changed = true; }
@@ -1362,8 +1631,8 @@ window.VHReport = (function () {
       el.innerHTML = '<p class="muted">Loading the progress log…</p>';
       allSessions().then(({ sessions, note }) => {
         if (!document.body.contains(el)) return;
-        const quests = `<h2 class="rep-h">Quests on this device</h2><div class="tablewrap"><table class="rep"><tr><th>Quest</th><th>Levels</th><th>Stars</th></tr>
-          ${TOPICS.map(t => `<tr><td>${t.name}</td><td class="num">${cleared(t)}/10</td><td class="num">${totalStars(t)}/30</td></tr>`).join('')}</table></div>`;
+        const quests = `<p><a class="btn primary" href="admin.html">Open the full progress dashboard →</a></p><h2 class="rep-h">Quests on this device</h2><div class="tablewrap"><table class="rep"><tr><th>Quest</th><th>Levels</th><th>Stars</th></tr>
+          ${TOPICS.map(t => `<tr><td>${t.name}${t.hidden ? ' <span class="muted">(off the home screen)</span>' : ''}</td><td class="num">${cleared(t)}/10</td><td class="num">${totalStars(t)}/30${sumStars(prog(t.id).hard) ? `<br><span class="muted">+${sumStars(prog(t.id).hard)} ⚡</span>` : ''}</td></tr>`).join('')}</table></div>`;
         const pend = window.VHSync.pending();
         window.VHReport.render(el, sessions, TOPICS, AREAS, KID, quests,
           `<p class="muted small">${note ? note + ' ' : ''}${pend ? `${pend} level(s) on this device are still waiting to upload.` : ''}${!c.token ? ' Saving to GitHub is not set up on this device yet (Settings).' : ''}</p>`);
@@ -1378,6 +1647,9 @@ window.VHReport = (function () {
           <div class="actions left"><button class="btn primary" type="button" id="c-save">Save rate</button></div>
           <p class="pin-msg" id="c-msg" aria-live="polite"></p>
           <p class="muted small">Now: ${allStars()} stars, ${plural(earned(), 'coin')} earned, ${spentCoins()} spent, ${balance()} left.</p></section>
+        <section class="panel"><h2>Daily warm-up</h2>
+          <label class="toggle" for="p-warm"><input type="checkbox" id="p-warm" ${lsGet(K_WARMON, true) ? 'checked' : ''}> Start each day with ${WARM_N} questions on his weak spots</label>
+          <p class="muted small">It comes up before his first quest of the day. Right now it uses: ${weakSpots().map(x => `${x.t.name} level ${x.i + 1} (${x.t.levels[x.i].title})`).join(', ') || 'nothing yet (he needs a few levels played first)'}.</p></section>
         <section class="panel"><h2>Save progress to GitHub</h2>
           <p class="muted small">Each level is saved as a small text file in <b>${c.repo}</b> under the code <b>${CODE}</b> (no names). Reading the report needs nothing; saving needs an access token, entered here once on ${KID}'s device.</p>
           <label class="f" for="s-repo">Data repo</label><input id="s-repo" class="txt" value="${c.repo}" autocomplete="off">
@@ -1420,6 +1692,7 @@ window.VHReport = (function () {
         cm.className = 'pin-msg good';
         cm.textContent = `Saved: ${plural(sp, 'star')} = 1 coin = ${plural(mp, 'minute')}.` + (f.error ? ' It will reach his other devices once this one uploads.' : '');
       });
+      el.querySelector('#p-warm').addEventListener('change', e => lsSet(K_WARMON, e.target.checked));
       const m = el.querySelector('#p-msg');
       el.querySelector('#p-parent').addEventListener('click', () => pinDialog('set', () => { m.textContent = 'Parent PIN changed.'; }));
       el.querySelector('#p-kid').addEventListener('click', () => { setPin('kid', null); m.textContent = `${KID} will make new secret pictures next time he logs in.`; });
