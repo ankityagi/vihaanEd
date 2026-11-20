@@ -147,6 +147,9 @@ window.VH_TOPICS = [{"id":"addsub","name":"Adding & Taking Away","area":"math","
 {"id":"shapes","name":"Shapes, Time & Measuring","area":"math","hidden":false,"levels":["Name the Shape","Sides & Corners","Halves & Quarters","Longer or Shorter","Measure It","O'Clock","Half Past","Picture Graphs","Time Puzzles","Boss Level"]},
 {"id":"letters","name":"Big & Small Letters","area":"abc","hidden":false,"levels":["Find the Small Letter","Find the Big Letter","Big or Small?","b, d, p, q","Letter Pairs","Names Start Big","Sentence Start","ABC Order","Spot the Mistake","Boss Level"]},
 {"id":"read","name":"Reading Quest","area":"abc","hidden":false,"levels":["First Sounds","Last Sounds","Rhymes","Read a, i Words","Read o, u, e Words","Sight Words 1","Sight Words 2","Middle Sound","Read a Sentence","Boss Level"]},
+{"id":"g2read","name":"Story Time","area":"g2","hidden":false,"levels":["Blends","sh, ch, th, wh","Magic e","Vowel Teams","Sight Words 3","Compound Words","Read and Answer","What Happened First?","Longer Sentences","Boss Level"]},
+{"id":"g2add","name":"Adding to 100","area":"g2","hidden":false,"levels":["Add Tens","Add Without Carrying","Add With Carrying","Take Away Tens","Take Away, No Borrowing","Take Away With Borrowing","Missing Numbers","Story Problems to 100","Add Three or Four Numbers","Boss Level"]},
+{"id":"g2num","name":"Hundreds, Money & Time","area":"g2","hidden":false,"levels":["Hundreds, Tens & Ones","Compare to 1,000","Count by 5s, 10s and 100s","Count Coins","Quarters and Dollars","Time to 5 Minutes","How Much Time?","Even and Odd","Money Stories","Boss Level"]},
 {"id":"write","name":"Write d and m","area":"abc","hidden":true,"levels":["Trace d","Trace m","Find d","Find m","Trace d Again","Trace m Again","First Sounds","Just the Dots","Right Way Round","Boss Level"]}];
 </script>
 <script>
@@ -161,7 +164,7 @@ window.VH_TOPICS = [{"id":"addsub","name":"Adding & Taking Away","area":"math","
   const root = document.getElementById('admin');
   const tip = document.getElementById('tip');
   const TOPICS = window.VH_TOPICS;
-  const AREAS = { math: 'Math', abc: 'Letters & Reading' };
+  const AREAS = { abc: 'Letters & Reading', g2: 'Grade 2', math: 'Math' };
   const tById = Object.fromEntries(TOPICS.map(t => [t.id, t]));
   tById.warmup = { id: 'warmup', name: 'Warm-up', levels: [] };
 

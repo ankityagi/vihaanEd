@@ -1,12 +1,18 @@
 # Vihaan's Quest
 
 A Grade 1 practice site for Vihaan, on the same idea as Viraj's Math Quest (ankityagi/VirajEd).
-Five quests on the home screen, each with **10 levels** of 10 fresh random questions:
+Eight quests on the home screen, each with **10 levels** of 10 fresh random questions:
 
-- Math: Adding & Taking Away, Numbers & Tens, Shapes, Time & Measuring
 - Letters & Reading: Big & Small Letters, Reading Quest (first and last sounds, rhymes, reading
   short a/i/o/u/e words, sight words, middle sounds and short sentences; the voice never reads the
   word he is meant to read)
+- Grade 2: Story Time (blends, sh/ch/th/wh, magic e, vowel teams, Grade 2 sight words, compound
+  words, short stories with who/what/where, story order, longer sentences), Adding to 100 (2-digit
+  adding and taking away with carrying and borrowing, missing numbers, two-step story problems,
+  adding three or four numbers), Hundreds, Money & Time (place value and comparing to 1,000,
+  skip counting, coins drawn with their values, quarters and dollars, time to 5 minutes, elapsed
+  time, even and odd, money stories)
+- Math: Adding & Taking Away, Numbers & Tens, Shapes, Time & Measuring
 
 Write d and m (finger tracing) is off the home screen now; its stars still count and it still
 shows in the reports.
@@ -16,9 +22,10 @@ Same rules as Viraj's site: **8 of 10** right unlocks the next level; 10/10 with
 read out loud with the device's voice (Parent → Settings picks the voice and speed; the most
 natural English voice is used by default), and answers use an on-screen number pad.
 
-- **Hard mode:** a level with 3 stars gets a ⚡ Hard button on the quest page: bigger numbers,
-  look-alike choices and typed answers instead of picking. Hard stars are kept apart from the
-  normal stars and also earn coins.
+- **Hard mode:** every Grade 1 level he has passed (or tested out of) gets a ⚡ Hard button on the
+  quest page, and the result screen offers "Try Hard ⚡": bigger numbers, look-alike choices and
+  typed answers instead of picking. Reading Quest's Hard set uses blends, digraphs, longer words,
+  trickier rhymes and short stories. Hard stars are kept apart from the normal stars.
 - **Daily warm-up:** once a day, before his first level, 6 quick questions from his weakest levels
   (under 80% over his last answers, at least 5 answers). Parent → Settings turns it off and lists
   the levels it is using.
@@ -49,8 +56,11 @@ natural English voice is used by default), and answers use an on-screen number p
   one, small slips, look-alikes, mixed-up pairs), tries per level and every session question by
   question. It asks for the parent PIN set on that device and only reads the log.
 
-- **Coins for play time** (same as Viraj's site): stars earn coins, each level's best stars
-  counting once, at a rate set in Parent → Settings (default 1 star = 1 coin = 5 minutes). On the
+- **Coins for play time:** a Grade 1 level pays 1 coin once he passes it; Hard levels and Grade 2
+  levels pay 1 coin per star (up to 3), best result counting once. Stars won before `COIN_EPOCH`
+  (in index.html) keep the coins they earned under the old 1 star = 1 coin rule. By default
+  10 coins buy 5 minutes; Parent → Settings can set 1, 5, 10 or 20 coins for 5 minutes (saved as
+  `v: 2` rate records; older `v: 1` records are ignored). On the
   coins page (the 🪙 button, or `vihaan.ankityagi.online/#coins`) he trades coins for a 6-character
   code, read out loud, that BrainPlay (games.ankityagi.online) takes for that much play time. A code
   works once, on the day it was made. `playcode.js` is the same file as on Viraj's site; the code
