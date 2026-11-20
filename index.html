@@ -1300,7 +1300,9 @@ window.VHReport = (function () {
   const qType = txt => String(txt || '').replace(/\d+/g, '#').replace(/(^|[\s"'(])[A-Za-z](?=[\s.,?!"')]|$)/g, '$1_').replace(/(#\s*){2,}/g, '# ').slice(0, 90);
   const K_LOCAL = 'vh.sessions.' + CODE;
   // the progress repo is public, so names in story problems are swapped out before saving
-  const anon = v => (typeof v === 'string' ? v.replace(/vihaan/gi, 'Kid').replace(/viraj/gi, 'Brother') : v);
+  // keep the capital-letter pattern, so "Names Start Big" answers stay tellable apart (Vihaan, vihaan, vIhaan)
+  const swapName = (m, w) => (m === m.toLowerCase() ? w.toLowerCase() : m === m.toUpperCase() ? w.toUpperCase() : m[0] === m[0].toUpperCase() && m.slice(1) === m.slice(1).toLowerCase() ? w : w[0].toLowerCase() + w.slice(1).toUpperCase());
+  const anon = v => (typeof v === 'string' ? v.replace(/vihaan/gi, m => swapName(m, 'Kid')).replace(/viraj/gi, m => swapName(m, 'Brother')) : v);
   const saveQs = qs => (qs || []).map(q => { const o = { type: qType(anon(q.prompt)) }; Object.keys(q).forEach(k => { o[k] = anon(q[k]); }); return o; });
   function record(t, li, run, completed, stars) {
     const now = new Date(), id = now.toISOString().replace(/[:.]/g, '-') + '-' + Math.random().toString(36).slice(2, 6);
