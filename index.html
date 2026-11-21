@@ -1414,7 +1414,11 @@ window.VHReport = (function () {
     return changed;
   }
   const spentCoins = () => spends().reduce((s, x) => s + (+x.coins || 0), 0);
-  const balance = () => Math.max(0, earned() - spentCoins());
+  // one-time coin changes a parent made (+ adds, - takes away). Each entry counts once, on every
+  // device, because it lives in the site code rather than in one browser. The balance never goes below 0.
+  const ADJUSTMENTS = [{ id: '2026-11-21-dad-minus5', coins: -5, note: 'taken away by Dad' }];
+  const adjustCoins = () => ADJUSTMENTS.reduce((s, x) => s + (+x.coins || 0), 0);
+  const balance = () => Math.max(0, earned() + adjustCoins() - spentCoins());
   // play codes hold 5 to 80 minutes in steps of 5, so offer those amounts that a whole number of coins buys
   // (at 1 minute per coin: 5 min costs 5 coins, 10 min costs 10, and so on)
   const playOptions = () => { const m = rateOf().minutesPerCoin; return [5, 10, 15, 20, 30, 40, 60, 80].map(min => ({ coins: Math.round(min / m), minutes: min })).filter(o => o.coins >= 1 && Math.abs(o.coins * m - o.minutes) < 1e-6).slice(0, 8); };
@@ -1478,6 +1482,7 @@ window.VHReport = (function () {
             <p class="eyebrow">${KID}'s coins</p>
             <h1><span aria-hidden="true">🪙</span> ${plural(bal, 'coin')}</h1>
             <p class="lede">That's up to <b>${Math.floor(bal * r.minutesPerCoin / 5) * 5} minutes</b> of games.</p>
+            ${ADJUSTMENTS.map(a => `<p class="lede">${plural(Math.abs(a.coins), 'coin')} ${a.note}.</p>`).join('')}
           </div>
           ${open(fresh ? '' : 'primary')}
         </section>
@@ -1904,7 +1909,7 @@ window.VHReport = (function () {
           <label class="f" for="c-five">Coins for 5 minutes of play</label><select id="c-five" class="txt">${COIN_STEPS.map(n => `<option value="${n}"${n === coinsPer5(cr) ? ' selected' : ''}>${plural(n, 'coin')}</option>`).join('')}</select>
           <div class="actions left"><button class="btn primary" type="button" id="c-save">Save rate</button></div>
           <p class="pin-msg" id="c-msg" aria-live="polite"></p>
-          <p class="muted small">Now: ${plural(earned(), 'coin')} earned, ${spentCoins()} spent, ${balance()} left.</p></section>
+          <p class="muted small">Now: ${plural(earned(), 'coin')} earned, ${spentCoins()} spent${adjustCoins() ? `, ${adjustCoins() > 0 ? '+' : ''}${adjustCoins()} changed by a parent` : ''}, ${balance()} left.</p></section>
         <section class="panel"><h2>Daily warm-up</h2>
           <label class="toggle" for="p-warm"><input type="checkbox" id="p-warm" ${lsGet(K_WARMON, true) ? 'checked' : ''}> Start each day with ${WARM_N} questions on his weak spots</label>
           <p class="muted small">It comes up before his first quest of the day. Right now it uses: ${weakSpots().map(x => `${x.t.name} level ${x.i + 1} (${x.t.levels[x.i].title})`).join(', ') || 'nothing yet (he needs a few levels played first)'}.</p></section>
