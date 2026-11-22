@@ -1635,8 +1635,17 @@ window.VHReport = (function () {
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text.replace(/−/g, ' minus ').replace(/_/g, ' blank '));
-      if (voice) u.voice = voice;
-      const sp = SPEEDS[lsGet(K_VSPEED, 'normal')] || SPEEDS.normal; u.rate = sp.rate; u.pitch = sp.pitch; speechSynthesis.speak(u);
+      // some voices (Chrome's Google voices, Edge's Online voices) need the internet: with none, use one on the device
+      const local = () => rankedVoices().find(v => v.localService) || null;
+      const v = voice && !voice.localService && navigator.onLine === false ? local() : voice;
+      if (v) u.voice = v;
+      const sp = SPEEDS[lsGet(K_VSPEED, 'normal')] || SPEEDS.normal; u.rate = sp.rate; u.pitch = sp.pitch;
+      u.onerror = ev => { // an internet voice failed (bad Wi-Fi): say it again once with a device voice
+        const alt = local();
+        if (u.retried || !alt || alt === v || !v || v.localService || /interrupted|canceled/.test(ev.error || '')) return;
+        const u2 = new SpeechSynthesisUtterance(u.text); u2.retried = true; u2.voice = alt; u2.rate = u.rate; u2.pitch = u.pitch; speechSynthesis.speak(u2);
+      };
+      speechSynthesis.speak(u);
     } catch (e) { /* speech not available */ }
   }
 
@@ -2316,7 +2325,7 @@ window.VHReport = (function () {
       const vsel = el.querySelector('#p-vname');
       const fillVoices = () => {
         const want = lsGet(K_VNAME, ''), vs = rankedVoices();
-        vsel.innerHTML = `<option value="">Automatic${vs[0] ? ` (${vs[0].name.replace(/[<>&"]/g, '')})` : ''}</option>` + vs.map(v => { const n = v.name.replace(/[<>&"]/g, ''); return `<option value="${n}"${n === want ? ' selected' : ''}>${n} · ${v.lang}</option>`; }).join('');
+        vsel.innerHTML = `<option value="">Automatic${vs[0] ? ` (${vs[0].name.replace(/[<>&"]/g, '')})` : ''}</option>` + vs.map(v => { const n = v.name.replace(/[<>&"]/g, ''); return `<option value="${n}"${n === want ? ' selected' : ''}>${n} · ${v.lang}${v.localService ? '' : ' · needs internet'}</option>`; }).join('');
         if (!vs.length) vsel.innerHTML = '<option value="">No voices found on this device</option>';
       };
       fillVoices(); try { speechSynthesis.addEventListener('voiceschanged', fillVoices); } catch (e) { /* no speech */ }
@@ -2349,6 +2358,12 @@ window.VHReport = (function () {
   if (location.hash === '#parent' || location.hash === '#admin') parentGate(() => parentPage('report'));
   window.addEventListener('online', () => window.VHSync.flush());
 })();
+</script>
+<script>
+/* save this site for offline play (flights): see sw.js */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === '127.0.0.1')) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => { /* offline support is a bonus */ }); });
+}
 </script>
 </body>
 </html>
