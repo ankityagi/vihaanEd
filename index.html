@@ -139,6 +139,11 @@ h2 { font-size: 1.3rem; font-weight: 600; }
 .colsum .bar { width: 100%; border-top: 4px solid var(--ink); margin: 4px 0; }
 .colsum .q { color: var(--berry); }
 .story { margin: 0 0 12px; padding: 12px 16px; border: 2px solid var(--line); border-radius: 14px; background: var(--soft); font: 400 1.3rem/1.6 var(--body); }
+.groups { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 360px; }
+.groups .grp { border: 3px dashed var(--line); border-radius: 18px; padding: 6px 8px; font-size: 1.7rem; line-height: 1.1; max-width: 120px; text-align: center; }
+.arr { display: grid; gap: 4px; font-size: 1.7rem; line-height: 1; justify-content: center; }
+.gtable { border-collapse: collapse; font: 600 1.15rem var(--display); }
+.gtable td { border: 2px solid var(--line); padding: 6px 10px; text-align: left; }
 .fig { margin: 0; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 14px; }
 .fig svg { max-width: 100%; height: auto; }
 .pics { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 330px; font-size: 2.1rem; line-height: 1; }
@@ -1036,6 +1041,341 @@ window.VQ = (function () {
   ];
   shapes[0].hard = shapes1Hard;
 
+  /* ============ Grade 2 path, in Issaquah's order (Eureka Math Grade 2) ============
+     Adding to 1,000 (Modules 4-5), Groups & Arrays (Module 6), Measure & Graphs (Modules 2 and 7),
+     Shapes & Fractions (Module 8). Like the other Grade 2 quests they pay a coin per star. */
+  const dig = (n, p) => Math.floor(n / p) % 10;
+  // a + b with chosen regrouping: ones carry? tens carry?
+  const addPair = (lo, hi, cOnes, cTens, bMin = 10) => { for (let g = 0; g < 400; g++) { const a = R(lo, hi - bMin), b = R(bMin, hi - a); const co = dig(a, 1) + dig(b, 1) > 9, ct = dig(a, 10) + dig(b, 10) + (co ? 1 : 0) > 9; if (co === cOnes && ct === cTens && a + b <= hi) return [a, b]; } return [lo + 23, 41]; };
+  const subPair = (lo, hi, bOnes, bTens, bMin = 10) => { for (let g = 0; g < 400; g++) { const a = R(Math.max(lo, bMin + 1), hi), b = R(bMin, a - 1); const bo = dig(a, 1) < dig(b, 1), bt = dig(a, 10) - (bo ? 1 : 0) < dig(b, 10); if (bo === bOnes && bt === bTens && a - b > 0) return [a, b]; } return [hi, 25]; };
+  const placeHint = (a, b, op) => op === '+'
+    ? (dig(a, 1) + dig(b, 1) > 9 ? `Ones: ${dig(a, 1)} + ${dig(b, 1)} = ${dig(a, 1) + dig(b, 1)}, so write ${(dig(a, 1) + dig(b, 1)) % 10} and carry 1 ten. ` : `Ones: ${dig(a, 1)} + ${dig(b, 1)}. `) + 'Then the tens, then the hundreds. Carry when a place makes 10 or more.'
+    : (dig(a, 1) < dig(b, 1) ? `Ones: ${dig(a, 1)} − ${dig(b, 1)} won't work, so break a ten into 10 ones. ` : `Ones: ${dig(a, 1)} − ${dig(b, 1)}. `) + 'Then the tens (break a hundred if you need to), then the hundreds.';
+  const bigQ = ([a, b], op, col) => ({ kind: 'num', prompt: col ? (op === '+' ? 'Add.' : 'Take away.') : eq(`${a} ${op} ${b} = ?`), say: `${a} ${op === '+' ? 'plus' : 'take away'} ${b}`, fig: col ? colsum(a, b, op === '+' ? '+' : '−') : undefined, answer: op === '+' ? a + b : a - b, hint: placeHint(a, b, op), explain: `${a} ${op === '+' ? '+' : '−'} ${b} = ${op === '+' ? a + b : a - b}` });
+  const THINGS = [['stickers', 'had', 'got'], ['books', 'had', 'got'], ['shells', 'found', 'found'], ['cards', 'had', 'won'], ['beads', 'had', 'bought']];
+  const g2big = [
+    { title: 'Add Within 200', skill: 'Add to a number in the hundreds', variants: [
+      () => bigQ(addPair(100, 200, false, false), '+', false),
+      () => bigQ(addPair(100, 200, false, false), '+', true),
+      () => bigQ(addPair(100, 200, true, false), '+', true)
+    ] },
+    { title: 'Add Hundreds and Tens', skill: 'Add 100s and 10s in your head', variants: [
+      () => { const a = R(101, 699), h = R(1, Math.floor((999 - a) / 100)) * 100; return { kind: 'num', prompt: eq(`${a} + ${h} = ?`), say: `${a} plus ${h}`, answer: a + h, hint: `Only the hundreds change: add ${h / 100} hundred${h > 100 ? 's' : ''}.`, explain: `${a} + ${h} = ${a + h}` }; },
+      () => { const a = R(101, 899), t = R(1, 9 - dig(a, 10)) * 10 || 10; const ans = a + t; return { kind: 'num', prompt: eq(`${a} + ${t} = ?`), say: `${a} plus ${t}`, answer: ans, hint: `Add ${t / 10} ten${t > 10 ? 's' : ''}. The ones stay ${dig(a, 1)}.`, explain: `${a} + ${t} = ${ans}` }; },
+      () => { const a = R(110, 690), d = pick([10, 100]), m = pick(['more', 'less']); const ans = m === 'more' ? a + d : a - d; return { kind: 'num', prompt: `What is <b>${d} ${m}</b> than <b>${a}</b>?`, say: `What is ${d} ${m} than ${a}?`, answer: ans, hint: d === 10 ? 'Change the tens digit.' : 'Change the hundreds digit.', explain: `${a} ${m === 'more' ? '+' : '−'} ${d} = ${ans}` }; }
+    ] },
+    { title: 'Add to 1,000: Carry a Ten', skill: 'When the ones make a new ten', variants: [
+      () => bigQ(addPair(200, 999, true, false, 100), '+', true),
+      () => bigQ(addPair(200, 999, true, false, 100), '+', false),
+      () => bigQ(addPair(200, 999, true, false, 30), '+', true)
+    ] },
+    { title: 'Add to 1,000: Carry Twice', skill: 'Carry a ten and a hundred', variants: [
+      () => bigQ(addPair(200, 999, false, true, 100), '+', true),
+      () => bigQ(addPair(200, 999, true, true, 100), '+', true),
+      () => bigQ(addPair(200, 999, true, true, 100), '+', false)
+    ] },
+    { title: 'Take Away Within 200', skill: 'Take away from numbers in the hundreds', variants: [
+      () => bigQ(subPair(100, 200, false, false), '−', false),
+      () => bigQ(subPair(100, 200, true, false), '−', true),
+      () => bigQ(subPair(100, 200, false, true), '−', true)
+    ] },
+    { title: 'Take Away to 1,000', skill: 'Break a ten or a hundred', variants: [
+      () => bigQ(subPair(300, 999, true, false, 100), '−', true),
+      () => bigQ(subPair(300, 999, false, true, 100), '−', true),
+      () => bigQ(subPair(300, 999, true, true, 100), '−', true),
+      () => bigQ(subPair(300, 999, true, true, 100), '−', false)
+    ] },
+    { title: 'Take Away Across Zeros', skill: '300 − 127 and friends', variants: [
+      () => { const a = R(2, 9) * 100, b = R(101, a - 11); return bigQ([a, b], '−', true); },
+      () => { const h = R(3, 9), o = R(1, 8), a = h * 100 + o, b = R(1, h - 1) * 100 + R(1, 9) * 10 + R(o + 1, 9); return bigQ([a, b], '−', true); },
+      () => { const a = 1000 - pick([0, 0, 100]), b = R(111, a - 99); return bigQ([a, b], '−', false); }
+    ] },
+    { title: 'Missing Numbers to 1,000', skill: 'Find the hiding number', variants: [
+      () => { const a = R(120, 600), b = R(101, 999 - a); return { kind: 'num', prompt: eq(`${a} + ? = ${a + b}`), say: `${a} plus what makes ${a + b}?`, answer: b, hint: `Count up from ${a}: hundreds first, then tens, then ones. Or take ${a} away from ${a + b}.`, explain: `${a} + ${b} = ${a + b}` }; },
+      () => { const b = R(101, 450), c = R(101, 999 - b); return { kind: 'num', prompt: eq(`? − ${b} = ${c}`), say: `What number take away ${b} leaves ${c}?`, answer: b + c, hint: `Put back what was taken: ${c} + ${b}.`, explain: `${b + c} − ${b} = ${c}` }; },
+      () => { const n = R(150, 900), h = pick([10, 100]); const ans = 1000 - n; return { kind: 'num', prompt: eq(`${n} + ? = 1000`), say: `${n} plus what makes 1000?`, answer: ans, hint: 'Make the next hundred first, then count hundreds to 1,000.', explain: `${n} + ${ans} = 1000` }; }
+    ] },
+    { title: 'Story Problems to 1,000', skill: 'One step and two steps', variants: [
+      () => { const [a, b] = addPair(200, 999, true, pick([true, false]), 100), n = pick(PEOPLE), th = pick(THINGS); return { kind: 'num', prompt: `${n} ${th[1]} <b>${a}</b> ${th[0]}, then ${th[2]} <b>${b}</b> more. How many ${th[0]} now?`, say: `${n} ${th[1]} ${a} ${th[0]}, then ${th[2]} ${b} more. How many ${th[0]} now?`, answer: a + b, hint: 'More means add. Line up hundreds, tens and ones.', explain: `${a} + ${b} = ${a + b} ${th[0]}` }; },
+      () => { const [a, b] = subPair(300, 999, true, pick([true, false]), 100); return { kind: 'num', prompt: `The school library has <b>${a}</b> books. <b>${b}</b> are checked out. How many are still on the shelves?`, say: `The school library has ${a} books. ${b} are checked out. How many are still on the shelves?`, answer: a - b, hint: 'Some are gone, so take away.', explain: `${a} − ${b} = ${a - b} books` }; },
+      () => { const a = R(150, 450), d = R(120, 400); return { kind: 'num', prompt: `A red train has <b>${a}</b> seats. A blue train has <b>${d}</b> more seats than the red one. How many seats does the blue train have?`, say: `A red train has ${a} seats. A blue train has ${d} more seats than the red one. How many seats does the blue train have?`, answer: a + d, hint: '"More than" the red train: start at red and add.', explain: `${a} + ${d} = ${a + d} seats` }; },
+      () => { const a = R(300, 600), b = R(110, 300), c = R(100, a + b - 100); return { kind: 'num', prompt: `A farm had <b>${a}</b> apples. It picked <b>${b}</b> more, then sold <b>${c}</b>. How many apples are left?`, say: `A farm had ${a} apples. It picked ${b} more, then sold ${c}. How many apples are left?`, answer: a + b - c, hint: `Two steps: ${a} + ${b} first, then take away ${c}.`, explain: `${a} + ${b} = ${a + b}, and ${a + b} − ${c} = ${a + b - c}.` }; }
+    ] },
+    { title: 'Boss Level', skill: 'Everything to 1,000', variants: [] }
+  ];
+  g2big[9].variants = [...g2big[2].variants, ...g2big[3].variants, ...g2big[5].variants, ...g2big[6].variants, ...g2big[7].variants, ...g2big[8].variants];
+
+  // equal groups and arrays
+  const groupsFig = (g, n, e) => `<div class="groups">${Array.from({ length: g }, () => `<span class="grp">${e.repeat(n)}</span>`).join('')}</div>`;
+  const arrayFig = (r, c, e = '🔵') => `<div class="arr" style="grid-template-columns:repeat(${c},auto)" aria-label="${r} rows of ${c}">${Array.from({ length: r * c }, () => `<span>${e}</span>`).join('')}</div>`;
+  const ARR_E = ['🍎', '⭐', '🍪', '🌸', '🚗', '🐟', '🎈', '🍓'];
+  const repAdd = (g, n) => Array(g).fill(n).join(' + ');
+  const g2arr = [
+    { title: 'Equal Groups', skill: 'Groups with the same number in each', variants: [
+      () => { const g = R(2, 5), n = R(2, 5), e = pick(ARR_E); return { kind: 'num', prompt: `<b>${g}</b> groups of <b>${n}</b>. How many in all?`, say: `${g} groups of ${n}. How many in all?`, fig: groupsFig(g, n, e), answer: g * n, hint: `Count by ${n}s, ${g} times.`, explain: `${repAdd(g, n)} = ${g * n}` }; },
+      () => { const g = R(2, 5), n = R(2, 5), e = pick(ARR_E); const right = `${g} groups of ${n}`; const m = mc(right, [`${n} groups of ${g + 1}`, `${g + 1} groups of ${n}`, `${g} groups of ${n + 1}`].filter(x => x !== right)); return { kind: 'choice', cls: 'word', prompt: 'What do you see?', say: 'How many groups are there, and how many are in each group?', fig: groupsFig(g, n, e), ...m, hint: 'Count the groups first. Then count one group.', explain: `There are ${g} groups of ${n}.` }; }
+    ] },
+    { title: 'Add the Same Number', skill: 'Repeated addition', variants: [
+      () => { const g = R(2, 5), n = R(2, 10); return { kind: 'num', prompt: eq(`${repAdd(g, n)} = ?`), say: `${repAdd(g, n).replace(/\+/g, 'plus')}`, answer: g * n, hint: `Count by ${n}s.`, explain: `${g} groups of ${n} is ${g * n}.` }; },
+      () => { const g = R(2, 5), n = R(2, 6); const right = repAdd(g, n); const m = mc(right, [repAdd(n, g) === right ? repAdd(g + 1, n) : repAdd(n, g), repAdd(g, n + 1), `${g} + ${n}`]); return { kind: 'choice', cls: 'word', prompt: `Which addition matches <b>${g} groups of ${n}</b>?`, say: `Which addition matches ${g} groups of ${n}?`, ...m, hint: `Write ${n}, ${g} times.`, explain: `${g} groups of ${n} is ${right}.` }; }
+    ] },
+    { title: 'Arrays', skill: 'Rows and columns', variants: [
+      () => { const r = R(2, 5), c = R(2, 5), e = pick(ARR_E), ask = pick(['rows', 'columns', 'in all']); const ans = ask === 'rows' ? r : ask === 'columns' ? c : r * c; return { kind: 'num', prompt: ask === 'in all' ? 'How many are there <b>in all</b>?' : `How many <b>${ask}</b>?`, say: ask === 'in all' ? 'How many are there in all?' : `How many ${ask}? Rows go across. Columns go up and down.`, fig: arrayFig(r, c, e), answer: ans, hint: ask === 'rows' ? 'Rows go across, like a line of chairs.' : ask === 'columns' ? 'Columns go up and down, like a tall building.' : `Count by ${c}s, one row at a time.`, explain: `${r} rows of ${c} is ${r * c}.` }; },
+      () => { const r = R(2, 5), c = R(2, 5); return { kind: 'num', prompt: `How many in all?`, say: 'How many dots in all? Count by rows.', fig: arrayFig(r, c), answer: r * c, hint: `Each row has ${c}. Count by ${c}s.`, explain: `${repAdd(r, c)} = ${r * c}` }; }
+    ] },
+    { title: 'Arrays and Addition', skill: 'Match an array to an addition', variants: [
+      () => { const r = R(2, 5), c = R(2, 5); const right = repAdd(r, c); const m = mc(right, [repAdd(r, c + 1), repAdd(r + 1, c), `${r} + ${c}`].filter(x => x !== right)); return { kind: 'choice', cls: 'word', prompt: 'Which addition matches the array, row by row?', say: 'Which addition matches the array? Add one row at a time.', fig: arrayFig(r, c), ...m, hint: `There are ${r} rows. Each row has ${c}.`, explain: `${right} = ${r * c}` }; },
+      () => { const r = R(2, 5), c = R(2, 5); return { kind: 'num', prompt: `An array has <b>${r}</b> rows with <b>${c}</b> in each row. How many in all?`, say: `An array has ${r} rows with ${c} in each row. How many in all?`, answer: r * c, hint: 'Draw it, or count by the row number.', explain: `${repAdd(r, c)} = ${r * c}` }; }
+    ] },
+    { title: 'Skip Counting', skill: 'Count by 2s, 3s, 4s, 5s and 10s', variants: [
+      () => { const k = pick([2, 3, 4, 5, 10]), s = k * R(1, 5); return { kind: 'num', prompt: eq(`${s}, ${s + k}, ${s + 2 * k}, ?`), say: `Count by ${k}s. ${s}, ${s + k}, ${s + 2 * k}, what comes next?`, answer: s + 3 * k, hint: `Add ${k} each time.`, explain: `${s + 2 * k} + ${k} = ${s + 3 * k}` }; },
+      () => { const k = pick([3, 4, 5]), n = R(3, 6); return { kind: 'num', prompt: `Count by <b>${k}s</b>, ${n} times. Where do you land?`, say: `Count by ${k}s, ${n} times. Where do you land?`, answer: k * n, hint: `${Array.from({ length: n }, (_, i) => k * (i + 1)).slice(0, 2).join(', ')}, and keep going.`, explain: `${Array.from({ length: n }, (_, i) => k * (i + 1)).join(', ')}` }; }
+    ] },
+    { title: 'Share Equally', skill: 'Split into equal groups', variants: [
+      () => { const g = R(2, 5), n = R(2, 5), [e, w] = pick(FRUIT); return { kind: 'num', prompt: `<b>${g * n}</b> ${w} are shared equally by <b>${g}</b> friends. How many does each friend get?`, say: `${g * n} ${w} are shared equally by ${g} friends. How many does each friend get?`, fig: pics(e, g * n), answer: n, hint: `Give one to each friend, again and again, until they are all gone.`, explain: `${g * n} shared by ${g} is ${n} each.` }; },
+      () => { const g = R(2, 5), n = R(2, 5); return { kind: 'num', prompt: `<b>${g * n}</b> kids get into teams of <b>${n}</b>. How many teams?`, say: `${g * n} kids get into teams of ${n}. How many teams?`, answer: g, hint: `Count by ${n}s until you reach ${g * n}. How many jumps?`, explain: `${repAdd(g, n)} = ${g * n}, so ${g} teams.` }; }
+    ] },
+    { title: 'Even and Odd to 20', skill: 'Pairs and doubles', variants: [
+      () => { const n = R(5, 20); return { kind: 'choice', prompt: `Can <b>${n}</b> dots make 2 equal rows?`, say: `Can ${n} dots make 2 equal rows?`, fig: arrayFig(1, n, '⚫'), choices: ['Yes, it is even', 'No, it is odd'], answer: n % 2, cls: 'word', hint: 'Pair them up. Is one left over?', explain: n % 2 ? `${n} is odd: one is left over.` : `${n} is even: 2 rows of ${n / 2}.` }; },
+      () => { const n = R(3, 10); return { kind: 'num', prompt: eq(`${n} + ${n} = ?`), say: `Double ${n}. ${n} plus ${n}`, answer: 2 * n, hint: 'A double is always even.', explain: `${n} + ${n} = ${2 * n}` }; },
+      () => { const e = R(3, 10) * 2; return { kind: 'num', prompt: eq(`? + ? = ${e}`) + '<br><small>Both numbers are the same.</small>', say: `What number plus the same number makes ${e}?`, answer: e / 2, hint: `Split ${e} into 2 equal parts.`, explain: `${e / 2} + ${e / 2} = ${e}` }; }
+    ] },
+    { title: 'Missing Rows', skill: 'Find the missing part of an array', variants: [
+      () => { const r = R(2, 5), c = R(2, 5); return { kind: 'num', prompt: `<b>${r}</b> rows of <b>?</b> make <b>${r * c}</b>.`, say: `${r} rows of what number make ${r * c}?`, fig: arrayFig(r, c, '❔'), answer: c, hint: `Share ${r * c} into ${r} equal rows.`, explain: `${r} rows of ${c} make ${r * c}.` }; },
+      () => { const r = R(2, 5), c = R(2, 5); return { kind: 'num', prompt: `How many <b>rows</b> of <b>${c}</b> make <b>${r * c}</b>?`, say: `How many rows of ${c} make ${r * c}?`, answer: r, hint: `Count by ${c}s to ${r * c}.`, explain: `${r} rows of ${c} make ${r * c}.` }; }
+    ] },
+    { title: 'Group Stories', skill: 'Story problems with equal groups', variants: [
+      () => { const g = R(2, 5), n = R(2, 6), it = pick([['boxes', 'crayons'], ['bags', 'marbles'], ['plates', 'cookies'], ['vases', 'flowers']]); return { kind: 'num', prompt: `There are <b>${g}</b> ${it[0]}. Each has <b>${n}</b> ${it[1]}. How many ${it[1]} in all?`, say: `There are ${g} ${it[0]}. Each has ${n} ${it[1]}. How many ${it[1]} in all?`, answer: g * n, hint: `${g} groups of ${n}: count by ${n}s.`, explain: `${repAdd(g, n)} = ${g * n}` }; },
+      () => { const r = R(3, 5), c = R(3, 5); return { kind: 'num', prompt: `Chairs are set out in <b>${r}</b> rows with <b>${c}</b> chairs in each row. <b>${c}</b> chairs are taken away. How many are left?`, say: `Chairs are set out in ${r} rows with ${c} chairs in each row. ${c} chairs are taken away. How many are left?`, answer: r * c - c, hint: `First find all the chairs: ${r} rows of ${c}. Then take away ${c}.`, explain: `${r * c} − ${c} = ${r * c - c}` }; },
+      () => { const k = pick([2, 3, 4]), n = R(3, 6), a = pick(['bikes', 'tricycles', 'dogs']); const legs = { bikes: 2, tricycles: 3, dogs: 4 }[a]; return { kind: 'num', prompt: `How many ${a === 'dogs' ? 'legs' : 'wheels'} do <b>${n}</b> ${a} have?`, say: `How many ${a === 'dogs' ? 'legs' : 'wheels'} do ${n} ${a} have?`, answer: legs * n, hint: `Each one has ${legs}. Count by ${legs}s.`, explain: `${repAdd(n, legs)} = ${legs * n}` }; }
+    ] },
+    { title: 'Boss Level', skill: 'A mix of everything', variants: [] }
+  ];
+  g2arr[9].variants = [...g2arr[0].variants, ...g2arr[2].variants, ...g2arr[3].variants, ...g2arr[5].variants, ...g2arr[7].variants, ...g2arr[8].variants];
+
+  // rulers, number lines and graphs
+  const ruler = (len, from = 0, max = 15, unit = 'cm', col = 'var(--sky)') => { const u = 22, w = (max + 1) * u + 10; let t = ''; for (let i = 0; i <= max; i++) { const x = 8 + i * u; t += `<line x1="${x}" y1="58" x2="${x}" y2="${i % 5 ? 70 : 76}" stroke="var(--ink)" stroke-width="2"/><text x="${x}" y="92" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="13" fill="var(--ink)">${i}</text>`; } return `<svg viewBox="0 0 ${w} 100" width="${w}" style="max-width:100%;height:auto" role="img" aria-label="A ruler in ${unit}"><rect x="${8 + from * u}" y="22" width="${len * u}" height="22" rx="6" fill="${col}" stroke="var(--ink)" stroke-width="2.5"/><rect x="2" y="54" width="${w - 4}" height="44" rx="5" fill="none" stroke="var(--ink)" stroke-width="2"/>${t}<text x="${w - 8}" y="68" text-anchor="end" font-family="Fredoka, sans-serif" font-size="12" fill="var(--ink)">${unit}</text></svg>`; };
+  const numline = (lo, hi, step, at) => { const n = (hi - lo) / step, w = 330, x = v => 15 + (v - lo) / (hi - lo) * (w - 30); let t = ''; for (let i = 0; i <= n; i++) { const v = lo + i * step; t += `<line x1="${x(v)}" y1="40" x2="${x(v)}" y2="${i === 0 || i === n ? 58 : 52}" stroke="var(--ink)" stroke-width="2"/>`; if (i === 0 || i === n) t += `<text x="${x(v)}" y="76" text-anchor="middle" font-family="Fredoka, sans-serif" font-size="14" fill="var(--ink)">${v}</text>`; } return `<svg viewBox="0 0 ${w} 84" width="${w}" style="max-width:100%;height:auto" role="img" aria-label="A number line from ${lo} to ${hi}"><line x1="10" y1="46" x2="${w - 10}" y2="46" stroke="var(--ink)" stroke-width="2.5"/>${t}<path d="M${x(at)} 30 l-7 -12 h14 z" fill="var(--berry)"/></svg>`; };
+  const barGraph = (cats, vals, title) => { const H = 9, bw = 46, gap = 18, w = 40 + cats.length * (bw + gap), y = v => 20 + (H - v) * 18; let b = ''; for (let v = 0; v <= H; v++) b += `<line x1="34" y1="${y(v)}" x2="${w}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="28" y="${y(v) + 4}" text-anchor="end" font-family="Fredoka, sans-serif" font-size="11" fill="var(--ink)">${v}</text>`; cats.forEach(([name, e], i) => { const x = 42 + i * (bw + gap); b += `<rect x="${x}" y="${y(vals[i])}" width="${bw}" height="${vals[i] * 18}" fill="${COLS[i % COLS.length]}" stroke="var(--ink)" stroke-width="2"/><text x="${x + bw / 2}" y="${y(0) + 22}" text-anchor="middle" font-size="20">${e}</text>`; }); return `<svg viewBox="0 0 ${w + 4} ${y(0) + 34}" width="${w + 4}" style="max-width:100%;height:auto" role="img" aria-label="${title}">${b}</svg>`; };
+  const GRAPHS = [['Favorite pets', [['dogs', '🐶'], ['cats', '🐱'], ['fish', '🐟'], ['birds', '🐦']]], ['Favorite fruit', [['apples', '🍎'], ['bananas', '🍌'], ['grapes', '🍇'], ['pears', '🍐']]], ['Weather this month', [['sunny days', '☀️'], ['rainy days', '🌧️'], ['cloudy days', '☁️'], ['snowy days', '❄️']]]];
+  const graphQ = (kind) => { const [title, all] = pick(GRAPHS), cats = all.slice(0, kind === 'total' ? 3 : 4), vals = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]).slice(0, cats.length); const fig = `<p class="muted small" style="margin:0">${title}</p>` + barGraph(cats, vals, title); const [i, j] = shuffle(cats.map((_, k) => k)).slice(0, 2);
+    if (kind === 'read') return { kind: 'num', prompt: `How many <b>${cats[i][0]}</b>?`, say: `Look at the graph. How many ${cats[i][0]}?`, fig, answer: vals[i], hint: 'Go to the top of the bar, then across to the numbers.', explain: `The ${cats[i][0]} bar goes up to ${vals[i]}.` };
+    if (kind === 'more') { const [a, b] = vals[i] > vals[j] ? [i, j] : [j, i]; return { kind: 'num', prompt: `How many <b>more</b> ${cats[a][0]} than ${cats[b][0]}?`, say: `How many more ${cats[a][0]} than ${cats[b][0]}?`, fig, answer: vals[a] - vals[b], hint: 'Read both bars, then take the smaller from the bigger.', explain: `${vals[a]} − ${vals[b]} = ${vals[a] - vals[b]}` }; }
+    if (kind === 'total') { const s = vals.reduce((p, q) => p + q, 0); return { kind: 'num', prompt: 'How many <b>in all</b>?', say: 'Add up all the bars. How many in all?', fig, answer: s, hint: 'Read each bar, then add them.', explain: `${vals.join(' + ')} = ${s}` }; }
+    const most = Math.random() < .5, best = vals.indexOf(most ? Math.max(...vals) : Math.min(...vals)); return { kind: 'choice', cls: 'word', prompt: `Which has the <b>${most ? 'most' : 'fewest'}</b>?`, say: `Look at the graph. Which has the ${most ? 'most' : 'fewest'}?`, fig, choices: cats.map(c => c[0]), answer: best, hint: most ? 'Find the tallest bar.' : 'Find the shortest bar.', explain: `${cats[best][0]} has the ${most ? 'tallest' : 'shortest'} bar.` }; };
+  const picGraph = () => { const [title, all] = pick(GRAPHS), cats = all.slice(0, 3), vals = cats.map(() => R(1, 5) * 2), i = R(0, 2); const rows = cats.map((c, k) => `<tr><td>${c[1]} ${c[0]}</td><td>${'⭐'.repeat(vals[k] / 2)}</td></tr>`).join(''); return { kind: 'num', prompt: `Each ⭐ means <b>2</b>. How many <b>${cats[i][0]}</b>?`, say: `Each star means 2. How many ${cats[i][0]}?`, fig: `<table class="gtable" aria-label="${title}">${rows}</table>`, answer: vals[i], hint: 'Count the stars by 2s.', explain: `${vals[i] / 2} stars, counted by 2s, is ${vals[i]}.` }; };
+  const UNITS = [['a pencil', 15, 'cm', ['m']], ['a crayon', 8, 'cm', ['m']], ['a door', 2, 'm', ['cm']], ['a school bus', 12, 'm', ['cm']], ['a book', 25, 'cm', ['m']], ['a paper clip', 3, 'cm', ['m']], ['a swimming pool', 25, 'm', ['cm']], ['your shoe', 18, 'cm', ['m']]];
+  const g2meas = [
+    { title: 'Measure With a Ruler', skill: 'Line it up at 0 and read the end', variants: [
+      () => { const n = R(2, 14); return { kind: 'num', prompt: 'How long is the bar, in <b>centimeters</b>?', say: 'How long is the bar, in centimeters?', fig: ruler(n), answer: n, hint: 'The bar starts at 0. Read the number at its end.', explain: `It is ${n} centimeters long.` }; },
+      () => { const n = R(2, 10); return { kind: 'num', prompt: 'How long is the bar, in <b>inches</b>?', say: 'How long is the bar, in inches?', fig: ruler(n, 0, 11, 'in', 'var(--grass)'), answer: n, hint: 'Start at 0. Read the number where the bar ends.', explain: `It is ${n} inches long.` }; }
+    ] },
+    { title: 'Not Starting at 0', skill: 'Measure when it starts in the middle', variants: [
+      () => { const from = R(1, 6), n = R(2, 15 - from); return { kind: 'num', prompt: 'How long is the bar, in centimeters? Careful, it does not start at 0.', say: 'How long is the bar, in centimeters? Careful, it does not start at 0.', fig: ruler(n, from), answer: n, hint: `Count the spaces from ${from} to ${from + n}, or take ${from} away from ${from + n}.`, explain: `${from + n} − ${from} = ${n} centimeters` }; }
+    ] },
+    { title: 'Which Unit?', skill: 'Centimeters, meters, inches and feet', variants: [
+      () => { const [it, v, u, wr] = pick(UNITS); const m = mc(`${v} ${u}`, wr.map(x => `${v} ${x}`).concat([`${v * 10} ${u === 'cm' ? 'm' : 'cm'}`])); return { kind: 'choice', cls: 'word', prompt: `About how long is <b>${it}</b>?`, say: `About how long is ${it}?`, ...m, hint: 'A centimeter is about as wide as your finger. A meter is about one big step.', explain: `${it[0].toUpperCase() + it.slice(1)} is about ${v} ${u === 'cm' ? 'centimeters' : 'meters'}.` }; },
+      () => { const q = pick([['How many inches are in 1 foot?', 12], ['How many centimeters are in 1 meter?', 100], ['How many feet are in 1 yard?', 3]]); return { kind: 'num', prompt: `<b>${q[0]}</b>`, say: q[0], answer: q[1], hint: 'A foot is a 12-inch ruler. A meter stick has 100 centimeters.', explain: `${q[1]}.` }; },
+      () => { const [it, v, u] = pick(UNITS); const m = mc(u === 'cm' ? 'centimeters' : 'meters', [u === 'cm' ? 'meters' : 'centimeters', 'kilograms', 'hours']); return { kind: 'choice', cls: 'word', prompt: `What would you use to measure <b>${it}</b>?`, say: `What would you use to measure ${it}?`, ...m, hint: 'Small things: centimeters. Big things: meters.', explain: `Use ${u === 'cm' ? 'centimeters' : 'meters'}.` }; }
+    ] },
+    { title: 'Compare Lengths', skill: 'How much longer or shorter?', variants: [
+      () => { const a = R(15, 60), d = R(5, 35), col = shuffle(['red', 'blue', 'green']); return { kind: 'num', prompt: `The ${col[0]} ribbon is <b>${a}</b> cm. The ${col[1]} ribbon is <b>${a + d}</b> cm. How much <b>longer</b> is the ${col[1]} ribbon?`, say: `The ${col[0]} ribbon is ${a} centimeters. The ${col[1]} ribbon is ${a + d} centimeters. How much longer is the ${col[1]} ribbon?`, answer: d, hint: `Take the shorter from the longer: ${a + d} − ${a}.`, explain: `${a + d} − ${a} = ${d} cm` }; },
+      () => { const a = R(3, 9), b = R(2, 13 - a); return { kind: 'num', prompt: 'How much longer is the top bar than the bottom bar, in cm?', say: 'How much longer is the top bar than the bottom bar, in centimeters?', fig: ruler(a + b) + ruler(a, 0, 15, 'cm', 'var(--sun)'), answer: b, hint: 'Measure both bars, then take away.', explain: `${a + b} − ${a} = ${b} cm` }; }
+    ] },
+    { title: 'Number Lines', skill: 'Find the number on a number line', variants: [
+      () => { const step = pick([1, 2, 5]), lo = R(0, 8) * step * 2, at = lo + R(1, 9) * step; return { kind: 'num', prompt: 'What number is the arrow pointing to?', say: `What number is the arrow pointing to? Each mark is ${step} more.`, fig: numline(lo, lo + 10 * step, step, at), answer: at, hint: `Each mark is ${step} more. Count on from ${lo}.`, explain: `The arrow is at ${at}.` }; },
+      () => { const lo = R(1, 8) * 10, at = lo + R(1, 9) * 10; return { kind: 'num', prompt: 'What number is the arrow pointing to?', say: 'What number is the arrow pointing to? Each mark is 10 more.', fig: numline(lo, lo + 100, 10, at), answer: at, hint: `Each mark is 10 more. Count by 10s from ${lo}.`, explain: `The arrow is at ${at}.` }; }
+    ] },
+    { title: 'Bar Graphs', skill: 'Read a bar graph', variants: [() => graphQ('read'), () => graphQ('most')] },
+    { title: 'Bar Graph Questions', skill: 'How many more, how many in all', variants: [() => graphQ('more'), () => graphQ('total')] },
+    { title: 'Picture Graphs', skill: 'When each picture means 2', variants: [picGraph] },
+    { title: 'Length Stories', skill: 'Story problems with length', variants: [
+      () => { const a = R(12, 40), b = R(9, 30); return { kind: 'num', prompt: `A worm is <b>${a}</b> cm long. A snake is <b>${b}</b> cm longer than the worm. How long is the snake?`, say: `A worm is ${a} centimeters long. A snake is ${b} centimeters longer than the worm. How long is the snake?`, answer: a + b, hint: '"Longer than" the worm: start at the worm and add.', explain: `${a} + ${b} = ${a + b} cm` }; },
+      () => { const a = R(30, 90), c = R(10, a - 10); return { kind: 'num', prompt: `A rope was <b>${a}</b> cm long. ${pick(PEOPLE)} cut off <b>${c}</b> cm. How long is it now?`, say: `A rope was ${a} centimeters long. Someone cut off ${c} centimeters. How long is it now?`, answer: a - c, hint: 'Cut off means take away.', explain: `${a} − ${c} = ${a - c} cm` }; },
+      () => { const a = R(12, 30), b = R(12, 30), c = R(12, 30); return { kind: 'num', prompt: `A path has three parts: <b>${a}</b> m, <b>${b}</b> m and <b>${c}</b> m. How long is the whole path?`, say: `A path has three parts: ${a} meters, ${b} meters and ${c} meters. How long is the whole path?`, answer: a + b + c, hint: 'Add two parts, then add the third.', explain: `${a} + ${b} + ${c} = ${a + b + c} m` }; }
+    ] },
+    { title: 'Boss Level', skill: 'A mix of everything', variants: [] }
+  ];
+  g2meas[9].variants = [...g2meas[1].variants, ...g2meas[2].variants, ...g2meas[3].variants, ...g2meas[4].variants, ...g2meas[6].variants, ...g2meas[7].variants, ...g2meas[8].variants];
+
+  // fractions of shapes
+  const FILL = 'var(--sky)', EMPTY = 'var(--card)';
+  const fracRect = (n, k, equal = true, w = 150, h = 90) => { let cuts = []; if (equal) cuts = Array.from({ length: n - 1 }, (_, i) => (i + 1) * w / n); else { const c = [w * 0.18, w * 0.55, w * 0.8].slice(0, n - 1); cuts = c; } const xs = [0, ...cuts, w]; let b = ''; for (let i = 0; i < n; i++) b += `<rect x="${5 + xs[i]}" y="5" width="${xs[i + 1] - xs[i]}" height="${h}" fill="${i < k ? FILL : EMPTY}" stroke="var(--ink)" stroke-width="3"/>`; return `<svg viewBox="0 0 ${w + 10} ${h + 10}" width="${w + 10}" role="img" aria-label="A rectangle in ${n} parts">${b}</svg>`; };
+  const fracCircle = (n, k, r = 48) => { const c = 54; let b = ''; for (let i = 0; i < n; i++) { const a0 = (i / n) * 2 * Math.PI - Math.PI / 2, a1 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2; const p = (a) => `${(c + r * Math.cos(a)).toFixed(1)} ${(c + r * Math.sin(a)).toFixed(1)}`; b += n === 1 ? `<circle cx="${c}" cy="${c}" r="${r}" fill="${k ? FILL : EMPTY}" stroke="var(--ink)" stroke-width="3"/>` : `<path d="M${c} ${c} L${p(a0)} A${r} ${r} 0 ${1 / n > 0.5 ? 1 : 0} 1 ${p(a1)} Z" fill="${i < k ? FILL : EMPTY}" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/>`; } return `<svg viewBox="0 0 108 108" width="108" role="img" aria-label="A circle in ${n} parts">${b}</svg>`; };
+  const gridRect = (r, c) => { const s = 30; let b = ''; for (let i = 0; i < r; i++) for (let j = 0; j < c; j++) b += `<rect x="${4 + j * s}" y="${4 + i * s}" width="${s}" height="${s}" fill="${COLS[(i + j) % 2 ? 0 : 4]}" stroke="var(--ink)" stroke-width="2.5"/>`; return `<svg viewBox="0 0 ${c * s + 8} ${r * s + 8}" width="${c * s + 8}" role="img" aria-label="A rectangle of small squares">${b}</svg>`; };
+  const FRAC = { 2: 'half', 3: 'third', 4: 'fourth' };
+  const fname = (k, n) => `${k} ${FRAC[n]}${k > 1 ? 's' : ''}`;
+  const POLY = { triangle: 'triangle', square: 'quadrilateral', rectangle: 'quadrilateral', rhombus: 'quadrilateral', trapezoid: 'quadrilateral', pentagon: 'pentagon', hexagon: 'hexagon' };
+  const AMPM = [['eat breakfast', 'a.m.'], ['go to bed', 'p.m.'], ['eat dinner', 'p.m.'], ['wake up', 'a.m.'], ['start school', 'a.m.'], ['watch the stars', 'p.m.']];
+  const g2shape = [
+    { title: 'Polygons', skill: 'Triangles, quadrilaterals, pentagons, hexagons', variants: [
+      () => { const s = pick(Object.keys(POLY)); const m = mc(POLY[s], ['triangle', 'quadrilateral', 'pentagon', 'hexagon']); return { kind: 'choice', cls: 'word', prompt: 'What kind of shape is this?', say: 'What kind of shape is this? Count the sides.', fig: shape(s, 120), ...m, hint: 'Count the sides: 3 triangle, 4 quadrilateral, 5 pentagon, 6 hexagon.', explain: `It has ${SHAPES[s].sides} sides, so it is a ${POLY[s]}.` }; },
+      () => { const q = pick([['quadrilateral', 4], ['pentagon', 5], ['hexagon', 6], ['triangle', 3]]); return { kind: 'num', prompt: `How many sides does a <b>${q[0]}</b> have?`, say: `How many sides does a ${q[0]} have?`, answer: q[1], hint: 'Quad means 4, penta means 5, hexa means 6.', explain: `A ${q[0]} has ${q[1]} sides.` }; }
+    ] },
+    { title: 'Sides and Angles', skill: 'Count sides and corners', variants: [
+      () => { const a = pick(['triangle', 'square', 'pentagon', 'hexagon', 'trapezoid']), b = pick(['triangle', 'square', 'pentagon', 'hexagon']); return { kind: 'num', prompt: `How many <b>angles</b> do these two shapes have altogether?`, say: 'How many angles, or corners, do these two shapes have altogether?', fig: shape(a, 90) + shape(b, 90), answer: SHAPES[a].corners + SHAPES[b].corners, hint: 'An angle is a corner. Count each shape, then add.', explain: `${SHAPES[a].corners} + ${SHAPES[b].corners} = ${SHAPES[a].corners + SHAPES[b].corners}` }; },
+      () => { const k = R(2, 4), s = pick(['pentagon', 'hexagon', 'square']); return { kind: 'num', prompt: `How many <b>sides</b> do <b>${k}</b> ${s}s have?`, say: `How many sides do ${k} ${s}s have?`, answer: k * SHAPES[s].sides, hint: `Each one has ${SHAPES[s].sides}. Count by ${SHAPES[s].sides}s.`, explain: `${repAdd(k, SHAPES[s].sides)} = ${k * SHAPES[s].sides}` }; }
+    ] },
+    { title: 'Solid Shapes', skill: 'Cubes, faces and corners', variants: [
+      () => { const q = pick([['How many faces does a cube have?', 6, 'Think of a dice: count every side.'], ['How many corners does a cube have?', 8, 'A box has 4 corners on top and 4 on the bottom.'], ['How many flat faces does a cylinder have?', 2, 'A can is flat on the top and the bottom.'], ['How many flat faces does a sphere have?', 0, 'A ball is round all over.']]); return { kind: 'num', prompt: `<b>${q[0]}</b>`, say: q[0], answer: q[1], hint: q[2], explain: `${q[1]}.` }; },
+      shapes1Hard[2]
+    ] },
+    { title: 'Rows of Squares', skill: 'Split a rectangle into equal squares', variants: [
+      () => { const r = R(2, 4), c = R(2, 5); return { kind: 'num', prompt: 'How many small squares make this rectangle?', say: 'How many small squares make this rectangle? Count by rows.', fig: gridRect(r, c), answer: r * c, hint: `${r} rows of ${c}.`, explain: `${repAdd(r, c)} = ${r * c}` }; },
+      () => { const r = R(2, 4), c = R(2, 5); return { kind: 'num', prompt: `A rectangle is split into <b>${r}</b> rows and <b>${c}</b> columns of squares. How many squares?`, say: `A rectangle is split into ${r} rows and ${c} columns of squares. How many squares?`, answer: r * c, hint: 'Draw it, then count by rows.', explain: `${r} × ${c} = ${r * c} squares` }; }
+    ] },
+    { title: 'Halves, Thirds, Fourths', skill: 'Name one equal part', variants: [
+      () => { const n = pick([2, 3, 4]); const m = mc(fname(1, n), [2, 3, 4].filter(x => x !== n).map(x => fname(1, x)).concat(['1 fifth'])); return { kind: 'choice', cls: 'word', prompt: 'How much is shaded?', say: 'How much of the shape is shaded? Count the equal parts.', fig: pick([fracRect, fracCircle])(n, 1), ...m, hint: 'Count all the equal parts. 2 is halves, 3 is thirds, 4 is fourths.', explain: `1 of ${n} equal parts is ${fname(1, n)}.` }; },
+      () => { const n = pick([2, 3, 4]); return { kind: 'num', prompt: `How many <b>${FRAC[n]}s</b> make a whole?`, say: `How many ${FRAC[n]}s make a whole?`, answer: n, hint: 'A whole is all the equal parts together.', explain: `${n} ${FRAC[n]}s make a whole.` }; }
+    ] },
+    { title: 'Equal Parts?', skill: 'Fractions need equal parts', variants: [
+      () => { const n = pick([2, 3, 4]); const opts = shuffle([['eq', fracRect(n, 0, true, 120, 70)], ['un', fracRect(n, 0, false, 120, 70)], ['wrong', fracRect(n === 4 ? 3 : n + 1, 0, true, 120, 70)]]); return { kind: 'choice', prompt: `Which one shows <b>${FRAC[n]}s</b>?`, say: `Which one shows ${FRAC[n]}s? The parts must be equal.`, choices: opts.map(o => o[1]), answer: opts.findIndex(o => o[0] === 'eq'), hint: `Look for ${n} parts that are all the same size.`, explain: `${FRAC[n][0].toUpperCase() + FRAC[n].slice(1)}s are ${n} equal parts.` }; },
+      () => { const n = pick([2, 3, 4]), eqp = Math.random() < .5; return { kind: 'choice', cls: 'word', prompt: 'Are these parts equal?', say: 'Are these parts equal? Look carefully at their sizes.', fig: fracRect(n, 0, eqp), choices: ['Yes', 'No'], answer: eqp ? 0 : 1, hint: 'Equal parts are all exactly the same size.', explain: eqp ? 'Yes, the parts are all the same size.' : 'No, some parts are bigger than others.' }; }
+    ] },
+    { title: 'Parts of a Whole', skill: '2 fourths, 2 thirds and more', variants: [
+      () => { const n = pick([3, 4]), k = R(1, n - 1); const m = mc(fname(k, n), [fname(n - k === k ? k + 1 > n - 1 ? 1 : k + 1 : n - k, n), fname(k, n === 3 ? 4 : 3), fname(k + 1, n)].filter(x => x !== fname(k, n))); return { kind: 'choice', cls: 'word', prompt: 'How much is shaded?', say: 'How much is shaded? Count the shaded parts and all the parts.', fig: pick([fracRect, fracCircle])(n, k), ...m, hint: `Count the shaded parts. Then count all ${n} parts.`, explain: `${k} of ${n} equal parts is ${fname(k, n)}.` }; },
+      () => { const n = pick([2, 3, 4]), k = R(1, n - 1); return { kind: 'num', prompt: `${fname(k, n)} is shaded. How many more ${FRAC[n]}s to shade the whole shape?`, say: `${fname(k, n)} is shaded. How many more ${FRAC[n]}s to shade the whole shape?`, fig: fracRect(n, k), answer: n - k, hint: `A whole is ${n} ${FRAC[n]}s.`, explain: `${k} + ${n - k} = ${n} ${FRAC[n]}s` }; }
+    ] },
+    { title: 'Time, a.m. and p.m.', skill: 'Clocks to 5 minutes, morning or evening', variants: [
+      g2num[5].variants[0],
+      () => { const [act, ap] = pick(AMPM); const h = ap === 'a.m.' ? R(6, 9) : R(6, 9); return { kind: 'choice', cls: 'word', prompt: `You <b>${act}</b> at ${h}:${mm(pick([0, 15, 30, 45]))}. Is it a.m. or p.m.?`, say: `You ${act} at ${h}. Is it a.m. or p.m.?`, choices: ['a.m.', 'p.m.'], answer: ap === 'a.m.' ? 0 : 1, hint: 'a.m. is from midnight to noon (morning). p.m. is from noon to midnight.', explain: `You ${act} in the ${ap === 'a.m.' ? 'morning' : 'evening'}, so it is ${ap}` }; }
+    ] },
+    { title: 'Time Stories', skill: 'How long, and what time will it be?', variants: [
+      () => { const h = R(1, 10), m = pick([0, 5, 10, 15, 20, 30, 40]), add = pick([15, 20, 25, 35, 40, 45]); let nm = m + add, nh = h; if (nm >= 60) { nm -= 60; nh = wrapH(h + 1); } const right = tm(nh, nm); const mcq = mc(right, [tm(h, (m + add) % 60), tm(wrapH(nh + 1), nm), tm(nh, (nm + 5) % 60)]); return { kind: 'choice', prompt: `A movie starts at <b>${tm(h, m)}</b> and lasts <b>${add} minutes</b>. When does it end?`, say: `A movie starts at ${tm(h, m)} and lasts ${add} minutes. When does it end?`, ...mcq, hint: 'Count on by 5s, or add 10s then 5s. Past 60 is a new hour.', explain: `${tm(h, m)} plus ${add} minutes is ${right}.` }; },
+      () => { const h = R(1, 10), m = pick([0, 10, 15, 30]), d = pick([10, 15, 20, 25, 30, 40, 45]); let em = m + d, eh = h; if (em >= 60) { em -= 60; eh = wrapH(h + 1); } return { kind: 'num', prompt: `Recess starts at <b>${tm(h, m)}</b> and ends at <b>${tm(eh, em)}</b>. How many minutes long is it?`, say: `Recess starts at ${tm(h, m)} and ends at ${tm(eh, em)}. How many minutes long is it?`, answer: d, hint: 'Count by 5s from the start time to the end time.', explain: `It lasts ${d} minutes.` }; }
+    ] },
+    { title: 'Boss Level', skill: 'A mix of everything', variants: [] }
+  ];
+  g2shape[9].variants = [...g2shape[0].variants, ...g2shape[2].variants, ...g2shape[4].variants, ...g2shape[5].variants, ...g2shape[6].variants, ...g2shape[7].variants, ...g2shape[8].variants];
+
+  /* Word Detectives (Grade 2 word study, as in Issaquah's Words Their Way and Benchmark Advance).
+     Picture questions never say the word he is meant to read. */
+  const RCTRL = [['car', '🚗', 'ar'], ['star', '⭐', 'ar'], ['shark', '🦈', 'ar'], ['scarf', '🧣', 'ar'], ['harp', '🪕', 'ar'], ['farm', '🚜', 'ar'], ['fork', '🍴', 'or'], ['corn', '🌽', 'or'], ['horse', '🐴', 'or'], ['storm', '⛈️', 'or'], ['horn', '📯', 'or'], ['shorts', '🩳', 'or']];
+  const ERIRUR = [['bird', '🐦', 'ir'], ['girl', '👧', 'ir'], ['shirt', '👕', 'ir'], ['turtle', '🐢', 'ur'], ['purse', '👛', 'ur'], ['church', '⛪', 'ur'], ['burger', '🍔', 'ur'], ['fern', '🌿', 'er'], ['tiger', '🐯', 'er'], ['spider', '🕷️', 'er'], ['ladder', '🪜', 'er'], ['letter', '✉️', 'er']];
+  const DIPH = [['coin', '🪙', 'oi'], ['oil', '🛢️', 'oi'], ['boy', '👦', 'oy'], ['toy', '🧸', 'oy'], ['mouse', '🐭', 'ou'], ['house', '🏠', 'ou'], ['cloud', '☁️', 'ou'], ['mouth', '👄', 'ou'], ['owl', '🦉', 'ow'], ['cow', '🐄', 'ow'], ['crown', '👑', 'ow'], ['clown', '🤡', 'ow']];
+  const gapWord = (w, t) => { const i = w.indexOf(t); return `<span class="lt">${w.slice(0, i)} _ _ ${w.slice(i + 2)}</span>`; };
+  const swapIn = (w, t, x) => { const i = w.indexOf(t); return w.slice(0, i) + x + w.slice(i + 2); };
+  const soundQ = (list, set, tip) => [
+    () => { const [w, e, t] = pick(list); const m = mc(w, shuffle(set.filter(x => x !== t)).map(x => swapIn(w, t, x))); return { kind: 'choice', cls: 'word', prompt: 'Which word matches the picture?', say: 'Which word matches the picture? Look closely at the middle letters.', fig: big(e), ...m, hint: tip, explain: `The picture is ${w}, spelled with ${t}.` }; },
+    () => { const [w, e, t] = pick(list); const m = mc(t, set.filter(x => x !== t)); return { kind: 'choice', cls: 'letter', prompt: gapWord(w, t), say: 'Which two letters fill the gap? Look at the picture.', fig: big(e), ...m, hint: tip, explain: `It is ${w}.` }; }
+  ];
+  // [base, -ing, -ed]
+  const ENDINGS = [['jump', 'jumping', 'jumped', 'just add'], ['look', 'looking', 'looked', 'just add'], ['play', 'playing', 'played', 'just add'], ['hop', 'hopping', 'hopped', 'double'], ['stop', 'stopping', 'stopped', 'double'], ['clap', 'clapping', 'clapped', 'double'], ['skip', 'skipping', 'skipped', 'double'], ['plan', 'planning', 'planned', 'double'], ['bake', 'baking', 'baked', 'drop'], ['smile', 'smiling', 'smiled', 'drop'], ['dance', 'dancing', 'danced', 'drop'], ['wave', 'waving', 'waved', 'drop'], ['hope', 'hoping', 'hoped', 'drop']];
+  const endWrongs = (b, suf) => b.endsWith('e') ? [b + suf, b.slice(0, -1) + b.slice(-2, -1) + suf, b.slice(0, -1) + suf] : [b + suf, b + b.slice(-1) + suf, suf === 'ed' ? b + 't' : b + 'eing'];
+  const endTip = r => r === 'double' ? 'Short vowel and one last consonant? Double it before adding the ending.' : r === 'drop' ? 'Ends in a silent e? Drop the e, then add the ending.' : 'Just add the ending.';
+  const IRREG = [['go', 'went', 'goed'], ['run', 'ran', 'runned'], ['see', 'saw', 'seed'], ['eat', 'ate', 'eated'], ['sit', 'sat', 'sitted'], ['swim', 'swam', 'swimmed'], ['make', 'made', 'maked'], ['come', 'came', 'comed'], ['write', 'wrote', 'writed'], ['give', 'gave', 'gived'], ['take', 'took', 'taked'], ['sing', 'sang', 'singed'], ['fly', 'flew', 'flied'], ['draw', 'drew', 'drawed'], ['find', 'found', 'finded'], ['get', 'got', 'getted']];
+  const CONTR = [['do not', "don't"], ['cannot', "can't"], ['is not', "isn't"], ['I am', "I'm"], ['it is', "it's"], ['we are', "we're"], ['they are', "they're"], ['you will', "you'll"], ['I will', "I'll"], ['did not', "didn't"], ['was not', "wasn't"], ['he is', "he's"], ['let us', "let's"], ['she will', "she'll"], ['I have', "I've"], ['are not', "aren't"]];
+  const PREFIX = [['unhappy', 'not happy'], ['unkind', 'not kind'], ['unsafe', 'not safe'], ['unlock', 'the opposite of lock'], ['untie', 'the opposite of tie'], ['unpack', 'the opposite of pack'], ['redo', 'do again'], ['reread', 'read again'], ['refill', 'fill again'], ['retell', 'tell again'], ['replay', 'play again'], ['rewrite', 'write again']];
+  const prefMeans = (w, mean) => { const base = w.replace(/^(un|re)/, ''); return [mean, `${base} again`, `not ${base}`, `very ${base}`, `the opposite of ${base}`].filter((x, i, a) => a.indexOf(x) === i && (i === 0 || x !== mean)); };
+  const SUFFIX = [['helpful', 'full of help'], ['colorful', 'full of color'], ['careful', 'full of care'], ['joyful', 'full of joy'], ['careless', 'without care'], ['fearless', 'without fear'], ['spotless', 'without a spot'], ['endless', 'without an end'], ['teacher', 'a person who teaches'], ['singer', 'a person who sings'], ['painter', 'a person who paints'], ['builder', 'a person who builds']];
+  const COMPARE = [['A cheetah is the ___ animal of all.', 'fastest', ['faster', 'fast']], ['My dog is ___ than your cat.', 'bigger', ['biggest', 'biger']], ['This is the ___ day of the year.', 'hottest', ['hotter', 'hotest']], ['A mouse is ___ than a horse.', 'smaller', ['smallest', 'small']], ['Mount Everest is the ___ mountain in the world.', 'tallest', ['taller', 'tall']], ['A snail is ___ than a rabbit.', 'slower', ['slowest', 'slow']], ['Winter is ___ than summer.', 'colder', ['coldest', 'cold']], ['The moon is ___ than the sun.', 'smaller', ['smallest', 'smallerer']]];
+  const SPELL = [['because', ['becuz', 'becawse', 'becaus']], ['friend', ['frend', 'freind', 'frind']], ['said', ['sed', 'siad', 'sayd']], ['they', ['thay', 'thei', 'tha']], ['could', ['cood', 'coud', 'culd']], ['house', ['hows', 'howse', 'hous']], ['night', ['nite', 'niht', 'nigt']], ['bird', ['burd', 'berd', 'brid']], ['school', ['skool', 'scool', 'shcool']], ['again', ['agen', 'agin', 'agian']], ['water', ['watr', 'woter', 'wauter']], ['people', ['peple', 'peeple', 'pepol']], ['jumped', ['jumpt', 'jumpd', 'jumpped']], ['stopped', ['stoped', 'stopt', 'stopd']], ['baking', ['bakeing', 'bakking', 'backing']], ['coin', ['coyn', 'cion', 'koin']]];
+  const g2words = [
+    { title: 'Bossy R: ar and or', skill: 'car, star, fork, corn', variants: soundQ(RCTRL, ['ar', 'or', 'er', 'ur'], 'The r is bossy: ar says "ar" like car, or says "or" like fork.') },
+    { title: 'er, ir and ur', skill: 'Three ways to spell one sound', variants: soundQ(ERIRUR, ['er', 'ir', 'ur'], 'er, ir and ur all sound the same, so you have to remember which one the word uses.') },
+    { title: 'oi, oy, ou and ow', skill: 'coin, boy, house, cow', variants: soundQ(DIPH, ['oi', 'oy', 'ou', 'ow'], 'oy usually comes at the end of a word and oi in the middle. ou and ow both say "ow".') },
+    { title: 'Adding -ing and -ed', skill: 'Double it, drop the e, or just add', variants: [
+      () => { const [b, ing, , r] = pick(ENDINGS); const m = mc(ing, endWrongs(b, 'ing')); return { kind: 'choice', cls: 'word', prompt: eq(`${b} + ing = ?`), say: 'Add i n g to the word. Which spelling is right?', ...m, hint: endTip(r), explain: `${b} + ing = ${ing}` }; },
+      () => { const [b, , ed, r] = pick(ENDINGS); const m = mc(ed, endWrongs(b, 'ed').map(x => x.replace(/eed$/, 'ed'))); return { kind: 'choice', cls: 'word', prompt: eq(`${b} + ed = ?`), say: 'Add e d to the word. Which spelling is right?', ...m, hint: endTip(r), explain: `${b} + ed = ${ed}` }; }
+    ] },
+    { title: 'Past Tense', skill: 'jumped, ran, went, saw', variants: [
+      () => { const [now, past, bad] = pick(IRREG); const m = mc(past, [bad, now, now + 's']); return { kind: 'choice', cls: 'word', prompt: `Today I <b>${now}</b>. Yesterday I <b>___</b>.`, say: 'Today I do it. Yesterday I did it. Which word fits?', ...m, hint: 'Some words change in a special way. Say "Yesterday I..." out loud.', explain: `Today I ${now}. Yesterday I ${past}.` }; },
+      () => { const [b, , ed] = pick(ENDINGS); const m = mc(ed, [b, b + 's', endWrongs(b, 'ed').find(x => x !== ed) || b + 'ing']); return { kind: 'choice', cls: 'word', prompt: `Last week we <b>___</b> in the park.<br><small>(${b})</small>`, say: 'Which word tells about something that already happened?', ...m, hint: 'Already happened? Most words add ed.', explain: `Last week we ${ed} in the park.` }; }
+    ] },
+    { title: 'Contractions', skill: "don't, I'm, they're", variants: [
+      () => { const [l, s] = pick(CONTR); const m = mc(s, shuffle(CONTR.filter(x => x[1] !== s)).slice(0, 3).map(x => x[1])); return { kind: 'choice', cls: 'word', prompt: eq(`${l} = ?`), say: 'Squeeze the two words together. Which short word do they make?', ...m, hint: 'The apostrophe takes the place of the missing letters.', explain: `${l} = ${s}` }; },
+      () => { const [l, s] = pick(CONTR); const m = mc(l, shuffle(CONTR.filter(x => x[0] !== l)).slice(0, 3).map(x => x[0])); return { kind: 'choice', cls: 'word', prompt: `What two words make <b>${s}</b>?`, say: 'What two words make the short word at the top?', ...m, hint: 'Put back the letters the apostrophe took away.', explain: `${s} is short for ${l}.` }; }
+    ] },
+    { title: 'un- and re-', skill: 'un means not, re means again', variants: [
+      () => { const [w, mean] = pick(PREFIX); const m = mc(mean, prefMeans(w, mean)); return { kind: 'choice', cls: 'word', prompt: `What does <b>${w}</b> mean?`, say: 'What does the word at the top mean? Look at how it starts.', ...m, hint: 'un at the start means not, or the opposite. re means again.', explain: `${w} means ${mean}.` }; },
+      () => { const [w, mean] = pick(PREFIX); const base = w.replace(/^(un|re)/, ''); const m = mc(w, uniq([(w.startsWith('un') ? 're' : 'un') + base, base + 'er', base])); return { kind: 'choice', cls: 'word', prompt: `Which word means <b>${mean}</b>?`, say: 'Which word means what it says at the top?', ...m, hint: 'un at the start means not, or the opposite. re means again.', explain: `${w} means ${mean}.` }; }
+    ] },
+    { title: '-ful, -less, -er, -est', skill: 'Endings that change a word', variants: [
+      () => { const [w, mean] = pick(SUFFIX); const m = mc(mean, shuffle(SUFFIX.filter(x => x[1] !== mean)).slice(0, 3).map(x => x[1])); return { kind: 'choice', cls: 'word', prompt: `What does <b>${w}</b> mean?`, say: 'What does the word at the top mean? Look at how it ends.', ...m, hint: 'ful means full of. less means without. er can mean a person who.', explain: `${w} means ${mean}.` }; },
+      () => { const s = pick(COMPARE); const m = mc(s[1], s[2]); return { kind: 'choice', cls: 'word', prompt: `${s[0].replace('___', '<b>___</b>')}<br><small>Which word fits?</small>`, say: 'Which word fits the sentence? Is it comparing two things, or more?', ...m, hint: 'er compares two things. est is for the most of all.', explain: s[0].replace('___', s[1]) }; }
+    ] },
+    { title: 'Spelling Check', skill: 'Which one is spelled right?', variants: [
+      () => { const [w, bad] = pick(SPELL); const m = mc(w, bad); return { kind: 'choice', cls: 'word', prompt: 'Which word is spelled right?', say: `Spell the word: ${w}. Which one is spelled right?`, ...m, hint: 'Read each one slowly. Which looks like the word in books?', explain: `${w} is spelled ${w.split('').join(', ')}.` }; },
+      ...soundQ([...RCTRL, ...ERIRUR, ...DIPH], ['ar', 'or', 'er', 'ir', 'ur', 'oi', 'oy', 'ou', 'ow'], 'Say the word slowly. Which spelling have you seen in books?').slice(0, 1)
+    ] },
+    { title: 'Boss Level', skill: 'A mix of everything', variants: [] }
+  ];
+  g2words[9].variants = [...g2words[0].variants, ...g2words[1].variants, ...g2words[2].variants, ...g2words[3].variants, ...g2words[4].variants, ...g2words[5].variants, ...g2words[6].variants, ...g2words[7].variants, g2words[8].variants[0]];
+
+  /* Story Explorers: longer passages on Grade 2 themes (animal homes, characters facing a challenge,
+     long ago and today, how things work, tales with a lesson). Each question is [question, answer, wrong, wrong]. */
+  const PASSAGES = [
+    { home: 1, fact: 1, real: 1, text: 'Beavers build their homes in ponds. They cut down small trees with their strong teeth. They pile up sticks and mud to make a lodge. The door to the lodge is under the water. This keeps the beavers safe from foxes and wolves.',
+      q: { detail: [['What do beavers use to cut down trees?', 'Their strong teeth', 'Their flat tails', 'A saw']], main: [['What is this mostly about?', 'How beavers build their homes', 'How foxes hunt', 'Why trees grow tall']], why: [['Why is the door to the lodge under the water?', 'To keep the beavers safe', 'So the sun can get in', 'Because beavers like to get wet']], vocab: [['In this story, a lodge is…', "a beaver's home", 'a tall tree', 'a kind of boat']] } },
+    { home: 1, fact: 1, real: 1, text: 'A camel lives in the hot, dry desert. It can go many days without a drink of water. Its wide feet help it walk on soft sand. Long eyelashes keep blowing sand out of its eyes. The camel is made for life in the desert.',
+      q: { detail: [['What keeps sand out of the camel\'s eyes?', 'Long eyelashes', 'Wide feet', 'Sunglasses']], main: [['What is this mostly about?', 'How a camel can live in the desert', 'What camels eat for dinner', 'How to ride a camel']], why: [['Why does a camel have wide feet?', 'To walk on soft sand', 'To swim fast', 'To climb trees']], vocab: [['In this story, dry means…', 'not wet', 'very cold', 'very loud']] } },
+    { home: 1, fact: 1, real: 1, text: 'Penguins live where it is very cold. They have a thick layer of fat to keep them warm. Their feathers are packed close together, like a warm coat. Penguins cannot fly, but they are fast swimmers. They dive into the icy sea to catch fish.',
+      q: { detail: [['What do penguins catch in the sea?', 'Fish', 'Bugs', 'Nuts'], ['What can penguins NOT do?', 'Fly', 'Swim', 'Dive']], main: [['What is this mostly about?', 'How penguins live in the cold', 'How birds build nests', 'Why the sea is salty']], why: [['Why don\'t penguins get too cold?', 'They have fat and packed feathers', 'They wear coats', 'They sit by a fire']], vocab: [['In this story, icy means…', 'very cold, like ice', 'very hot', 'very sweet']] } },
+    { home: 1, fact: 1, real: 1, text: 'Bats sleep in dark caves during the day. They hang upside down by their feet. At night, they wake up and fly out to find food. Many bats eat bugs, and one bat can eat hundreds of bugs in one night. In the morning, they fly back to the cave.',
+      steps: ['The bats sleep in the cave', 'The bats wake up at night', 'The bats fly out to find food', 'The bats fly back to the cave'],
+      q: { detail: [['When do bats look for food?', 'At night', 'In the morning', 'At lunchtime'], ['How do bats sleep?', 'Upside down by their feet', 'Lying on the grass', 'In a bed']], main: [['What is this mostly about?', 'What bats do in a day and a night', 'How caves are made', 'Why bugs are small']], why: [['Why do bats fly out at night?', 'To find food', 'To see the sun', 'To go to school']] } },
+    { home: 1, fact: 1, real: 1, text: 'Bees live together in a home called a hive. Inside, they build little rooms made of wax. The bees fly from flower to flower to gather nectar. Back at the hive, they turn the nectar into honey. The honey is food for the bees all winter long.',
+      steps: ['The bees fly to the flowers', 'The bees gather nectar', 'The bees fly back to the hive', 'The bees make honey'],
+      q: { detail: [['What do bees turn nectar into?', 'Honey', 'Wax', 'Milk']], main: [['What is this mostly about?', 'How bees make honey', 'How flowers grow', 'Why winter is cold']], why: [['Why do bees make honey?', 'It is their food for the winter', 'To sell it at the store', 'To paint the hive']], vocab: [['In this story, gather means…', 'collect', 'throw away', 'paint']] } },
+    { home: 1, fact: 1, real: 1, text: 'An octopus lives on the ocean floor. It has eight long arms covered in suckers. It can change its color to hide from sharks. If a shark gets too close, the octopus squirts dark ink and swims away. Then it hides in a small space between the rocks.',
+      q: { detail: [['How many arms does an octopus have?', 'Eight', 'Six', 'Ten'], ['Where does the octopus hide at the end?', 'Between the rocks', 'In a shell', 'On a boat']], main: [['What is this mostly about?', 'How an octopus stays safe', 'How sharks sleep', 'What rocks are made of']], why: [['Why does the octopus squirt ink?', 'To get away from a shark', 'To write a letter', 'To find food']], vocab: [['In this story, squirts means…', 'shoots out fast', 'falls asleep', 'sings']] } },
+    { real: 1, text: 'Maya wanted to be in the school play. When she tried out, her voice was small and shaky. She felt nervous, and her cheeks turned red. Her teacher smiled and said, "Take a deep breath and try again." Maya tried again, and this time she sang loud and clear. She got a part in the play!',
+      steps: ['Maya wanted to be in the play', 'Maya sang in a small, shaky voice', 'Her teacher said to try again', 'Maya sang loud and clear'],
+      q: { feel: [['How did Maya feel when she first tried out?', 'Nervous', 'Angry', 'Sleepy'], ['How do you think Maya felt at the end?', 'Proud and happy', 'Sad', 'Bored']], why: [['Why did Maya\'s cheeks turn red?', 'She felt nervous', 'She was cold', 'She ate a cherry']], main: [['What is this story mostly about?', 'A girl who is brave and tries again', 'A girl who loses her dog', 'How to build a stage']] } },
+    { real: 1, text: "Leo's tower of blocks fell down. He stomped his foot and frowned. His little sister started to cry, because she had helped build it. Leo looked at her and took a deep breath. \"Let's build it again, even taller,\" he said. Soon they were both laughing.",
+      steps: ["Leo's tower fell down", 'Leo stomped his foot', 'Leo took a deep breath', 'They built the tower again'],
+      q: { feel: [['How did Leo feel when the tower fell?', 'Upset', 'Happy', 'Sleepy'], ['How did Leo and his sister feel at the end?', 'Happy', 'Angry', 'Scared']], why: [['Why did his sister cry?', 'She had helped build the tower', 'She was hungry', 'She lost her shoe']], main: [['What is this story mostly about?', 'A boy who calms down and tries again', 'A girl who learns to ride a bike', 'How blocks are made']] } },
+    { real: 1, text: 'Ava\'s grandpa was coming to visit, but her room was a big mess. Toys were all over the floor, and her bed was not made. Ava sighed. "This will take forever," she said. Then she set a timer and made it a game. She cleaned so fast that she finished before the doorbell rang.',
+      steps: ['Grandpa was coming to visit', 'Ava saw the big mess', 'Ava set a timer', 'Ava finished before the doorbell rang'],
+      q: { feel: [['How did Ava feel when she saw the mess?', 'It seemed like too much work', 'Excited to clean', 'Angry at Grandpa']], why: [['Why did Ava clean her room?', 'Her grandpa was coming to visit', 'She lost a toy', 'It was her birthday']], vocab: [['In this story, forever means…', 'a very long time', 'one second', 'today']], main: [['What is this story mostly about?', 'A girl who makes a hard job fun', 'A grandpa who gets lost', 'How to ring a doorbell']] } },
+    { real: 0, text: 'One morning, a little cloud named Puff did not want to rain. "I just want to float and play," said Puff. But the flowers below were drooping, and the pond was almost dry. Puff saw how thirsty everything looked. So Puff rained and rained, and the flowers stood up tall again.',
+      q: { why: [['Why did Puff decide to rain?', 'The flowers and pond were thirsty', 'Puff was tired of playing', 'The sun said to']], vocab: [['In this story, drooping means…', 'hanging down, weak', 'jumping up', 'singing loudly']], lesson: [['What lesson does this story teach?', 'Helping others is important', 'Always play first', 'Clouds are scary']], feel: [['How did the flowers look before the rain?', 'Thirsty and weak', 'Happy and tall', 'Wet and cold']] } },
+    { real: 0, text: 'A hare made fun of a slow tortoise. "Let\'s have a race," said the tortoise. The hare ran far ahead, then lay down for a nap. The tortoise kept walking, step by step. When the hare woke up, the tortoise was already crossing the finish line.',
+      steps: ['The hare made fun of the tortoise', 'The hare ran far ahead', 'The hare took a nap', 'The tortoise crossed the finish line'],
+      q: { lesson: [['What lesson does this story teach?', 'Slow and steady can win the race', 'Always take a nap', 'Hares are slow']], why: [['Why did the hare lose the race?', 'He took a nap', 'He hurt his foot', 'He got lost']], feel: [['How do you think the hare felt when he woke up?', 'Surprised', 'Proud', 'Bored']] } },
+    { real: 0, text: 'All summer, the ant worked hard carrying food to its nest. The grasshopper just sang and played in the sun. "Why work so hard?" asked the grasshopper. When winter came, the ground was covered in snow. The ant had plenty to eat, but the grasshopper was cold and hungry.',
+      q: { lesson: [['What lesson does this story teach?', 'Get ready now for what you will need later', 'Never sing in the sun', 'Snow is fun to play in']], why: [['Why was the grasshopper hungry in winter?', 'It did not save any food', 'It ate too much', 'The ant took its food']], vocab: [['In this story, plenty means…', 'a lot', 'none', 'a little bit']], feel: [['How did the grasshopper feel in winter?', 'Cold and hungry', 'Warm and full', 'Happy and busy']] } },
+    { real: 0, text: 'A tiny mouse woke up a sleeping lion. The lion was about to eat the mouse, but the mouse begged, "Let me go, and one day I will help you." The lion laughed and let it go. Later, the lion got caught in a hunter\'s net. The mouse chewed the ropes and set the lion free.',
+      steps: ['The mouse woke up the lion', 'The lion let the mouse go', 'The lion got caught in a net', 'The mouse chewed the ropes'],
+      q: { lesson: [['What lesson does this story teach?', 'Even a small friend can be a big help', 'Lions are always mean', 'Never sleep outside']], why: [['How did the lion get free?', 'The mouse chewed the ropes', 'The lion pulled very hard', 'A bird cut the net']], feel: [['Why did the lion laugh at the mouse?', 'He did not think a mouse could help him', 'The mouse told a joke', 'He was tickled']] } },
+    { real: 0, text: 'A thirsty crow found a jug with a little water at the bottom. Its beak could not reach the water. The crow had an idea. It dropped pebbles into the jug, one by one. The water rose higher and higher until the crow could drink.',
+      steps: ['The crow found a jug', 'The crow could not reach the water', 'The crow dropped in pebbles', 'The crow drank the water'],
+      q: { lesson: [['What lesson does this story teach?', 'When something is hard, think of a clever way', 'Give up when it gets hard', 'Crows do not like water']], why: [['Why did the water rise?', 'The pebbles filled up the jug', 'It started to rain', 'The crow shook the jug']], vocab: [['In this story, pebbles are…', 'small stones', 'big trees', 'drops of rain']] } },
+    { real: 0, text: 'Sam found a magic pencil in the park. Whatever he drew came to life! He drew a puppy, and it licked his face. He drew a kite, and it pulled him up into the sky. When it was time to go home, Sam drew a door and walked right through it.',
+      steps: ['Sam found a magic pencil', 'Sam drew a puppy', 'Sam drew a kite', 'Sam drew a door'],
+      q: { feel: [['How did Sam feel when the puppy licked his face?', 'Happy', 'Angry', 'Bored']], detail: [['What did the kite do?', 'It pulled him into the sky', 'It got stuck in a tree', 'It turned into a bird']], main: [['What is this story mostly about?', 'A boy with a magic pencil', 'How to fly a kite', 'A lost puppy']] } },
+    { past: 1, fact: 1, real: 1, text: 'Long ago, there were no cars. People rode horses or walked from place to place. At night, they lit candles to see, because there were no light bulbs. Children wrote on small chalkboards called slates instead of paper. Today, we have cars, lamps and lots of paper.',
+      q: { past: [['Long ago, how did people get from place to place?', 'They rode horses or walked', 'They drove cars', 'They took planes'], ['What did children write on long ago?', 'Slates', 'Tablets', 'Computers'], ['How did people see at night long ago?', 'They lit candles', 'They turned on lamps', 'They used flashlights']], main: [['What is this mostly about?', 'How life was different long ago', 'How to ride a horse', 'Why candles are hot']], vocab: [['In this story, a slate is…', 'a small chalkboard', 'a horse', 'a candle']] } },
+    { past: 1, fact: 1, real: 1, text: 'Long ago, people did not have refrigerators. To keep food cold, they used big blocks of ice. An ice man brought the ice to their homes in a wagon. Families kept the ice in a wooden box called an icebox. Today, a refrigerator keeps our food cold all by itself.',
+      q: { past: [['How did people keep food cold long ago?', 'With big blocks of ice', 'In a refrigerator', 'In the oven'], ['Who brought the ice?', 'An ice man with a wagon', 'A mail carrier', 'A robot']], main: [['What is this mostly about?', 'How people kept food cold long ago', 'How to make ice cream', 'Why wagons have wheels']], vocab: [['In this story, an icebox is…', 'a wooden box that holds ice', 'a freezer at the store', 'a box of toys']] } },
+    { past: 1, fact: 1, real: 1, text: 'Long ago, if you wanted to talk to a friend far away, you wrote a letter. It could take many days for the letter to arrive. Later, people used telephones that were stuck to the wall. Now we can call or video chat on a phone that fits in a pocket. We can see a friend\'s face from far away in just a few seconds.',
+      steps: ['People wrote letters', 'Letters took days to arrive', 'Phones were stuck to the wall', 'Phones fit in a pocket'],
+      q: { past: [['How did people talk to faraway friends long ago?', 'They wrote letters', 'They used video chat', 'They sent texts'], ['How long could a letter take to arrive?', 'Many days', 'A few seconds', 'One minute']], main: [['What is this mostly about?', 'How the way we talk to friends has changed', 'How to write a letter', 'Why phones are small']] } },
+    { fact: 1, real: 1, text: 'A robot vacuum cleans the floor all by itself. It has sensors that help it feel walls and chairs. When it bumps into something, it turns and goes another way. When its battery gets low, it rolls back to its charger. Then it rests until it is ready to clean again.',
+      steps: ['The robot cleans the floor', 'The robot bumps into a chair and turns', 'The battery gets low', 'The robot rolls back to its charger'],
+      q: { why: [['Why does the robot go back to its charger?', 'Its battery is low', 'It is scared of chairs', 'It is done for the year']], detail: [['What helps the robot feel walls?', 'Sensors', 'Wheels', 'A brush']], vocab: [['In this story, a charger is…', 'something that gives a battery power', 'a broom', 'a chair']], main: [['What is this mostly about?', 'How a robot vacuum works', 'How to build a chair', 'Why floors get dirty']] } }
+  ];
+  const LONGAGO = [['People lit candles to see at night.', 0], ['Kids do schoolwork on tablets.', 1], ['People rode horses to town.', 0], ['Families keep food cold in a refrigerator.', 1], ['People wrote letters to talk to faraway friends.', 0], ['We video chat with Grandma on a phone.', 1], ['Children wrote on slates.', 0], ['A robot vacuum cleans the floor.', 1], ['An ice man brought ice in a wagon.', 0], ['People drive electric cars.', 1]];
+  const passQ = tag => () => { const p = pick(PASSAGES.filter(x => x.q[tag])); const [q, a, ...w] = pick(p.q[tag]); const m = mc(a, w); return { kind: 'choice', cls: 'word', prompt: `${storyBox(p.text)}<b>${q}</b>`, say: 'Read the story. Then answer the question.', ...m, hint: tag === 'main' ? 'What is the whole story about, not just one sentence?' : tag === 'vocab' ? 'Read the sentence with the word again. What would make sense there?' : tag === 'lesson' ? 'What did the character learn? What should we learn?' : tag === 'feel' ? 'Look for clues: what did the character do or say?' : tag === 'why' ? 'Find the part of the story that tells why.' : 'Look back in the story. The answer is in there.', explain: a.replace(/…$/, '') + '.' }; };
+  const homeQ = () => { const p = pick(PASSAGES.filter(x => x.home)); const tag = pick(['detail', 'why', 'vocab', 'main'].filter(t => p.q[t])); const [q, a, ...w] = pick(p.q[tag]); const m = mc(a, w); return { kind: 'choice', cls: 'word', prompt: `${storyBox(p.text)}<b>${q}</b>`, say: 'Read about this animal. Then answer the question.', ...m, hint: 'Look back in the story. The answer is in there.', explain: `${a}.` }; };
+  const orderQ = () => { const p = pick(PASSAGES.filter(x => x.steps)), s = p.steps, k = R(0, 3); if (k === 3) { const m = mc(s[3], s.slice(0, 3)); return { kind: 'choice', cls: 'word', prompt: `${storyBox(p.text)}What happened <b>last</b>?`, say: 'Read the story. What happened last?', ...m, hint: 'Look at the end of the story.', explain: `Last: ${s[3]}.` }; } if (k === 0) { const m = mc(s[0], s.slice(1)); return { kind: 'choice', cls: 'word', prompt: `${storyBox(p.text)}What happened <b>first</b>?`, say: 'Read the story. What happened first?', ...m, hint: 'Look at the start of the story.', explain: `First: ${s[0]}.` }; } const m = mc(s[k + 1], s.filter((_, i) => i !== k + 1 && i !== k)); return { kind: 'choice', cls: 'word', prompt: `${storyBox(p.text)}What happened right <b>after</b> this: ${s[k].charAt(0).toLowerCase() + s[k].slice(1)}?`, say: 'Read the story. What happened right after the part in the question?', ...m, hint: 'Find that part in the story, then read the next sentence.', explain: `Next: ${s[k + 1]}.` }; };
+  const orderOf2 = () => { const p = pick(PASSAGES.filter(x => x.steps)), s = p.steps; const [i, j] = shuffle([0, 1, 2, 3]).slice(0, 2).sort((x, y) => x - y); const two = shuffle([s[i], s[j]]); return { kind: 'choice', cls: 'word', prompt: `${storyBox(p.text)}Which happened <b>first</b>?`, say: 'Read the story. Which of these two happened first?', choices: two, answer: two.indexOf(s[i]), hint: 'Find both parts in the story. Which one comes earlier?', explain: `${s[i]}, and later ${s[j].charAt(0).toLowerCase() + s[j].slice(1)}.` }; };
+  const realQ = () => { const p = pick(PASSAGES); return { kind: 'choice', cls: 'word', prompt: `${storyBox(p.text)}<b>Could this really happen?</b>`, say: 'Read the story. Could this really happen?', choices: ['Yes, it could', 'No, it is pretend'], answer: p.real ? 0 : 1, hint: 'Do animals or clouds talk? Can a pencil make things come alive?', explain: p.real ? 'Yes, this could really happen.' : 'No, this one is pretend.' }; };
+  const factQ = () => { const p = pick(PASSAGES); return { kind: 'choice', cls: 'word', prompt: `${storyBox(p.text)}<b>Does this give facts, or is it a made-up story?</b>`, say: 'Read it. Does it teach facts about the real world, or is it a made-up story?', choices: ['It gives facts', 'It is a made-up story'], answer: p.fact ? 0 : 1, hint: 'Facts teach you about real things. A made-up story has characters and a problem.', explain: p.fact ? 'It gives facts about the real world.' : 'It is a made-up story.' }; };
+  const agoQ = () => { const [s, today] = pick(LONGAGO); return { kind: 'choice', cls: 'word', prompt: `<b>${s}</b><br><small>Long ago, or today?</small>`, say: 'Read the sentence, then pick when it happens.', choices: ['Long ago', 'Today'], answer: today, hint: 'Did people have this a long, long time ago?', explain: today ? 'That is today.' : 'That was long ago.' }; };
+  const g2story = [
+    { title: 'Animal Homes', skill: 'Read to learn about animals', variants: [homeQ, homeQ] },
+    { title: 'Main Idea', skill: 'What is it mostly about?', variants: [passQ('main')] },
+    { title: 'Characters and Feelings', skill: 'How does the character feel?', variants: [passQ('feel')] },
+    { title: 'Why Did It Happen?', skill: 'Find the reason in the story', variants: [passQ('why')] },
+    { title: 'Story Order', skill: 'First, next, last', variants: [orderQ, orderOf2] },
+    { title: 'Real or Pretend?', skill: 'Could it happen? Facts or made up?', variants: [realQ, factQ] },
+    { title: 'Long Ago and Today', skill: 'How life has changed', variants: [passQ('past'), passQ('past'), agoQ] },
+    { title: 'Word Meaning', skill: 'Use the story to work out a word', variants: [passQ('vocab')] },
+    { title: 'Lessons in Tales', skill: 'What does the story teach?', variants: [passQ('lesson'), passQ('lesson'), passQ('why')] },
+    { title: 'Boss Level', skill: 'A mix of everything', variants: [passQ('main'), passQ('feel'), passQ('why'), orderQ, realQ, passQ('vocab'), passQ('lesson'), passQ('past'), homeQ] }
+  ];
+
 
   const TOPICS = [
     { id: 'addsub', area: 'math', name: 'Adding & Taking Away', blurb: 'Add and subtract to 20, story problems, then bigger numbers.', mark: '+', color: 'c-sky', grade: 'Grade 1 → 2', levels: addsub },
@@ -1044,8 +1384,14 @@ window.VQ = (function () {
     { id: 'letters', area: 'abc', name: 'Big & Small Letters', blurb: 'Match capitals to small letters, b d p q, names and sentences.', mark: 'Aa', color: 'c-berry', grade: 'Grade 1', levels: letters },
     { id: 'read', area: 'abc', name: 'Reading Quest', blurb: 'Sound out words, rhymes, sight words, then read a whole sentence.', mark: 'cat', color: 'c-sun', grade: 'Grade 1', levels: read },
     { id: 'g2read', area: 'g2', name: 'Story Time', blurb: 'Blends, sh ch th, magic e, vowel teams, then read short stories.', mark: 'sh', color: 'c-berry', grade: 'Grade 2', levels: g2read },
+    { id: 'g2words', area: 'g2', name: 'Word Detectives', blurb: 'Bossy r, oi and ou, -ing and -ed, contractions, un- and re-.', mark: 'ar', color: 'c-sun', grade: 'Grade 2', levels: g2words },
+    { id: 'g2story', area: 'g2', name: 'Story Explorers', blurb: 'Longer stories: main idea, feelings, why, order, lessons in tales.', mark: 'read', color: 'c-grass', grade: 'Grade 2', levels: g2story },
     { id: 'g2add', area: 'g2', name: 'Adding to 100', blurb: 'Add and take away 2-digit numbers, with carrying and borrowing.', mark: '47', color: 'c-sky', grade: 'Grade 2', levels: g2add },
     { id: 'g2num', area: 'g2', name: 'Hundreds, Money & Time', blurb: 'Numbers to 1,000, counting coins, and time to 5 minutes.', mark: '¢', color: 'c-grape', grade: 'Grade 2', levels: g2num },
+    { id: 'g2big', area: 'g2', name: 'Adding to 1,000', blurb: 'Add and take away 3-digit numbers, across zeros, two-step stories.', mark: '500', color: 'c-grass', grade: 'Grade 2', levels: g2big },
+    { id: 'g2arr', area: 'g2', name: 'Groups & Arrays', blurb: 'Equal groups, rows and columns, skip counting, sharing.', mark: '⁘', color: 'c-berry', grade: 'Grade 2', levels: g2arr },
+    { id: 'g2meas', area: 'g2', name: 'Measure & Graphs', blurb: 'Rulers in cm and inches, number lines, bar and picture graphs.', mark: 'cm', color: 'c-sun', grade: 'Grade 2', levels: g2meas },
+    { id: 'g2shape', area: 'g2', name: 'Shapes & Fractions', blurb: 'Polygons, halves thirds and fourths, a.m. and p.m., time stories.', mark: '½', color: 'c-sky', grade: 'Grade 2', levels: g2shape },
     // tracing is mastered, so it is off the home screen; its stars still count for coins and the report
     { id: 'write', area: 'abc', name: 'Write d and m', blurb: 'Trace d and m with your finger, then spot them in words.', mark: 'dm', color: 'c-sun', grade: 'Grade 1', levels: write, hidden: true }
   ];
@@ -1238,6 +1584,11 @@ window.VHReport = (function () {
 (function () {
   const { TOPICS, AREAS, KID } = window.VQ;
   const QUESTIONS = 10, PASS = 8, SILVER = 9;
+  // 3 stars now needs speed too: every answer right, no hints, and at least 8 of 10 answered in time.
+  // The time allowed grows with what there is to read and, for typed answers, with the digits to type.
+  const FAST_NEED = 0.8;
+  const words = s => String(s || '').replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length;
+  const fastLimit = q => (q.kind === 'num' ? 6 + 4 * String(q.answer).length : 8) + words(q.prompt) / 2 + (q.choices || []).reduce((a, c) => a + words(c), 0) / 4;
   const PLAYER = { id: 'p1', name: KID }, CODE = 'p2'; // CODE: anonymous id in the progress repo (Viraj is p1)
   const K_STATE = 'vh.state', K_SESS = 'vh.sessions', K_PINS = 'vh.pins', K_CUR = 'vh.current', K_VOICE = 'vh.voice';
   const lsGet = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
@@ -1581,7 +1932,7 @@ window.VHReport = (function () {
   }
 
   /* ---------- test out: 2 questions per level, in order, stopping at the first miss ---------- */
-  const TEST_PER = 2;
+  const TEST_PER = 4;
   function testOut(t) {
     const qs = [];
     t.levels.slice(0, -1).forEach((L, i) => makeQuestions(L, 'normal', TEST_PER).forEach(q => qs.push(Object.assign(q, { tid: t.id, li: i }))));
@@ -1747,6 +2098,7 @@ window.VHReport = (function () {
       else correct = q.letter;
       const plain = s => { const d = document.createElement('div'); d.innerHTML = String(s); return d.textContent.replace(/\s+/g, ' ').trim(); };
       run.qlog.push({ n: run.i + 1, prompt: plain(q.prompt).slice(0, 160), answer: /<svg/.test(correct) ? 'picture ' + (q.answer + 1) : plain(correct), given: q.kind === 'choice' ? (/<svg/.test(q.choices[v]) ? 'picture ' + (v + 1) : plain(q.choices[v])) : String(given), correct: ok, hint: !!q.usedHint, seconds: Math.min(600, Math.round((performance.now() - q.t0) / 100) / 10) });
+      { const e = run.qlog[run.qlog.length - 1]; e.fast = ok && e.seconds <= fastLimit(q); }
       if (q.tid) Object.assign(run.qlog[run.qlog.length - 1], { topic: q.tid, level: q.li + 1 });
       const cheer = q.kind === 'trace' ? pick(['Beautiful ' + q.letter + '!', 'Great tracing!', 'Super writing!']) : pick(['Yes! Great job!', 'You got it!', 'Super!', 'Awesome!']);
       const fb = app.querySelector('#fb');
@@ -1767,7 +2119,8 @@ window.VHReport = (function () {
     function results() {
       if (mode === 'warmup') return warmResults();
       if (mode === 'testout') return testResults();
-      const stars = run.right === N && run.hints === 0 ? 3 : run.right >= SILVER ? 2 : run.right >= PASS ? 1 : 0;
+      const quick = run.qlog.filter(x => x.fast).length >= Math.ceil(N * FAST_NEED);
+      const stars = run.right === N && run.hints === 0 ? (quick ? 3 : 2) : run.right >= SILVER ? 2 : run.right >= PASS ? 1 : 0;
       const passed = stars > 0, p = prog(t.id), coinsBefore = earned();
       if (mode === 'hard') { p.hard = p.hard || {}; p.hard[li] = Math.max(p.hard[li] || 0, stars); } else p.stars[li] = Math.max(p.stars[li] || 0, stars);
       save();
@@ -1776,7 +2129,7 @@ window.VHReport = (function () {
       const hasNext = mode === 'normal' && li + 1 < t.levels.length;
       const title = !passed ? 'So close!' : mode === 'hard' ? (stars === 3 ? 'Hard mode, perfect!' : 'Hard level done!') : !hasNext ? 'Quest complete!' : stars === 3 ? 'Perfect!' : 'Level done!';
       const msg = !passed ? `You got ${run.right} out of ${N}. Get ${PASS} ${mode === 'hard' ? 'for a star' : `to open level ${li + 2}`}. The questions change every time. Try again!`
-        : stars === 3 ? 'All right, with no hints. Three stars!' : stars === 2 ? `You got ${run.right} out of ${N}. Get them all with no hints for 3 stars.` : `You got ${run.right} out of ${N}. Get ${SILVER} for 2 stars.`;
+        : stars === 3 ? 'All right, with no hints, and quick too. Three stars!' : stars === 2 && run.right === N && run.hints === 0 ? 'All right, with no hints! Answer a bit faster for 3 stars.' : stars === 2 ? `You got ${run.right} out of ${N}. Get them all with no hints, and be quick, for 3 stars.` : `You got ${run.right} out of ${N}. Get ${SILVER} for 2 stars.`;
       go(`<section class="result ${passed ? 'win' : 'lose'}"><p class="eyebrow">${label}</p><h1>${title}</h1><div class="bigstars">${starRow(stars)}</div><p class="lede">${msg}</p>
           ${gotCoins > 0 ? `<p class="coin-note"><span aria-hidden="true">🪙</span> +${plural(gotCoins, 'coin')}! You have ${balance()}. <button class="link" id="tocoins">Get play time</button></p>` : ''}
           <div class="actions">${passed && hasNext ? `<button class="btn primary" id="nextlvl">Level ${li + 2} →</button>` : ''}${passed && mode === 'normal' && t.levels[li].hard ? `<button class="btn" id="hardgo">Try Hard ⚡</button>` : ''}<button class="btn ${passed && hasNext ? '' : 'primary'}" id="again">${passed ? 'Play again' : 'Try again'}</button><button class="btn" id="tomap">All levels</button></div></section>`, '.actions .primary');

@@ -12,13 +12,24 @@ Eight quests on the home screen, each with **10 levels** of 10 fresh random ques
   adding three or four numbers), Hundreds, Money & Time (place value and comparing to 1,000,
   skip counting, coins drawn with their values, quarters and dollars, time to 5 minutes, elapsed
   time, even and odd, money stories)
+- Grade 2, in the order of Issaquah's Grade 2 math (Eureka Math) and reading (Benchmark Advance
+  with Words Their Way word study): Word Detectives (bossy r, er/ir/ur, oi/oy/ou/ow, -ing and
+  -ed spelling rules, past tense, contractions, un- and re-, -ful/-less/-er/-est, spelling
+  check), Story Explorers (19 longer passages on animal homes, characters, long ago and today,
+  how things work and fables: main idea, feelings, why, story order, real or pretend, word
+  meaning, lessons), Adding to 1,000 (3-digit adding and taking away, across zeros, missing
+  numbers, two-step stories), Groups & Arrays (equal groups, repeated addition, rows and columns,
+  skip counting, sharing, even and odd), Measure & Graphs (rulers in cm and inches, choosing
+  units, number lines, bar and picture graphs, length stories), Shapes & Fractions (polygons,
+  angles, solids, halves/thirds/fourths, a.m. and p.m., time stories)
 - Math: Adding & Taking Away, Numbers & Tens, Shapes, Time & Measuring
 
 Write d and m (finger tracing) is off the home screen now; its stars still count and it still
 shows in the reports.
 
 Same rules as Viraj's site: **8 of 10** right unlocks the next level; 10/10 with no hints is
-3 stars, 9 is 2 stars, 8 is 1 star; +10 XP per right answer (+5 with a hint). Questions are
+3 stars only if at least 8 of the 10 answers were quick (the time allowed grows with how much
+there is to read and how many digits to type), otherwise 2; 9 is 2 stars, 8 is 1 star; +10 XP per right answer (+5 with a hint). Questions are
 read out loud with the device's voice (Parent → Settings picks the voice and speed; the most
 natural English voice is used by default), and answers use an on-screen number pad.
 
@@ -29,7 +40,7 @@ natural English voice is used by default), and answers use an on-screen number p
 - **Daily warm-up:** once a day, before his first level, 6 quick questions from his weakest levels
   (under 80% over his last answers, at least 5 answers). Parent → Settings turns it off and lists
   the levels it is using.
-- **Test out:** a quest he hasn't started offers a short quiz (2 questions per level, stopping at the
+- **Test out:** a quest he hasn't started offers a short quiz (4 questions per level, stopping at the
   first miss). Every level he gets through is marked done, so he starts where he is.
 - **Login:** Vihaan taps 3 secret pictures. A parent can reset them.
 - **Parent:** the link at the bottom asks for a parent PIN (chosen on first use; only a hash is
